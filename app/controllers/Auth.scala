@@ -34,14 +34,13 @@ class Auth @Inject() (val env: AuthenticationEnvironment, val messagesApi: Messa
 
   val signUpForm = Form(
     mapping(
-      "id" -> ignored(None: Option[Long]),
+//      "id" -> ignored(None: Option[Long]),
       "email" -> email.verifying(maxLength(250)),
       "emailConfirmed" -> ignored(false),
-      "password" -> nonEmptyText.verifying(minLength(6)),
-      "nick" -> nonEmptyText,
       "firstName" -> nonEmptyText,
       "lastName" -> nonEmptyText,
-			"services" -> list(nonEmptyText)
+      "password" -> nonEmptyText.verifying(minLength(6)),
+			"services" -> ignored(List("user"))
     )(User.apply)(User.unapply)
   )
 
