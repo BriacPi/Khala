@@ -1,0 +1,12 @@
+@()(implicit request: RequestHeader, user: User, messages: Messages)
+
+@import controllers.routes
+
+@views.html.templates.logged(title = "My account", tab = "myaccount") {
+
+@tags.alertFromRequest(request, "success")
+
+<h1>@Messages("myprofile.title") <a class="btn btn-default btn-sm pull-right" href="@routes.Auth.changePassword">@Messages("changepass")</a></h1>
+
+
+}

@@ -20,6 +20,7 @@ go.index=Aller à l'index
 
 topbar.index=Home
 topbar.myaccount=Mon compte
+topbar.myprofile=Mon profil
 topbar.hello=Hello {0}!<br>Your services are: {1}
 
 ################################################################################################
@@ -49,6 +50,11 @@ index.table.go=Go there and check yourself
 # MY ACCOUNT
 
 myaccount.title=My account
+
+################################################################################################
+# MY PROFILE
+
+myprofile.title=My Profile
 
 ################################################################################################
 # AUTH

@@ -20,6 +20,9 @@ class Application @Inject() (val env: AuthenticationEnvironment, val messagesApi
     Future.successful(Ok(views.html.myAccount()))
   }
 
+  def myProfile = SecuredAction.async { implicit request =>
+    Future.successful(Ok(views.html.myProfile()))
+  }
   // REQUIRED ROLES: serviceA (or master)
   def serviceA = SecuredAction(WithService("serviceA")).async { implicit request =>
     Future.successful(Ok(views.html.serviceA()))
