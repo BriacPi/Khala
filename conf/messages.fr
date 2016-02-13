@@ -18,7 +18,7 @@ go.index=Aller à l'index
 ################################################################################################
 # TOPBAR
 
-topbar.index=Index
+topbar.index=Home
 topbar.myaccount=Mon compte
 topbar.hello=Hello {0}!<br>Your services are: {1}
 
