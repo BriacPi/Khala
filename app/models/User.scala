@@ -17,6 +17,7 @@ case class User(
                  services: List[String]
                ) extends IdentitySilhouette {
   def key = email
+
   def fullName: String = firstName + " " + lastName
 }
 
@@ -40,6 +41,5 @@ object User {
       "password" -> user.password,
       "services" -> user.services
     )
-
   }
 }

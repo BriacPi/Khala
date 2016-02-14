@@ -76,25 +76,26 @@ object UserRepository extends UserRepository {
   //    }
   //  }
 
-//  def save(modifier: BSONDocument, selector: BSONDocument): Unit = {
-//    //don't want to insert if not found
-//    collectionUser.update(modifier, selector, upsert = true)
-//
-//  }
+  //  def save(modifier: BSONDocument, selector: BSONDocument): Unit = {
+  //    //don't want to insert if not found
+  //    collectionUser.update(modifier, selector, upsert = true)
+  //
+  //  }
 
   def save(user: User): Future[User] = {
     val futureId = getId(user)
     futureId.map {
       case None => {
-        collectionUser.insert(UserRepository.userWriter.write(user))
+        val newUser: BSONDocument = userWriter.write(user).add(BSONDocument("registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
+        collectionUser.insert(newUser)
         user
       }
       case Some(userId) => {
         val modifier = UserRepository.userWriter.write(user)
         val selector = BSONDocument("_id" -> userId.getAs[BSONObjectID]("user_id").get)
-        collectionUser.update( selector, modifier, upsert = true)
+        collectionUser.update(selector, modifier, upsert = true)
         user
-    }
+      }
     }
   }
 
@@ -147,20 +148,6 @@ object UserRepository extends UserRepository {
 
   }
 
-  def getId(user: User): Future[Option[BSONDocument]] = {
-    val query = BSONDocument(
-      "email" -> user.email
-    )
-    val futureOption: Future[Option[BSONDocument]] = collectionUser.find(query).cursor[BSONDocument]().headOption
-
-    val futureId: Future[Option[BSONDocument]] = futureOption.map {
-      case None => None
-      case Some(doc) => Some(BSONDocument("user_id" -> doc.getAs[BSONObjectID]("_id")))
-    }
-
-    return futureId
-  }
-
   def getId(email: String): Future[Option[BSONDocument]] = {
     val query = BSONDocument(
       "email" -> email
@@ -171,7 +158,8 @@ object UserRepository extends UserRepository {
       case None => None
       case Some(doc) => Some(BSONDocument("user_id" -> doc.getAs[BSONObjectID]("_id")))
     }
-
     return futureId
   }
+
+  def getId(user: User): Future[Option[BSONDocument]] = getId(user.email)
 }
