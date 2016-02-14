@@ -52,7 +52,7 @@ object UserRepository extends UserRepository {
 
 
   def create(user: User): Unit = {
-    val userDoc: BSONDocument = userWriter.write(user)
+    val userDoc: BSONDocument = userWriter.write(user).add(BSONDocument("registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
 
     // add or ++ methods create a new copy, deos not append.
     //    val newUserDoc = user.add("dateRegistration" -> BSONDateTime(DateTime.now().getMillis))
@@ -86,14 +86,15 @@ object UserRepository extends UserRepository {
     val futureId = getId(user)
     futureId.map {
       case None => {
-        val newUser: BSONDocument = userWriter.write(user).add(BSONDocument("registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
+        val newUser: BSONDocument = userWriter.write(user)
         collectionUser.insert(newUser)
         user
       }
       case Some(userId) => {
-        val modifier = UserRepository.userWriter.write(user)
+        val modifier = UserRepository.userWriter.write(user).add(BSONDocument("registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
         val selector = BSONDocument("_id" -> userId.getAs[BSONObjectID]("user_id").get)
-        collectionUser.update(selector, modifier, upsert = true)
+        // set is very important, otherwise it is a replacement!!!
+        collectionUser.update(selector, BSONDocument("$set"-> modifier), upsert = false)
         user
       }
     }

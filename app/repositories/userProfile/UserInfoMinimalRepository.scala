@@ -9,7 +9,7 @@ import repositories.UserRepository
 import utils.MongoDBProxy
 
 import scala.concurrent.Future
-
+import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * Created by corpus on 14/02/2016.
   */

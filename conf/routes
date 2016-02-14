@@ -20,11 +20,12 @@ GET         /denied                       controllers.Auth.accessDenied
 
 # Home page
 GET         /                             controllers.Application.index
-GET         /serviceA                     controllers.Application.serviceA
-GET         /serviceA_or_ServiceB         controllers.Application.serviceAorServiceB
-GET         /serviceA_and_ServiceB        controllers.Application.serviceAandServiceB
+#GET		/serviceA							controllers.Application.serviceA
+#GET		/serviceA_or_ServiceB		        controllers.Application.serviceAorServiceB
+#GET		/serviceA_and_ServiceB          	controllers.Application.serviceAandServiceB
 GET         /settings                     controllers.Application.settings
 GET         /myaccount                    controllers.Application.myAccount
+GET         /myprofile                    controllers.Application.myProfile
 
 GET         /lang/$lang<(en|es)>          controllers.Application.selectLang(lang: String)
 
@@ -42,4 +43,4 @@ GET         /common/img/*file             controllers.MyAssets.commonImg(path="/
 
 #Content management
 
-GET         /getAllArticles             controllers.ContentController.getAllArticles()
+GET         /getAllArticles               controllers.ContentController.getAllArticles()
