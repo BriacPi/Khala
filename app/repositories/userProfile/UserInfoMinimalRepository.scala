@@ -1,10 +1,9 @@
 package repositories.userProfile
 
 import models.User
-import models.userProfile.userInfoMinimal
+import models.userProfile.UserInfoMinimal
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.bson.BSONDocument
-import repositories.UserRepository
 
 import utils.MongoDBProxy
 
@@ -21,14 +20,14 @@ object UserInfoMinimalRepository extends UserInfoMinimalRepository {
 
   val collectionUser: BSONCollection = MongoDBProxy.db.collection("users")
 
-  def getByEmail(email: String): Future[Option[userInfoMinimal]] = {
+  def getByEmail(email: String): Future[Option[UserInfoMinimal]] = {
     val query = BSONDocument {
       "email" -> email
     }
     val futureOption: Future[Option[BSONDocument]] = collectionUser.find(query).cursor[BSONDocument]().headOption
     futureOption.map {
       case None => None
-      case Some(userDoc) => Some(userInfoMinimal(
+      case Some(userDoc) => Some(UserInfoMinimal(
         userDoc.getAs[String]("email").get,
         userDoc.getAs[String]("firstName").getOrElse("error.noFirstName"),
         userDoc.getAs[String]("lastName").getOrElse("error.noLastName"),
@@ -39,7 +38,7 @@ object UserInfoMinimalRepository extends UserInfoMinimalRepository {
     }
   }
 
-  def getByUser(user: User): Future[Option[userInfoMinimal]] = getByEmail(user.email)
+  def getByUser(user: User): Future[Option[UserInfoMinimal]] = getByEmail(user.email)
 
 
 }

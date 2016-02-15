@@ -56,14 +56,14 @@ object LikeRepository extends LikeRepository {
   }
 
   def getNumberLikes(article: Article): Future[Int] = {
-    val futureArticleOptionId: Future[Option[BSONDocument]] = ArticleRepository.getId(article)
+    val futureArticleOptionId: Future[Option[BSONObjectID]] = ArticleRepository.getId(article)
 
     val futureNumberArticles: Future[Int] = futureArticleOptionId.flatMap{
       case None => Future{0}
 
       case Some(articleId) => {
 
-        val query = BSONDocument("article_id" -> articleId.getAs[BSONObjectID]("article_id"))
+        val query = BSONDocument("article_id" -> articleId)
         val command = Count(query)
         val result: Future[CountResult] = collectionLikes.runCommand(command)
 
@@ -77,14 +77,14 @@ object LikeRepository extends LikeRepository {
   }
 
   def getLikesByTitle(title: String): Future[Int] = {
-    val futureArticleOptionId: Future[Option[BSONDocument]] = ArticleRepository.getOneIdByTitle(title)
+    val futureArticleOptionId: Future[Option[BSONObjectID]] = ArticleRepository.getOneIdByTitle(title)
 
     val futureNumberArticles: Future[Int] = futureArticleOptionId.flatMap{
       case None => Future{0}
 
       case Some(articleId) => {
 
-        val query = BSONDocument("article_id" -> articleId.getAs[BSONObjectID]("article_id"))
+        val query = BSONDocument("article_id" -> articleId)
         val command = Count(query)
         val result: Future[CountResult] = collectionLikes.runCommand(command)
 

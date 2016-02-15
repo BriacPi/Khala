@@ -61,12 +61,12 @@ object ArticleRepository extends ArticleRepository {
 
 
   def create(user: User, article: Article) = {
-    val userOptionId: Future[Option[BSONDocument]] = UserRepository.getId(user)
+    val userOptionId: Future[Option[BSONObjectID]] = UserRepository.getId(user)
     userOptionId.map {
       case None => Unit
       case Some(userId) => {
         val insertQuery: BSONDocument = ArticleRepository.articleWriter.write(article).add(BSONDocument(
-          "author_id" -> userId.getAs[BSONObjectID]("_id"),
+          "author_id" -> userId,
           "creationDate" -> BSONDateTime(DateTime.now().getMillis)
         ))
         val future = collectionArticle.insert(insertQuery)
@@ -81,18 +81,23 @@ object ArticleRepository extends ArticleRepository {
   }
 
 
-  def getByUser(author: User): Future[List[Article]] = {
+  def getByUser(author: User): Future[List[Article]] = getByEmail(author.email)
 
-    val query = BSONDocument("email" -> author.email)
-    val futureOption: Future[Option[BSONDocument]] = UserRepository.getId(author)
+  def getByEmail(email: String): Future[List[Article]] = {
+    val query = BSONDocument("email" -> email)
+    val futureOption: Future[Option[BSONObjectID]] = UserRepository.getId(email)
 
     val futureArticles: Future[List[Article]] = futureOption.flatMap {
-      case Some(userDB) => {
-        val queryId = BSONDocument("author_id" -> userDB.getAs[BSONObjectID]("_id"))
+      case Some(userId) => {
+        print(userId)
+        println(email)
+        val queryId = BSONDocument("author_id" -> userId)
         val futureList: Future[List[BSONDocument]] = collectionArticle.find(queryId).cursor[BSONDocument]().collect[List]()
         val futureArticles: Future[List[Article]] = futureList.map(list =>
           list.map { doc =>
+
             articleReader.read(doc)
+
           }
         )
         futureArticles
@@ -102,6 +107,7 @@ object ArticleRepository extends ArticleRepository {
       }
     }
     return futureArticles
+
   }
 
   def getAllArticles(): Future[List[Article]] = {
@@ -130,24 +136,9 @@ object ArticleRepository extends ArticleRepository {
     }
   }
 
-  def getId(article: Article): Future[Option[BSONDocument]] = {
-    val title = article.title
-    val creationDate = BSONDateTime(article.creationDate.getMillis)
-    val query = BSONDocument(
-      "title" -> title,
-      "creationDate" -> creationDate
-    )
-    val futureOption: Future[Option[BSONDocument]] = collectionArticle.find(query).cursor[BSONDocument]().headOption
+  def getId(article: Article): Future[Option[BSONObjectID]] = getId(article.title,article.creationDate)
 
-    val futureId: Future[Option[BSONDocument]] = futureOption.map {
-      case None => None
-      case Some(doc) => Some(BSONDocument("article_id" -> doc.getAs[BSONObjectID]("_id")))
-    }
-
-    return futureId
-  }
-
-  def getId(title: String, date: DateTime): Future[Option[BSONDocument]] = {
+  def getId(title: String, date: DateTime): Future[Option[BSONObjectID]] = {
     val creationDate = BSONDateTime(date.getMillis)
     val query = BSONDocument(
       "title" -> title,
@@ -155,25 +146,27 @@ object ArticleRepository extends ArticleRepository {
     )
     val futureOption: Future[Option[BSONDocument]] = collectionArticle.find(query).cursor[BSONDocument]().headOption
 
-    val futureId: Future[Option[BSONDocument]] = futureOption.map {
+    val futureId: Future[Option[BSONObjectID]] = futureOption.map {
       case None => None
-      case Some(doc) => Some(BSONDocument("article_id" -> doc.getAs[BSONObjectID]("_id")))
+      case Some(doc) => Some(doc.getAs[BSONObjectID]("_id").get)
     }
 
     return futureId
   }
 
-  def getOneIdByTitle(title: String): Future[Option[BSONDocument]]  = {
+  def getOneIdByTitle(title: String): Future[Option[BSONObjectID]] = {
     val query = BSONDocument("title" -> title)
     val futureOption: Future[Option[BSONDocument]] = collectionArticle.find(query).cursor[BSONDocument]().headOption
 
-    val futureId: Future[Option[BSONDocument]] = futureOption.map {
+    val futureId: Future[Option[BSONObjectID]] = futureOption.map {
       case None => None
-      case Some(doc) => Some(BSONDocument("article_id" -> doc.getAs[BSONObjectID]("_id")))
+      case Some(doc) => Some(doc.getAs[BSONObjectID]("_id").get)
     }
 
     return futureId
   }
+
+
 
 }
 

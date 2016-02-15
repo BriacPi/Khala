@@ -11,7 +11,7 @@ import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.{JsValue, _}
 import play.api.libs.ws.WSClient
 import play.api.mvc._
-import reactivemongo.bson.{BSONDocument, BSONObjectID}
+import reactivemongo.bson.{BSONObjectID, BSONDocument}
 import utils.silhouette.{AuthenticationEnvironment, AuthenticationController}
 
 
@@ -58,8 +58,8 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   //}
 
   def likes(article: Article): Action[AnyContent] = SecuredAction.async { implicit request => {
-    val userFutureOptionId: Future[Option[BSONDocument]] = UserRepository.getId(request.identity)
-    val articleFutureOptionId: Future[Option[BSONDocument]] = ArticleRepository.getId(article)
+    val userFutureOptionId: Future[Option[BSONObjectID]] = UserRepository.getId(request.identity)
+    val articleFutureOptionId: Future[Option[BSONObjectID]] = ArticleRepository.getId(article)
 
     userFutureOptionId.flatMap {
       case None => Future {
@@ -70,7 +70,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
           case None => Ok(Json.obj("error.messages:" -> "the article does not exist"))
           case Some(articleId) => {
             LikeRepository.create(
-              userId.getAs[BSONObjectID]("_id").get, articleId.getAs[BSONObjectID]("_id").get)
+              userId, articleId)
             Ok(Json.obj("messages:" -> "the user successfully liked the article"))
           }
         }
@@ -82,8 +82,8 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   }
 
   def likes(title: String) = SecuredAction.async { implicit request => {
-    val userFutureOptionId: Future[Option[BSONDocument]] = UserRepository.getId(request.identity)
-    val articleFutureOptionId: Future[Option[BSONDocument]] = ArticleRepository.getOneIdByTitle(title)
+    val userFutureOptionId: Future[Option[BSONObjectID]] = UserRepository.getId(request.identity)
+    val articleFutureOptionId: Future[Option[BSONObjectID]] = ArticleRepository.getOneIdByTitle(title)
 
     userFutureOptionId.flatMap {
       case None => Future {
@@ -96,7 +96,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
           }
           case Some(articleId) => {
             val futureString = LikeRepository.create(
-              userId.getAs[BSONObjectID]("user_id").get, articleId.getAs[BSONObjectID]("article_id").get)
+              userId, articleId)
             futureString.map(
               string => Ok(Json.obj("messages:" -> string))
             )

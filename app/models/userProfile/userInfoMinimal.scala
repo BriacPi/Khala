@@ -9,7 +9,7 @@ import reactivemongo.api.gridfs.{// ReactiveMongo GridFS
 DefaultFileToSave, FileToSave, GridFS, ReadFile
 }
 
-case class userInfoMinimal(
+case class UserInfoMinimal(
                             email: String,
                             firstName: String,
                             lastName: String,
@@ -23,17 +23,17 @@ case class userInfoMinimal(
 
 object UserInfoMinimal {
 
-  implicit val userReader: Reads[userInfoMinimal] = (
+  implicit val userReader: Reads[UserInfoMinimal] = (
     (JsPath \ "email").read[String] and
     (JsPath \ "firstName").read[String] and
       (JsPath \ "lastName").read[String] and
       (JsPath \ "headline").read[String] and
       (JsPath \ "urlUserInfo").read[String] and
       (JsPath \ "urlPaymentInfo").read[String]
-    ) (userInfoMinimal.apply _)
+    ) (UserInfoMinimal.apply _)
 
-  implicit val userWriter = new Writes[userInfoMinimal] {
-    def writes(userInfoMinimal: userInfoMinimal): JsObject = Json.obj(
+  implicit val userWriter = new Writes[UserInfoMinimal] {
+    def writes(userInfoMinimal: UserInfoMinimal): JsObject = Json.obj(
       "email" -> userInfoMinimal.email,
       "firstName" -> userInfoMinimal.firstName,
       "lastName" -> userInfoMinimal.lastName,

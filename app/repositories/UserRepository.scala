@@ -64,7 +64,7 @@ object UserRepository extends UserRepository {
     }
   }
 
-  //  def editUser(user: EditUser): Unit = {
+  //  def update(user: EditUser): Unit = {
   //
   //    val selector = BSONDocument("email" -> user.email)
   //    val modifier = BSONDocument("$set" -> userWriter.write(user))
@@ -92,7 +92,7 @@ object UserRepository extends UserRepository {
       }
       case Some(userId) => {
         val modifier = UserRepository.userWriter.write(user).add(BSONDocument("registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
-        val selector = BSONDocument("_id" -> userId.getAs[BSONObjectID]("user_id").get)
+        val selector = BSONDocument("_id" -> userId)
         // set is very important, otherwise it is a replacement!!!
         collectionUser.update(selector, BSONDocument("$set"-> modifier), upsert = false)
         user
@@ -149,18 +149,18 @@ object UserRepository extends UserRepository {
 
   }
 
-  def getId(email: String): Future[Option[BSONDocument]] = {
+  def getId(email: String): Future[Option[BSONObjectID]] = {
     val query = BSONDocument(
       "email" -> email
     )
     val futureOption: Future[Option[BSONDocument]] = collectionUser.find(query).cursor[BSONDocument]().headOption
 
-    val futureId: Future[Option[BSONDocument]] = futureOption.map {
+    val futureId: Future[Option[BSONObjectID]] = futureOption.map {
       case None => None
-      case Some(doc) => Some(BSONDocument("user_id" -> doc.getAs[BSONObjectID]("_id")))
+      case Some(doc) => Some(doc.getAs[BSONObjectID]("_id").get)
     }
     return futureId
   }
 
-  def getId(user: User): Future[Option[BSONDocument]] = getId(user.email)
+  def getId(user: User): Future[Option[BSONObjectID]] = getId(user.email)
 }
