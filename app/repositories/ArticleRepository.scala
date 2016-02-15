@@ -31,11 +31,9 @@ object ArticleRepository extends ArticleRepository {
   implicit object articleReader extends BSONDocumentReader[Article] {
     def read(doc: BSONDocument): Article = {
       //GetAs returns automatically an option of the type it wraps around
-      val id = doc.getAs[Int]("_id") match {
+      val id = doc.getAs[BSONObjectID]("_id") match {
         case None => None
         case Some(id) =>
-          println("<sdfsdvwcvwxc")
-          println("qsdfvsdfvsdfvbsd"+BSONObjectID("test"))
           Some(id.toString())
       }
       val title = doc.getAs[String]("title").get

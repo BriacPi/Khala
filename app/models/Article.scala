@@ -36,6 +36,7 @@ object Article {
 
   implicit val articleWriter = new Writes[Article] {
     def writes(a: Article): JsObject = {
+
       def json = Json.obj(
         "title" -> a.title,
         "content" -> a.content,
@@ -46,7 +47,7 @@ object Article {
       )
       a.id match {
         case None => json
-        case Some(id) => json.++(Json.obj("_id" -> id))
+        case Some(id) => (Json.obj("_id" -> id)).++(json)
 
       }
     }
