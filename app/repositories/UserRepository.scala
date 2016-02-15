@@ -25,8 +25,13 @@ object UserRepository extends UserRepository {
 
   implicit object userReader extends BSONDocumentReader[User] {
     def read(doc: BSONDocument): User = {
+
+      val optionId = doc.getAs[BSONObjectID]("_id") match {
+        case None => None
+        case Some(id) => Some(id.toString())
+      }
       //check the implicit conversion
-      User(doc.getAs[String]("_id"),
+      User(optionId,
         doc.getAs[String]("email").get,
         doc.getAs[Boolean]("emailConfirmed").get,
         doc.getAs[String]("firstName").getOrElse("error.noFirstName"),
@@ -40,8 +45,7 @@ object UserRepository extends UserRepository {
   implicit object userWriter extends BSONDocumentWriter[User] {
 
     def write(user: User): BSONDocument = {
-      val partialDoc = BSONDocument(
-        "_id" -> user.id.get,
+      val doc = BSONDocument(
         "email" -> user.email,
         "emailConfirmed" -> user.emailConfirmed,
         "firstName" -> user.firstName,
@@ -51,44 +55,25 @@ object UserRepository extends UserRepository {
 
       )
       user.id match {
-        case None => return partialDoc
-        case Some(id) => val bsonObjectId = BSONObjectID(id)
-          return partialDoc.add(BSONDocument("_id" -> bsonObjectId))
+        case None => doc
+        case Some(id) => doc.add(BSONDocument("_id" -> BSONObjectID(id)))
       }
     }
   }
 
-
-  def create(user: User): Unit = {
-    val userDoc: BSONDocument = userWriter.write(user).add(BSONDocument("registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
-
-    // add or ++ methods create a new copy, deos not append.
-    //    val newUserDoc = user.add("dateRegistration" -> BSONDateTime(DateTime.now().getMillis))
-    val future: Future[WriteResult] = collectionUser.insert(userDoc)
-    future.onComplete {
-      case Failure(e) => throw e
-      case Success(writeResult) =>
-        println(s"successfully created user with result: $writeResult")
-    }
-  }
-
-  //  def update(user: EditUser): Unit = {
-  //
-  //    val selector = BSONDocument("email" -> user.email)
-  //    val modifier = BSONDocument("$set" -> userWriter.write(user))
-  //    val future = collectionUser.update(selector, modifier)
-  //    future.onComplete {
-  //      case Failure(e) => throw e
-  //      case Success(writeResult) =>
-  //        println(s"successfully edited user with result: $writeResult")
-  //    }
-  //  }
-
-  //  def save(modifier: BSONDocument, selector: BSONDocument): Unit = {
-  //    //don't want to insert if not found
-  //    collectionUser.update(modifier, selector, upsert = true)
-  //
-  //  }
+//
+//  def create(user: User): Unit = {
+//    val userDoc: BSONDocument = userWriter.write(user).add(BSONDocument("registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
+//
+//    // add or ++ methods create a new copy, deos not append.
+//    //    val newUserDoc = user.add("dateRegistration" -> BSONDateTime(DateTime.now().getMillis))
+//    val future: Future[WriteResult] = collectionUser.insert(userDoc)
+//    future.onComplete {
+//      case Failure(e) => throw e
+//      case Success(writeResult) =>
+//        println(s"successfully created user with result: $writeResult")
+//    }
+//  }
 
   def save(user: User): Future[User] = {
     val futureOptionExistingUser: Future[Option[User]] = getByEmail(user.email)
@@ -98,9 +83,16 @@ object UserRepository extends UserRepository {
           optionExistingUser match {
             case None => val newUser: BSONDocument = userWriter.write(user).add(BSONDocument("registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
               val future = collectionUser.insert(newUser)
-              return Future.successful(user)
+              val futureOptionUser = getByEmail(user.email)
+              futureOptionUser.map { optionUser =>
+                optionUser match {
+                  case None => user
+                  case Some(newUser) => newUser
+                }
+              }
+              Future.successful(user)
             case Some(existingUser) =>
-              return Future.failed(new Throwable("error.emailInUse.text"))
+              Future.failed(new Throwable("error.emailInUse.text"))
           }
         }
       }
@@ -177,19 +169,20 @@ object UserRepository extends UserRepository {
       }
     }
   }
-//
-//  def getId(email: String): Future[Option[BSONObjectID]] = {
-//    val query = BSONDocument(
-//      "email" -> email
-//    )
-//    val futureOption: Future[Option[BSONDocument]] = collectionUser.find(query).cursor[BSONDocument]().headOption
-//
-//    val futureId: Future[Option[BSONObjectID]] = futureOption.map {
-//      case None => None
-//      case Some(doc) => Some(doc.getAs[BSONObjectID]("_id").get)
-//    }
-//    return futureId
-//  }
-//
-//  def getId(user: User): Future[Option[BSONObjectID]] = getId(user.email)
+
+  //
+  //  def getId(email: String): Future[Option[BSONObjectID]] = {
+  //    val query = BSONDocument(
+  //      "email" -> email
+  //    )
+  //    val futureOption: Future[Option[BSONDocument]] = collectionUser.find(query).cursor[BSONDocument]().headOption
+  //
+  //    val futureId: Future[Option[BSONObjectID]] = futureOption.map {
+  //      case None => None
+  //      case Some(doc) => Some(doc.getAs[BSONObjectID]("_id").get)
+  //    }
+  //    return futureId
+  //  }
+  //
+  //  def getId(user: User): Future[Option[BSONObjectID]] = getId(user.email)
 }

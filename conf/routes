@@ -39,7 +39,9 @@ GET         /common/js/*file              controllers.MyAssets.commonJs(path="/p
 GET         /common/img/*file             controllers.MyAssets.commonImg(path="/public/lib/common/images", file: Asset)
 
 
-#Article management
+#Content management
+GET         /writeArticle                 controllers.ContentController.writeArticle()
+POST        /saveArticle                  controllers.ContentController.saveArticle()
 GET         /getAllArticles               controllers.ContentController.getAllArticles()
 GET         /getArticlesByAuthor          controllers.ContentController.getArticlesByAuthor()
 #GET         /likeArticle                controllers.ContentController.articleToLike()

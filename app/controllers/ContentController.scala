@@ -3,6 +3,7 @@ package controllers
 import javax.inject.Inject
 
 import models.Article
+import org.joda.time.DateTime
 import repositories.{LikeRepository, UserRepository, ArticleRepository}
 
 import play.api.data.Form
@@ -24,9 +25,45 @@ import scala.concurrent.Future
 
 class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironment, val messagesApi: MessagesApi) extends AuthenticationController with I18nSupport {
 
-  val articleTitleForm: Form[String] = Form(
-    "title" -> nonEmptyText
+  val newArticleForm: Form[Article] = Form(
+    mapping(
+      "id" -> ignored(None: Option[String]),
+      "title" -> nonEmptyText,
+      "content" -> nonEmptyText,
+      "creationDate" -> ignored(DateTime.now()),
+      "lastUpdate" -> ignored(DateTime.now()),
+      "nbLikes" -> ignored(0),
+      "nbComments" -> ignored(0)
+    )(Article.apply)(Article.unapply)
   )
+
+  def writeArticle() = SecuredAction { implicit request =>
+    println(request.identity.id.getOrElse("What the fuck!"))
+    Ok(views.html.content.writeArticle(newArticleForm))
+  }
+
+  def saveArticle() = SecuredAction.async { implicit request => {
+
+    newArticleForm.bindFromRequest.fold(
+      error => {
+
+        // Request payload is invalid.envisageable
+        Future.successful(BadRequest(views.html.content.writeArticle(newArticleForm)))
+      },
+      article => {
+        if (article.title.length() == 0) {
+          Future.successful(Ok(Json.obj("message" -> "error.emptyTitle")))
+        }
+        else if (article.title.length() > 300) Future.successful(Ok(Json.obj("message" -> "error.titleTooLong")))
+        else {
+          ArticleRepository.save(request.identity, article)
+          Future.successful(Ok(Json.obj("message" -> "content.updateSuccessful")))
+        }
+      }
+
+    )
+  }
+  }
 
   def getAllArticles() = Action.async { implicit request => {
     val futureArticles: Future[List[Article]] = ArticleRepository.getAllArticles()

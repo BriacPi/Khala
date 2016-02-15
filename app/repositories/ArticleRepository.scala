@@ -12,6 +12,8 @@ import reactivemongo.bson._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+import reactivemongo.bson.BSONObjectID
+
 /**
   * Created by corpus on 05/02/2016.
   */
@@ -25,10 +27,17 @@ object ArticleRepository extends ArticleRepository {
   val collectionArticle: BSONCollection = MongoDBProxy.db.collection("articles")
   val collectionUser: BSONCollection = MongoDBProxy.db.collection("users")
 
+
   implicit object articleReader extends BSONDocumentReader[Article] {
     def read(doc: BSONDocument): Article = {
       //GetAs returns automatically an option of the type it wraps around
-      val id = doc.getAs[String]("_id")
+      val id = doc.getAs[Int]("_id") match {
+        case None => None
+        case Some(id) =>
+          println("<sdfsdvwcvwxc")
+          println("qsdfvsdfvsdfvbsd"+BSONObjectID("test"))
+          Some(id.toString())
+      }
       val title = doc.getAs[String]("title").get
       val content = doc.getAs[String]("content").get
       //
@@ -49,8 +58,8 @@ object ArticleRepository extends ArticleRepository {
 
   implicit object articleWriter extends BSONDocumentWriter[Article] {
     def write(a: Article): BSONDocument = {
+//      print("lolilol")
       def doc: BSONDocument = BSONDocument(
-        "_id" -> a.id.get,
         "title" -> a.title,
         "content" -> a.content,
         "nbLikes" -> a.nbLikes,
@@ -58,23 +67,47 @@ object ArticleRepository extends ArticleRepository {
         "creationDate" -> BSONDateTime(a.creationDate.getMillis),
         "lastUpdate" -> BSONDateTime(a.lastUpdate.getMillis)
       )
-      return doc
+      a.id match {
+        case None => doc
+        case Some(id) => val bsonID = BSONObjectID(id)
+          doc.add("_id" -> bsonID)
+      }
     }
   }
 
-
-  def create(user: User, article: Article) = {
+  //authenticated action only so I won't check the existence of the user.
+  def save(author: User, article: Article): Future[Article] = {
     //user is supposed to be legitimate
-    val insertQuery: BSONDocument = ArticleRepository.articleWriter.write(article).add(BSONDocument(
-      "author_id" -> BSONObjectID(user.id.get),
-      "creationDate" -> BSONDateTime(DateTime.now().getMillis)
-    ))
-    val future = collectionArticle.insert(insertQuery)
-    future.onComplete {
-      case Failure(e) => throw e
-      case Success(writeResult) =>
-        println(s"successfully inserted article with result: $writeResult")
+    val query: BSONDocument = ArticleRepository.articleWriter.write(article)
+    //Cannot user a generic article.id.getOrElse in a selector as it will force an id!
+    article.id match {
+      case None =>
+        val creationDate = BSONDateTime(DateTime.now().getMillis())
+        val insertQuery = query.add(BSONDocument("creationDate" -> creationDate,
+          "lastUpdate" -> creationDate,
+          "nbModification" -> 0,
+          "author_id" -> author.id.get))
+        val future = collectionArticle.insert(insertQuery)
+        future.onComplete {
+          case Failure(e) => throw e
+          case Success(writeResult) =>
+            println(s"successfully inserted article with result: $writeResult")
+        }
+        val futureOptionArticle = getByAuthorAndTitle(author, article.title)
+        futureOptionArticle.map { optionArticle =>
+          optionArticle match {
+            case None => article
+            case Some(newArticle) => newArticle
+          }
+        }
+      case Some(articleId) =>
+        val selector = BSONDocument("_id" -> BSONObjectID(articleId))
+        val modifier = BSONDocument("$set" -> query.add("lastUpdate" -> BSONDateTime(DateTime.now().getMillis())),
+          "$inc" -> BSONDocument("nbModification" -> 1))
+        val future = collectionArticle.update(selector, modifier)
+        Future.successful(article)
     }
+
   }
 
   //Article id!
@@ -121,6 +154,20 @@ object ArticleRepository extends ArticleRepository {
       }
     )
     futureArticle
+  }
+
+  def getByAuthorAndTitle(author: User, title: String): Future[Option[Article]] = {
+    val query = BSONDocument("author_id" -> author.id.get, "title" -> title)
+    val sortQuery = BSONDocument("lastUpdate" -> -1)
+    val futureOptionDoc = collectionArticle.find(query).sort(sortQuery).cursor[BSONDocument]().headOption
+
+    futureOptionDoc.map {
+      optionDoc =>
+        optionDoc match {
+          case None => None
+          case Some(doc) => Some(ArticleRepository.articleReader.read(doc))
+        }
+    }
   }
 
   def getAllArticles(): Future[List[Article]] = {

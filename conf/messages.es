@@ -107,6 +107,8 @@ error.notfound.title=Dirección no encontrada
 error.notfound.text=Para la petición ''{0}''
 error.emailInUse.text = Sorry, the email you entered is already in use.
 error.noSuchArticle.text=Sorry, the article you are referring to does not exist.
+error.emptyTitle=
+error.titleTooLong=
 
 ################################################################################################
 # MAILS
@@ -121,3 +123,10 @@ mail.forgotpwd.prelink=Alguien (esperemos que tú) ha solicitado restablecer la 
 mail.forgotpwd.postlink=Este link expirará en 24 horas. Si no deseas modificar tu contraseña, ignora este email y no se realizará ninguna acción.
 
 mail.sign=Equipo MyWeb
+
+################################################################################################
+#CONTENT
+
+content.updateSuccessful=
+article.title=
+article.content=

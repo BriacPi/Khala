@@ -1,0 +1,40 @@
+@import play.api.Play.current
+@import play.api.i18n.Messages.Implicits._
+@import models.{User,Article}
+
+@(newArticleForm: Form[Article])(implicit lang:Lang)
+
+
+
+
+@helper.form(action = routes.ContentController.saveArticle(), args = 'class -> "newArticleForm"){
+  <div class="centerFlex vertical-center" style="text-align: center" >
+    <div class="page-header">
+
+      <h1>@Messages("Get on with your creative mind!")</h1>
+    </div>
+
+
+    @* views.html.admin.components.globalError(newArticleForm) *@
+    <div class="content" style="margin-left:1em;">
+      @if(newArticleForm.hasGlobalErrors) {
+        <div class="user__global-error-message vertical-center">
+        @for(err <- newArticleForm.globalErrors.flatMap(_.messages)) {
+          <div class="error vertical-center errorRed">@Messages(err)</div>
+        }
+        </div>
+      }
+      <div>
+      @helper.inputText(newArticleForm("title"), '_label -> Messages("article.title"))
+      </div>
+      <div>
+      @helper.inputText(newArticleForm("content"), '_label -> Messages("article.content"))
+      </div>
+      <div class="submit">
+        <input type="submit" name="submit" value=@Messages("submit")>
+      </div>
+    </div>
+    }
+
+</div>
+

@@ -107,6 +107,8 @@ error.notfound.title=Handler Not Found
 error.notfound.text=For request ''{0}''
 error.emailInUse.text=Sorry, the email you entered is already in use.
 error.noSuchArticle.text=Sorry, the article you are referring to does not exist.
+error.emptyTitle=Hey, it's very unlikely someone's going to read an article without a title!
+error.titleTooLong=Sorry, the title of an article is limited to 300 characters.
 
 ################################################################################################
 # MAILS
@@ -121,3 +123,10 @@ mail.forgotpwd.prelink=Someone (hopefully you) has requested a password reset fo
 mail.forgotpwd.postlink=Note that this link will expire in 24 hours. If you don''t wish to reset your password, disregard this email and no action will be taken.
 
 mail.sign=Team MyWeb
+
+################################################################################################
+#CONTENT
+
+content.updateSuccessful = Perfect! Your article just got even better!
+article.title = Here the title of your masterpiece!
+article.content = Pour your thoughts here.

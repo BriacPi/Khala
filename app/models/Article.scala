@@ -26,7 +26,7 @@ case class Article(
 object Article {
   implicit val articleReader: Reads[Article] = (
     (JsPath \ "_id").readNullable[String] and
-    (JsPath \ "title").read[String] and
+      (JsPath \ "title").read[String] and
       (JsPath \ "content").read[String] and
       (JsPath \ "creationDate").read[DateTime] and
       (JsPath \ "lastUpdate").read[DateTime] and
@@ -35,14 +35,22 @@ object Article {
     ) (Article.apply _)
 
   implicit val articleWriter = new Writes[Article] {
-    def writes(a: Article): JsObject = Json.obj(
-      "title" -> a.title,
-      "content" -> a.content,
-      "nbLikes" -> a.nbLikes,
-      "nbComments" -> a.nbComments,
-      "creationDate" -> a.creationDate,
-      "lastUpdate" -> a.lastUpdate
-    )
+    def writes(a: Article): JsObject = {
+      def json = Json.obj(
+        "title" -> a.title,
+        "content" -> a.content,
+        "nbLikes" -> a.nbLikes,
+        "nbComments" -> a.nbComments,
+        "creationDate" -> a.creationDate,
+        "lastUpdate" -> a.lastUpdate
+      )
+      a.id match {
+        case None => json
+        case Some(id) => json.++(Json.obj("_id" -> id))
+
+      }
+    }
+
 
   }
 
