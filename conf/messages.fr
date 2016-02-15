@@ -105,6 +105,8 @@ error.unknown.title=Oops, an error occurred
 error.unknown.text=This exception has been logged with id <strong>{0}</strong>.
 error.notfound.title=Handler Not Found
 error.notfound.text=For request ''{0}''
+error.emailInUse.text=Sorry, the email you entered is already in use.
+error.noSuchArticle.text=Sorry, the article you are referring to does not exist.
 
 ################################################################################################
 # MAILS

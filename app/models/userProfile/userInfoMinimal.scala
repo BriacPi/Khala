@@ -23,7 +23,7 @@ case class UserInfoMinimal(
 
 object UserInfoMinimal {
 
-  implicit val userReader: Reads[UserInfoMinimal] = (
+  implicit val userInfoMinimal: Reads[UserInfoMinimal] = (
     (JsPath \ "email").read[String] and
     (JsPath \ "firstName").read[String] and
       (JsPath \ "lastName").read[String] and
@@ -32,7 +32,7 @@ object UserInfoMinimal {
       (JsPath \ "urlPaymentInfo").read[String]
     ) (UserInfoMinimal.apply _)
 
-  implicit val userWriter = new Writes[UserInfoMinimal] {
+  implicit val userInfoMinimalWriter = new Writes[UserInfoMinimal] {
     def writes(userInfoMinimal: UserInfoMinimal): JsObject = Json.obj(
       "email" -> userInfoMinimal.email,
       "firstName" -> userInfoMinimal.firstName,

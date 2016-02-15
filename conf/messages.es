@@ -105,6 +105,8 @@ error.unknown.title=Oops, ha ocurrido un error
 error.unknown.text=Esta excepción ha sido registrada con el id <strong>{0}</strong>.
 error.notfound.title=Dirección no encontrada
 error.notfound.text=Para la petición ''{0}''
+error.emailInUse.text = Sorry, the email you entered is already in use.
+error.noSuchArticle.text=Sorry, the article you are referring to does not exist.
 
 ################################################################################################
 # MAILS

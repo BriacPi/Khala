@@ -1,5 +1,6 @@
 package repositories
 
+import reactivemongo.api.collections.bson
 import repositories._
 import scala.util.{Failure, Success}
 import models.User
@@ -24,7 +25,9 @@ object UserRepository extends UserRepository {
 
   implicit object userReader extends BSONDocumentReader[User] {
     def read(doc: BSONDocument): User = {
-      User(doc.getAs[String]("email").get,
+      //check the implicit conversion
+      User(doc.getAs[String]("_id"),
+        doc.getAs[String]("email").get,
         doc.getAs[Boolean]("emailConfirmed").get,
         doc.getAs[String]("firstName").getOrElse("error.noFirstName"),
         doc.getAs[String]("lastName").getOrElse("error.noLastName"),
@@ -37,7 +40,8 @@ object UserRepository extends UserRepository {
   implicit object userWriter extends BSONDocumentWriter[User] {
 
     def write(user: User): BSONDocument = {
-      BSONDocument(
+      val partialDoc = BSONDocument(
+        "_id" -> user.id.get,
         "email" -> user.email,
         "emailConfirmed" -> user.emailConfirmed,
         "firstName" -> user.firstName,
@@ -46,7 +50,11 @@ object UserRepository extends UserRepository {
         "services" -> user.services
 
       )
-
+      user.id match {
+        case None => return partialDoc
+        case Some(id) => val bsonObjectId = BSONObjectID(id)
+          return partialDoc.add(BSONDocument("_id" -> bsonObjectId))
+      }
     }
   }
 
@@ -83,19 +91,37 @@ object UserRepository extends UserRepository {
   //  }
 
   def save(user: User): Future[User] = {
-    val futureId = getId(user)
-    futureId.map {
+    val futureOptionExistingUser: Future[Option[User]] = getByEmail(user.email)
+    user.id match {
       case None => {
-        val newUser: BSONDocument = userWriter.write(user)
-        collectionUser.insert(newUser)
-        user
+        futureOptionExistingUser.flatMap { optionExistingUser =>
+          optionExistingUser match {
+            case None => val newUser: BSONDocument = userWriter.write(user).add(BSONDocument("registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
+              val future = collectionUser.insert(newUser)
+              return Future.successful(user)
+            case Some(existingUser) =>
+              return Future.failed(new Throwable("error.emailInUse.text"))
+          }
+        }
       }
       case Some(userId) => {
-        val modifier = UserRepository.userWriter.write(user).add(BSONDocument("registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
+        val modifier = UserRepository.userWriter.write(user)
         val selector = BSONDocument("_id" -> userId)
-        // set is very important, otherwise it is a replacement!!!
-        collectionUser.update(selector, BSONDocument("$set"-> modifier), upsert = false)
-        user
+        futureOptionExistingUser.flatMap { optionExistingUser =>
+
+          optionExistingUser match {
+            // set is very important, otherwise it is a replacement!!!
+            case None => collectionUser.update(selector, BSONDocument("$set" -> modifier), upsert = false)
+              return Future.successful(user)
+            case Some(existingUser) =>
+              if (existingUser.id == userId) {
+                collectionUser.update(selector, BSONDocument("$set" -> modifier), upsert = false)
+                return Future.successful(user)
+              }
+              else
+                return Future.failed(new Throwable("error.emailInUse.text"))
+          }
+        }
       }
     }
   }
@@ -136,31 +162,34 @@ object UserRepository extends UserRepository {
     return futureUser
   }
 
-  def getByName(name: String): Option[List[User]] = {
+  def getByName(name: String): Future[List[User]] = {
     //IntelliJi doesn't solve BSONCollection type, has to state it
 
     val query = BSONDocument("$or" -> BSONDocument("firstName" -> name, "lastName" -> name))
 
     //value gives option of try from future list, 2 gets fot option and try then head
-    val listBSON = collectionUser.find(query).cursor[BSONDocument]().collect[List]().value.get.get
     //collect returns a future type that needs to be unwrapped
-    if (listBSON.isEmpty) return None
-    else Some((listBSON.map(doc => UserRepository.userReader.read(doc))))
+    val listBSON: Future[List[BSONDocument]] = collectionUser.find(query).cursor[BSONDocument]().collect[List]()
 
-  }
-
-  def getId(email: String): Future[Option[BSONObjectID]] = {
-    val query = BSONDocument(
-      "email" -> email
-    )
-    val futureOption: Future[Option[BSONDocument]] = collectionUser.find(query).cursor[BSONDocument]().headOption
-
-    val futureId: Future[Option[BSONObjectID]] = futureOption.map {
-      case None => None
-      case Some(doc) => Some(doc.getAs[BSONObjectID]("_id").get)
+    listBSON.map {
+      listDoc => listDoc.map {
+        doc => UserRepository.userReader.read(doc)
+      }
     }
-    return futureId
   }
-
-  def getId(user: User): Future[Option[BSONObjectID]] = getId(user.email)
+//
+//  def getId(email: String): Future[Option[BSONObjectID]] = {
+//    val query = BSONDocument(
+//      "email" -> email
+//    )
+//    val futureOption: Future[Option[BSONDocument]] = collectionUser.find(query).cursor[BSONDocument]().headOption
+//
+//    val futureId: Future[Option[BSONObjectID]] = futureOption.map {
+//      case None => None
+//      case Some(doc) => Some(doc.getAs[BSONObjectID]("_id").get)
+//    }
+//    return futureId
+//  }
+//
+//  def getId(user: User): Future[Option[BSONObjectID]] = getId(user.email)
 }

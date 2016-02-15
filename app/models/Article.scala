@@ -10,7 +10,7 @@ import play.api.libs.json._
 
 // The implicit conversion has to be done ia long for dateTime and BSONDateTime
 case class Article(
-
+                    id: Option[String],
                     title: String,
                     content: String,
                     creationDate: DateTime,
@@ -25,6 +25,7 @@ case class Article(
 
 object Article {
   implicit val articleReader: Reads[Article] = (
+    (JsPath \ "_id").readNullable[String] and
     (JsPath \ "title").read[String] and
       (JsPath \ "content").read[String] and
       (JsPath \ "creationDate").read[DateTime] and
@@ -33,8 +34,8 @@ object Article {
       (JsPath \ "nbComments").read[Int]
     ) (Article.apply _)
 
-  implicit val articleWriter =  new Writes[Article] {
-    def writes(a: Article): JsObject = Json.obj (
+  implicit val articleWriter = new Writes[Article] {
+    def writes(a: Article): JsObject = Json.obj(
       "title" -> a.title,
       "content" -> a.content,
       "nbLikes" -> a.nbLikes,

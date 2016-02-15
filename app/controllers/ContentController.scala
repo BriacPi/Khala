@@ -41,7 +41,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   }
 
   def getArticlesByAuthor(): Action[AnyContent] = SecuredAction.async { implicit request => {
-    val futureArticles: Future[List[Article]] = ArticleRepository.getByUser(request.identity)
+    val futureArticles: Future[List[Article]] = ArticleRepository.getByAuthor(request.identity)
     val futureJson: Future[List[JsValue]] = futureArticles.map { list => list.map {
       article => Article.articleWriter.writes(article)
     }
@@ -58,64 +58,26 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   //}
 
   def likes(article: Article): Action[AnyContent] = SecuredAction.async { implicit request => {
-    val userFutureOptionId: Future[Option[BSONObjectID]] = UserRepository.getId(request.identity)
-    val articleFutureOptionId: Future[Option[BSONObjectID]] = ArticleRepository.getId(article)
 
-    userFutureOptionId.flatMap {
-      case None => Future {
-        Ok(Json.obj("error.messages:" -> "the user does not exist"))
-      }
-      case Some(userId) => {
-        articleFutureOptionId.map {
-          case None => Ok(Json.obj("error.messages:" -> "the article does not exist"))
-          case Some(articleId) => {
-            LikeRepository.create(
-              userId, articleId)
-            Ok(Json.obj("messages:" -> "the user successfully liked the article"))
-          }
-        }
+    val articleFutureOptionId: Future[Option[Article]] = ArticleRepository.getById(article.id.get)
+    articleFutureOptionId.map {
+      case None => Ok(Json.obj("error.messages:" -> "error.noArticleFound.text"))
+      case Some(articleId) => {
+        LikeRepository.create(
+          request.identity.id.get, article.id.get)
+        Ok(Json.obj("messages:" -> "the user successfully liked the article"))
       }
     }
-
   }
 
   }
 
-  def likes(title: String) = SecuredAction.async { implicit request => {
-    val userFutureOptionId: Future[Option[BSONObjectID]] = UserRepository.getId(request.identity)
-    val articleFutureOptionId: Future[Option[BSONObjectID]] = ArticleRepository.getOneIdByTitle(title)
-
-    userFutureOptionId.flatMap {
-      case None => Future {
-        Ok(Json.obj("error.messages:" -> "the user does not exist"))
-      }
-      case Some(userId) => {
-        articleFutureOptionId.flatMap {
-          case None => Future {
-            Ok(Json.obj("error.messages:" -> "the article does not exist"))
-          }
-          case Some(articleId) => {
-            val futureString = LikeRepository.create(
-              userId, articleId)
-            futureString.map(
-              string => Ok(Json.obj("messages:" -> string))
-            )
-
-          }
-        }
-      }
-    }
-
-  }
-
-  }
-
-//  def getNbLikes(title: String) = Action.async { implicit request => {
-//    val futureInt: Future[Int] = LikeRepository.getLikesByTitle(title);
-//    futureInt.map { nbLikes =>
-//      Ok(Json.obj("messages:" -> "there is" + nbLikes" likes for this article!"))
-//    }
-//  }
-//  }
+  //  def getNbLikes(title: String) = Action.async { implicit request => {
+  //    val futureInt: Future[Int] = LikeRepository.getLikesByTitle(title);
+  //    futureInt.map { nbLikes =>
+  //      Ok(Json.obj("messages:" -> "there is" + nbLikes" likes for this article!"))
+  //    }
+  //  }
+  //  }
 
 }

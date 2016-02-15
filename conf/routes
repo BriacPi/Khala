@@ -20,9 +20,6 @@ GET         /denied                       controllers.Auth.accessDenied
 
 # Home page
 GET         /                             controllers.Application.index
-#GET		/serviceA							controllers.Application.serviceA
-#GET		/serviceA_or_ServiceB		        controllers.Application.serviceAorServiceB
-#GET		/serviceA_and_ServiceB          	controllers.Application.serviceAandServiceB
 GET         /settings                     controllers.Application.settings
 GET         /myaccount                    controllers.Application.myAccount
 GET         /myprofile                    controllers.Application.myProfile
@@ -46,8 +43,8 @@ GET         /common/img/*file             controllers.MyAssets.commonImg(path="/
 GET         /getAllArticles               controllers.ContentController.getAllArticles()
 GET         /getArticlesByAuthor          controllers.ContentController.getArticlesByAuthor()
 #GET         /likeArticle                controllers.ContentController.articleToLike()
-POST        /likeArticle/:title           controllers.ContentController.likes(title)
 
 #UserProfile Management
-GET         /user                         controllers.userProfile.userInfoMinimalController.getUser()
-GET         /userInfoMinimal              controllers.userProfile.userInfoMinimalController.getUserInfoMinimal()
+GET         /user                         controllers.UserProfileController.getUser()
+GET         /userInfoMinimal              controllers.UserProfileController.getUserInfoMinimal()
+#GET         /influence                    controllers.UserProfileController.getInfluence()

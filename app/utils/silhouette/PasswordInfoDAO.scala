@@ -32,16 +32,13 @@ class PasswordInfoDAO extends DelegableAuthInfoDAO[PasswordInfo] {
   def update(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] =
     UserRepository.getByEmail(loginInfo).map {
       case Some(user) => {
-
         val newUser = user.copy(password = authInfo)
         println(user.password)
         UserRepository.save(newUser)
         println(authInfo)
         authInfo
-
       }
       case _ => {
-        println("caca")
         throw new Exception("PasswordInfoDAO - update : the user must exists to update its password")
       }
     }

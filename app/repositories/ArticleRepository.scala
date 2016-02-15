@@ -23,10 +23,12 @@ trait ArticleRepository {
 
 object ArticleRepository extends ArticleRepository {
   val collectionArticle: BSONCollection = MongoDBProxy.db.collection("articles")
+  val collectionUser: BSONCollection = MongoDBProxy.db.collection("users")
 
   implicit object articleReader extends BSONDocumentReader[Article] {
     def read(doc: BSONDocument): Article = {
       //GetAs returns automatically an option of the type it wraps around
+      val id = doc.getAs[String]("_id")
       val title = doc.getAs[String]("title").get
       val content = doc.getAs[String]("content").get
       //
@@ -39,7 +41,7 @@ object ArticleRepository extends ArticleRepository {
       val nbLikes = doc.getAs[Int]("nbLikes").getOrElse(0)
       val nbComments = doc.getAs[Int]("nbComments").getOrElse(0)
 
-      Article(title, content, creationDate, lastUpdate, nbLikes, nbComments)
+      Article(id, title, content, creationDate, lastUpdate, nbLikes, nbComments)
       //how to not to build them
 
     }
@@ -48,6 +50,7 @@ object ArticleRepository extends ArticleRepository {
   implicit object articleWriter extends BSONDocumentWriter[Article] {
     def write(a: Article): BSONDocument = {
       def doc: BSONDocument = BSONDocument(
+        "_id" -> a.id.get,
         "title" -> a.title,
         "content" -> a.content,
         "nbLikes" -> a.nbLikes,
@@ -61,53 +64,63 @@ object ArticleRepository extends ArticleRepository {
 
 
   def create(user: User, article: Article) = {
-    val userOptionId: Future[Option[BSONObjectID]] = UserRepository.getId(user)
-    userOptionId.map {
-      case None => Unit
-      case Some(userId) => {
-        val insertQuery: BSONDocument = ArticleRepository.articleWriter.write(article).add(BSONDocument(
-          "author_id" -> userId,
-          "creationDate" -> BSONDateTime(DateTime.now().getMillis)
-        ))
-        val future = collectionArticle.insert(insertQuery)
-        future.onComplete {
-          case Failure(e) => throw e
-          case Success(writeResult) =>
-            println(s"successfully inserted article with result: $writeResult")
-        }
-      }
+    //user is supposed to be legitimate
+    val insertQuery: BSONDocument = ArticleRepository.articleWriter.write(article).add(BSONDocument(
+      "author_id" -> BSONObjectID(user.id.get),
+      "creationDate" -> BSONDateTime(DateTime.now().getMillis)
+    ))
+    val future = collectionArticle.insert(insertQuery)
+    future.onComplete {
+      case Failure(e) => throw e
+      case Success(writeResult) =>
+        println(s"successfully inserted article with result: $writeResult")
     }
+  }
+
+  //Article id!
+  def getById(id: BSONObjectID): Future[Option[Article]] = {
+    val query = BSONDocument("_id" -> id)
+    val futureOption: Future[Option[BSONDocument]] = collectionArticle.find(query).cursor[BSONDocument]().headOption
+    val futureArticle: Future[Option[Article]] = futureOption.map(opt =>
+      opt match {
+        case None => None
+        case Some(doc) =>
+          Some(articleReader.read(doc))
+      }
+    )
+    futureArticle
+  }
+
+  def getById(id: String): Future[Option[Article]] = getById(BSONObjectID(id))
+
+  //Author email!
+
+
+  def getByAuthor(authorId: BSONObjectID): Future[List[Article]] = {
+    val query = BSONDocument("author_id" -> authorId)
+    val futureOption: Future[List[BSONDocument]] = collectionUser.find(query).cursor[BSONDocument]().collect[List]()
+    futureOption.map(list =>
+      list.map {
+        doc => articleReader.read(doc)
+      })
 
   }
 
+  def getByAuthor(authorId: String): Future[List[Article]] = getByAuthor(BSONObjectID(authorId))
 
-  def getByUser(author: User): Future[List[Article]] = getByEmail(author.email)
+  def getByAuthor(author: User): Future[List[Article]] = getByAuthor(author.id.get)
 
   def getByEmail(email: String): Future[List[Article]] = {
     val query = BSONDocument("email" -> email)
-    val futureOption: Future[Option[BSONObjectID]] = UserRepository.getId(email)
-
-    val futureArticles: Future[List[Article]] = futureOption.flatMap {
-      case Some(userId) => {
-        print(userId)
-        println(email)
-        val queryId = BSONDocument("author_id" -> userId)
-        val futureList: Future[List[BSONDocument]] = collectionArticle.find(queryId).cursor[BSONDocument]().collect[List]()
-        val futureArticles: Future[List[Article]] = futureList.map(list =>
-          list.map { doc =>
-
-            articleReader.read(doc)
-
-          }
-        )
-        futureArticles
+    val futureOption: Future[Option[BSONDocument]] = collectionUser.find(query).cursor[BSONDocument]().headOption
+    val futureArticle = futureOption.flatMap(option =>
+      option match {
+        case None => Future.successful(List())
+        case Some(doc) => articleReader.read(doc)
+          getByAuthor(doc.getAs[BSONObjectID]("_id").get)
       }
-      case _ => Future {
-        List()
-      }
-    }
-    return futureArticles
-
+    )
+    futureArticle
   }
 
   def getAllArticles(): Future[List[Article]] = {
@@ -136,23 +149,23 @@ object ArticleRepository extends ArticleRepository {
     }
   }
 
-  def getId(article: Article): Future[Option[BSONObjectID]] = getId(article.title,article.creationDate)
-
-  def getId(title: String, date: DateTime): Future[Option[BSONObjectID]] = {
-    val creationDate = BSONDateTime(date.getMillis)
-    val query = BSONDocument(
-      "title" -> title,
-      "creationDate" -> creationDate
-    )
-    val futureOption: Future[Option[BSONDocument]] = collectionArticle.find(query).cursor[BSONDocument]().headOption
-
-    val futureId: Future[Option[BSONObjectID]] = futureOption.map {
-      case None => None
-      case Some(doc) => Some(doc.getAs[BSONObjectID]("_id").get)
-    }
-
-    return futureId
-  }
+  //  def getId(article: Article): Future[Option[BSONObjectID]] = getId(article.title, article.creationDate)
+  //
+  //  def getId(title: String, date: DateTime): Future[Option[BSONObjectID]] = {
+  //    val creationDate = BSONDateTime(date.getMillis)
+  //    val query = BSONDocument(
+  //      "title" -> title,
+  //      "creationDate" -> creationDate
+  //    )
+  //    val futureOption: Future[Option[BSONDocument]] = collectionArticle.find(query).cursor[BSONDocument]().headOption
+  //
+  //    val futureId: Future[Option[BSONObjectID]] = futureOption.map {
+  //      case None => None
+  //      case Some(doc) => Some(doc.getAs[BSONObjectID]("_id").get)
+  //    }
+  //
+  //    return futureId
+  //  }
 
   def getOneIdByTitle(title: String): Future[Option[BSONObjectID]] = {
     val query = BSONDocument("title" -> title)
@@ -165,7 +178,6 @@ object ArticleRepository extends ArticleRepository {
 
     return futureId
   }
-
 
 
 }
