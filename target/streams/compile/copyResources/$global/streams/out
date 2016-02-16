@@ -1,7 +1,0 @@
-[debug] Copy resource mappings: 
-[debug] 	(C:\Users\corpus\Desktop\khala\conf\application.conf,C:\Users\corpus\Desktop\khala\target\scala-2.11\classes\application.conf)
-[debug] 	(C:\Users\corpus\Desktop\khala\conf\logback.xml,C:\Users\corpus\Desktop\khala\target\scala-2.11\classes\logback.xml)
-[debug] 	(C:\Users\corpus\Desktop\khala\conf\messages.en,C:\Users\corpus\Desktop\khala\target\scala-2.11\classes\messages.en)
-[debug] 	(C:\Users\corpus\Desktop\khala\conf\messages.es,C:\Users\corpus\Desktop\khala\target\scala-2.11\classes\messages.es)
-[debug] 	(C:\Users\corpus\Desktop\khala\conf\messages.fr,C:\Users\corpus\Desktop\khala\target\scala-2.11\classes\messages.fr)
-[debug] 	(C:\Users\corpus\Desktop\khala\conf\routes,C:\Users\corpus\Desktop\khala\target\scala-2.11\classes\routes)
