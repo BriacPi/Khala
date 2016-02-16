@@ -61,7 +61,7 @@ object UserInfoMinimalRepository extends UserInfoMinimalRepository {
     }
     getByQuery(query)
   }
-  def getById(id: String) = getById(BSONObjectID(id))
+  def getById(id: String): Future[Option[UserInfoMinimal]] = getById(BSONObjectID(id))
 
 
 
