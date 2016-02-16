@@ -13,6 +13,7 @@ import play.api.libs.ws.WSClient
 import utils.silhouette.{AuthenticationController, AuthenticationEnvironment}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 /**
   * Created by corpus on 13/02/2016.
@@ -25,7 +26,7 @@ class UserProfileController @Inject()(ws: WSClient)(val env: AuthenticationEnvir
   }
 
   def getUserInfoMinimal(): Action[AnyContent] = SecuredAction.async { implicit request => {
-    def futureOptionUserInfoMinimal = UserInfoMinimalRepository.getByUser(request.identity)
+    def futureOptionUserInfoMinimal: Future[Option[UserInfoMinimal]] = UserInfoMinimalRepository.getByUser(request.identity)
     futureOptionUserInfoMinimal.map {
       case None => Ok(Json.obj("userInfoMinimal" -> ""))
       case Some(userInfoMinimal) => Ok(UserInfoMinimal.userInfoMinimalWriter.writes(userInfoMinimal))

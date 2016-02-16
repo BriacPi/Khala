@@ -41,18 +41,30 @@ object UserInfoMinimalRepository extends UserInfoMinimalRepository {
     }
   }
 
-  def getByEmail(email: String): Future[Option[UserInfoMinimal]] = {
-    val query = BSONDocument {
-      "email" -> email
-    }
+  def getByQuery(query:BSONDocument): Future[Option[UserInfoMinimal]] = {
     val futureOption: Future[Option[BSONDocument]] = collectionUser.find(query).cursor[BSONDocument]().headOption
     futureOption.map {
       case None => None
       case Some(doc) => Some(UserInfoMinimalRepository.userInfoMinimalReader.read(doc))
     }
   }
+  def getById(id: BSONObjectID): Future[Option[UserInfoMinimal]] = {
+    val query = BSONDocument {
+      "_id" -> id
+    }
+    getByQuery(query)
+
+  }
+  def getByEmail(email: String): Future[Option[UserInfoMinimal]] = {
+    val query = BSONDocument {
+      "email" -> email
+    }
+    getByQuery(query)
+  }
+  def getById(id: String) = getById(BSONObjectID(id))
+
+
 
   def getByUser(user: User): Future[Option[UserInfoMinimal]] = getByEmail(user.email)
-
 
 }
