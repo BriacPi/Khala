@@ -32,7 +32,7 @@ object LikeRepository extends LikeRepository {
   val collectionLike: BSONCollection = MongoDBProxy.db.collection("likes")
   val collectionArticle: BSONCollection = MongoDBProxy.db.collection("articles")
 
-  def createOrRemove(userId: BSONObjectID, articleId: BSONObjectID): Future[String] = {
+  def createOrRemove(userId: String, articleId: String): Future[String] = {
     val selector = BSONDocument("article_id" -> articleId)
     val query = selector.add(BSONDocument("user_id" -> userId))
     val command = Count(query)
@@ -70,7 +70,6 @@ object LikeRepository extends LikeRepository {
 
   }
 
-  def createOrRemove(userId: String, articleId: String): Future[String] = createOrRemove(BSONObjectID(userId), BSONObjectID(articleId))
 
   def createOrRemove(user: User, article: Article): Future[String] = createOrRemove(user.id.get, article.id.get)
 

@@ -33,12 +33,12 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
       "creationDate" -> ignored(DateTime.now()),
       "lastUpdate" -> ignored(DateTime.now()),
       "nbLikes" -> ignored(0),
-      "nbComments" -> ignored(0)
+      "nbComments" -> ignored(0),
+      "nbViews" -> ignored(0)
     )(Article.apply)(Article.unapply)
   )
 
   def writeArticle() = SecuredAction { implicit request =>
-    println(request.identity.id.getOrElse("What the fuck!"))
     Ok(views.html.content.writeArticle(newArticleForm))
   }
 

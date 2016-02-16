@@ -1,10 +1,10 @@
 package controllers
 
-import models.User
-import models.userProfile.UserInfoMinimal
+import models.{Article, User}
+import models.userProfile.{Influence, UserInfoMinimal}
 import play.api.libs.json.{Json, JsObject}
 import play.api.mvc.{AnyContent, Action}
-import repositories.userProfile.UserInfoMinimalRepository
+import repositories.userProfile.{InfluenceRepository, UserInfoMinimalRepository}
 import repositories.{LikeRepository, UserRepository, ArticleRepository}
 import javax.inject.Inject
 
@@ -33,6 +33,14 @@ class UserProfileController @Inject()(ws: WSClient)(val env: AuthenticationEnvir
     }
   }
   }
+//
+//  def getInfluence() = SecuredAction.async { implicit request => {
+//    def futureOptionInfluence: Future[List[Article]] = InfluenceRepository.getByUser(request.identity)
+//    futureOptionInfluence.map {
+//      case None => Ok(Json.obj("influence" -> ""))
+//      case Some(influence) =>  Ok(Influence.influenceWriter.writes(influence))
+//    }
+//  }}
 
 //  def getInfluence() = SecuredAction.async { implicit request => {
 //

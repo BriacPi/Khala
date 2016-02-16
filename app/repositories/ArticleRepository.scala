@@ -47,8 +47,9 @@ object ArticleRepository extends ArticleRepository {
       val lastUpdate = doc.getAs[BSONDateTime]("lastUpdate").map(dt => new DateTime(dt.value)).getOrElse(DateTime.now())
       val nbLikes = doc.getAs[Int]("nbLikes").getOrElse(0)
       val nbComments = doc.getAs[Int]("nbComments").getOrElse(0)
+      val nbViews = doc.getAs[Int]("nbViews").getOrElse(0)
 
-      Article(id, title, content, creationDate, lastUpdate, nbLikes, nbComments)
+      Article(id, title, content, creationDate, lastUpdate, nbLikes, nbComments,nbViews)
       //how to not to build them
 
     }
@@ -62,6 +63,7 @@ object ArticleRepository extends ArticleRepository {
         "content" -> a.content,
         "nbLikes" -> a.nbLikes,
         "nbComments" -> a.nbComments,
+        "nbViews" -> a.nbViews,
         "creationDate" -> BSONDateTime(a.creationDate.getMillis),
         "lastUpdate" -> BSONDateTime(a.lastUpdate.getMillis)
       )
@@ -112,7 +114,7 @@ object ArticleRepository extends ArticleRepository {
 
   //Article id!
   def getById(id: String): Future[Option[Article]] = {
-    val query = BSONDocument("_id" -> id)
+    val query = BSONDocument("_id" -> BSONObjectID(id))
     val futureOption: Future[Option[BSONDocument]] = collectionArticle.find(query).cursor[BSONDocument]().headOption
     val futureArticle: Future[Option[Article]] = futureOption.map(opt =>
       opt match {

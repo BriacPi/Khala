@@ -1,7 +1,9 @@
 package repositories.userProfile
 
-import models.{Article, User}
+import models.userProfile.Influence
+import models.User
 import reactivemongo.api.collections.bson.BSONCollection
+import reactivemongo.bson.{BSONObjectID, BSONDocument, BSONDocumentReader}
 import repositories.{ArticleRepository, LikeRepository, UserRepository}
 import utils.MongoDBProxy
 
@@ -23,7 +25,27 @@ object InfluenceRepository extends InfluenceRepository {
   val collectionArticle: BSONCollection = MongoDBProxy.db.collection("articles")
 
 
-  def getByUser(user: User): Future[List[Article]] = ArticleRepository.getByAuthor(user)
+
+  def getByUser(user: User) {
+
+    val query = BSONDocument("_id"->BSONObjectID(user.id.get))
+    val futureOptionUserDoc: Future[Option[BSONDocument]] = collectionUser.find(query).cursor[BSONDocument]().headOption
+    futureOptionUserDoc.flatMap( optionUser =>
+      optionUser match {
+      case None => Future.successful(None)
+      case Some(userDoc) => ArticleRepository.getByAuthor(user).map { list =>
+        Influence(
+          //mock
+          0,
+          userDoc.getAs[Int]("nbFollowers").get,
+          userDoc.getAs[Int]("nbFollowings").get,
+          0,
+          list
+        )
+      }
+    })
+
+  }
 
   //  def getByEmail(email: String) = {
   //    val futureOptionUser: Future[Option[User]] = UserRepository.getByEmail(email)

@@ -28,7 +28,7 @@ object UserRepository extends UserRepository {
 
       val optionId = doc.getAs[BSONObjectID]("_id") match {
         case None => None
-        case Some(id) => Some(id.toString().substring(14,38))
+        case Some(id) => Some(id.toString().substring(14, 38))
       }
       //check the implicit conversion
       User(optionId,
@@ -61,38 +61,34 @@ object UserRepository extends UserRepository {
     }
   }
 
-//
-//  def create(user: User): Unit = {
-//    val userDoc: BSONDocument = userWriter.write(user).add(BSONDocument("registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
-//
-//    // add or ++ methods create a new copy, deos not append.
-//    //    val newUserDoc = user.add("dateRegistration" -> BSONDateTime(DateTime.now().getMillis))
-//    val future: Future[WriteResult] = collectionUser.insert(userDoc)
-//    future.onComplete {
-//      case Failure(e) => throw e
-//      case Success(writeResult) =>
-//        println(s"successfully created user with result: $writeResult")
-//    }
-//  }
+  //
+  //  def create(user: User): Unit = {
+  //    val userDoc: BSONDocument = userWriter.write(user).add(BSONDocument("registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
+  //
+  //    // add or ++ methods create a new copy, deos not append.
+  //    //    val newUserDoc = user.add("dateRegistration" -> BSONDateTime(DateTime.now().getMillis))
+  //    val future: Future[WriteResult] = collectionUser.insert(userDoc)
+  //    future.onComplete {
+  //      case Failure(e) => throw e
+  //      case Success(writeResult) =>
+  //        println(s"successfully created user with result: $writeResult")
+  //    }
+  //  }
 
   def save(user: User): Future[User] = {
     val futureOptionExistingUser: Future[Option[User]] = getByEmail(user.email)
     user.id match {
 
-        //the user is in creation
+      //the user is in creation
       case None => {
         futureOptionExistingUser.flatMap { optionExistingUser =>
           optionExistingUser match {
 
 
             case None =>
-//              println("111111111111111111")
-              val newId: BSONObjectID = BSONObjectID.generate
-//              println(newId)
-//              println("22222222222222222222")
               val newUser: BSONDocument = userWriter.write(user).add(BSONDocument(
-              "_id" -> newId,
-              "registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
+                "_id" -> BSONObjectID.generate,
+                "registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
               val future = collectionUser.insert(newUser)
               val futureOptionUser = getByEmail(user.email)
               futureOptionUser.map { optionUser =>
@@ -111,7 +107,7 @@ object UserRepository extends UserRepository {
       }
       case Some(userId) => {
         val modifier = UserRepository.userWriter.write(user)
-        val selector = BSONDocument("_id" -> userId)
+        val selector = BSONDocument("_id" -> BSONObjectID(userId))
         futureOptionExistingUser.flatMap { optionExistingUser =>
 
           optionExistingUser match {
@@ -119,7 +115,7 @@ object UserRepository extends UserRepository {
             case None => collectionUser.update(selector, BSONDocument("$set" -> modifier), upsert = false)
               return Future.successful(user)
             case Some(existingUser) =>
-              if (existingUser.id == userId) {
+              if (existingUser.id.get == userId) {
                 collectionUser.update(selector, BSONDocument("$set" -> modifier), upsert = false)
                 return Future.successful(user)
               }
@@ -183,19 +179,4 @@ object UserRepository extends UserRepository {
     }
   }
 
-  //
-  //  def getId(email: String): Future[Option[BSONObjectID]] = {
-  //    val query = BSONDocument(
-  //      "email" -> email
-  //    )
-  //    val futureOption: Future[Option[BSONDocument]] = collectionUser.find(query).cursor[BSONDocument]().headOption
-  //
-  //    val futureId: Future[Option[BSONObjectID]] = futureOption.map {
-  //      case None => None
-  //      case Some(doc) => Some(doc.getAs[BSONObjectID]("_id").get)
-  //    }
-  //    return futureId
-  //  }
-  //
-  //  def getId(user: User): Future[Option[BSONObjectID]] = getId(user.email)
 }
