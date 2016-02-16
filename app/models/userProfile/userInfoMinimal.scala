@@ -48,7 +48,3 @@ object UserInfoMinimal {
   }
 
 }
-
-/**
-  * Created by corpus on 13/02/2016.
-  */
