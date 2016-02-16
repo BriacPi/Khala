@@ -18,9 +18,10 @@ import scala.concurrent.Future
 /**
   * Created by corpus on 13/02/2016.
   */
-class UserProfileController @Inject()(ws: WSClient)(val env: AuthenticationEnvironment, val messagesApi: MessagesApi) extends AuthenticationController with I18nSupport {
+class UserProfileController @Inject()(ws: WSClient)(val env: AuthenticationEnvironment, val messagesApi: MessagesApi)
+  extends AuthenticationController with I18nSupport {
 
-  def getUser() = SecuredAction{ implicit request => {
+  def getUser() = SecuredAction { implicit request => {
     Ok(User.userWriter.writes(request.identity))
   }
   }
@@ -33,21 +34,13 @@ class UserProfileController @Inject()(ws: WSClient)(val env: AuthenticationEnvir
     }
   }
   }
-//
-//  def getInfluence() = SecuredAction.async { implicit request => {
-//    def futureOptionInfluence: Future[List[Article]] = InfluenceRepository.getByUser(request.identity)
-//    futureOptionInfluence.map {
-//      case None => Ok(Json.obj("influence" -> ""))
-//      case Some(influence) =>  Ok(Influence.influenceWriter.writes(influence))
-//    }
-//  }}
 
-//  def getInfluence() = SecuredAction.async { implicit request => {
-//
-//    def futureOptionInfluence = UserInfoMinimalRepository.getByUser(request.identity)
-//    futureOptionUserInfoMinimal.map {
-//      case None => Ok(Json.obj("userInfoMinimal" -> ""))
-//      case Some(userInfoMinimal) => Ok(UserInfoMinimal.userInfoMinimalWriter.writes(userInfoMinimal))
-//    }
-//  }}
+  def getInfluence() = SecuredAction.async { implicit request => {
+    def futureOptionInfluence = InfluenceRepository.getByUser(request.identity)
+    futureOptionInfluence.map {
+      case None => Ok(Json.obj("influence" -> ""))
+      case Some(influence) => Ok(Influence.influenceWriter.writes(influence))
+    }
+  }
+  }
 }

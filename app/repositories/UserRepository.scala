@@ -61,20 +61,6 @@ object UserRepository extends UserRepository {
     }
   }
 
-  //
-  //  def create(user: User): Unit = {
-  //    val userDoc: BSONDocument = userWriter.write(user).add(BSONDocument("registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
-  //
-  //    // add or ++ methods create a new copy, deos not append.
-  //    //    val newUserDoc = user.add("dateRegistration" -> BSONDateTime(DateTime.now().getMillis))
-  //    val future: Future[WriteResult] = collectionUser.insert(userDoc)
-  //    future.onComplete {
-  //      case Failure(e) => throw e
-  //      case Success(writeResult) =>
-  //        println(s"successfully created user with result: $writeResult")
-  //    }
-  //  }
-
   def save(user: User): Future[User] = {
     val futureOptionExistingUser: Future[Option[User]] = getByEmail(user.email)
     user.id match {
@@ -83,11 +69,11 @@ object UserRepository extends UserRepository {
       case None => {
         futureOptionExistingUser.flatMap { optionExistingUser =>
           optionExistingUser match {
-
-
             case None =>
               val newUser: BSONDocument = userWriter.write(user).add(BSONDocument(
                 "_id" -> BSONObjectID.generate,
+                "nbFollowers" -> 0,
+                "nbFollowings" -> 0,
                 "registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
               val future = collectionUser.insert(newUser)
               val futureOptionUser = getByEmail(user.email)
@@ -164,8 +150,8 @@ object UserRepository extends UserRepository {
   }
 
   def getByName(name: String): Future[List[User]] = {
-    //IntelliJi doesn't solve BSONCollection type, has to state it
 
+    //IntelliJi doesn't solve BSONCollection type, has to state it
     val query = BSONDocument("$or" -> BSONDocument("firstName" -> name, "lastName" -> name))
 
     //value gives option of try from future list, 2 gets fot option and try then head

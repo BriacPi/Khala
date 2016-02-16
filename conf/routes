@@ -47,6 +47,6 @@ GET         /api/get-articles-by-author        controllers.ContentController.get
 #GET         /likeArticle                controllers.ContentController.articleToLike()
 
 #UserProfile Management
-GET         /api/user                          controllers.UserProfileController.getUser()
-GET         /api/user-info-minimal             controllers.UserProfileController.getUserInfoMinimal()
-#GET         /api/influence                    controllers.UserProfileController.getInfluence()
+GET         /api/get-user                          controllers.UserProfileController.getUser()
+GET         /api/get-user-info-minimal             controllers.UserProfileController.getUserInfoMinimal()
+GET         /api/get-influence                     controllers.UserProfileController.getInfluence()

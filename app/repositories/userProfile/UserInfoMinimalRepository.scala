@@ -26,7 +26,7 @@ object UserInfoMinimalRepository extends UserInfoMinimalRepository {
 
       val optionId = doc.getAs[BSONObjectID]("_id") match {
         case None => None
-        case Some(id) => Some(id.toString())
+        case Some(id) => Some(id.toString().substring(14,38))
       }
       //check the implicit conversion
       UserInfoMinimal(
@@ -34,9 +34,9 @@ object UserInfoMinimalRepository extends UserInfoMinimalRepository {
         doc.getAs[String]("firstName").getOrElse("error.noFirstName"),
         doc.getAs[String]("lastName").getOrElse("error.noLastName"),
         doc.getAs[String]("headline").getOrElse("error.noHeadline"),
-        "Generic photo URL" + optionId.getOrElse("Anonymous"),
-        "Generic Personal Information URL" + optionId.getOrElse("Anonymous"),
-        "Generic Payment Information URL" + optionId.getOrElse("Anonymous")
+        "Generic photo URL_" + optionId.getOrElse("Anonymous"),
+        "Generic Personal Information URL_" + optionId.getOrElse("Anonymous"),
+        "Generic Payment Information URL_" + optionId.getOrElse("Anonymous")
       )
     }
   }
@@ -48,22 +48,19 @@ object UserInfoMinimalRepository extends UserInfoMinimalRepository {
       case Some(doc) => Some(UserInfoMinimalRepository.userInfoMinimalReader.read(doc))
     }
   }
-  def getById(id: BSONObjectID): Future[Option[UserInfoMinimal]] = {
+  def getById(id: String): Future[Option[UserInfoMinimal]] = {
     val query = BSONDocument {
-      "_id" -> id
+      "_id" -> BSONObjectID(id)
     }
     getByQuery(query)
-
   }
+
   def getByEmail(email: String): Future[Option[UserInfoMinimal]] = {
     val query = BSONDocument {
       "email" -> email
     }
     getByQuery(query)
   }
-  def getById(id: String): Future[Option[UserInfoMinimal]] = getById(BSONObjectID(id))
-
-
 
   def getByUser(user: User): Future[Option[UserInfoMinimal]] = getByEmail(user.email)
 

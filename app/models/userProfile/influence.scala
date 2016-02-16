@@ -39,7 +39,7 @@ object Influence {
       "nbFollowers" -> influence.nbFollowers,
       "nbFollowings" -> influence.nbFollowings,
       "nbArticles" -> influence.nbArticles,
-      "lkesPerArticles" -> influence.listArticles.map {
+      "listArticles" -> influence.listArticles.map {
         article => Article.articleWriter.writes(article)
       }
     )

@@ -79,29 +79,44 @@ object ArticleRepository extends ArticleRepository {
   def save(author: User, article: Article): Future[Article] = {
     //user is supposed to be legitimate
     val query: BSONDocument = ArticleRepository.articleWriter.write(article)
+
     //Cannot user a generic article.id.getOrElse in a selector as it will force an id!
     article.id match {
+        //the article is in creation
       case None =>
         val creationDate = BSONDateTime(DateTime.now().getMillis())
-        val insertQuery = query.add(BSONDocument(
-          "_id" -> BSONObjectID.generate,
-          "creationDate" -> creationDate,
-          "lastUpdate" -> creationDate,
-          "nbModification" -> 0,
-          "author_id" -> author.id.get))
-        val future = collectionArticle.insert(insertQuery)
-        future.onComplete {
-          case Failure(e) => throw e
-          case Success(writeResult) =>
-            println(s"successfully inserted article with result: $writeResult")
+        val sameTitleSameAuthorQuery = BSONDocument("author_id" -> author.id.get,"title" -> article.title)
+        val futureOptionSameTitleArticle = collectionArticle.find(sameTitleSameAuthorQuery).cursor[BSONDocument]().
+          headOption
+        futureOptionSameTitleArticle.flatMap {
+          opt =>
+            opt match  {
+                // Here we force the title to be different for the same user, otherwise nothing is done
+              case Some(doc) => Future.successful(article)
+              case None =>
+                val insertQuery = query.add(BSONDocument(
+                  "_id" -> BSONObjectID.generate,
+                  "creationDate" -> creationDate,
+                  "lastUpdate" -> creationDate,
+                  "nbModification" -> 0,
+                  "author_id" -> author.id.get))
+                val future = collectionArticle.insert(insertQuery)
+                future.onComplete {
+                  case Failure(e) => throw e
+                  case Success(writeResult) =>
+                    println(s"successfully inserted article with result: $writeResult")
+                }
+                val futureOptionArticle: Future[Option[Article]] = getByAuthorAndTitle(author, article.title)
+                futureOptionArticle.map { optionArticle =>
+                  optionArticle match {
+                    case None => article
+                    case Some(newArticle) => newArticle
+                  }
+                }
+
+            }
         }
-        val futureOptionArticle = getByAuthorAndTitle(author, article.title)
-        futureOptionArticle.map { optionArticle =>
-          optionArticle match {
-            case None => article
-            case Some(newArticle) => newArticle
-          }
-        }
+
       case Some(articleId) =>
         val selector = BSONDocument("_id" -> BSONObjectID(articleId))
         val modifier = BSONDocument("$set" -> query.add("lastUpdate" -> BSONDateTime(DateTime.now().getMillis())),
@@ -194,24 +209,6 @@ object ArticleRepository extends ArticleRepository {
 
     }
   }
-
-  //  def getId(article: Article): Future[Option[BSONObjectID]] = getId(article.title, article.creationDate)
-  //
-  //  def getId(title: String, date: DateTime): Future[Option[BSONObjectID]] = {
-  //    val creationDate = BSONDateTime(date.getMillis)
-  //    val query = BSONDocument(
-  //      "title" -> title,
-  //      "creationDate" -> creationDate
-  //    )
-  //    val futureOption: Future[Option[BSONDocument]] = collectionArticle.find(query).cursor[BSONDocument]().headOption
-  //
-  //    val futureId: Future[Option[BSONObjectID]] = futureOption.map {
-  //      case None => None
-  //      case Some(doc) => Some(doc.getAs[BSONObjectID]("_id").get)
-  //    }
-  //
-  //    return futureId
-  //  }
 
   def getOneIdByTitle(title: String): Future[Option[BSONObjectID]] = {
     val query = BSONDocument("title" -> title)
