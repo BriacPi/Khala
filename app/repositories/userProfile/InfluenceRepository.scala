@@ -28,7 +28,7 @@ object InfluenceRepository extends InfluenceRepository {
     val futureListArticles: Future[List[Article]] = ArticleRepository.getByAuthor(user)
     val futureNbLikes: Future[List[List[Object]]] = futureListArticles.map {
       list => list.map {
-        article => List(List(article, LikeRepository.getNumberLikes(article)))
+        article => List(article, LikeRepository.getNumberLikes(article))
       }
     }
 
