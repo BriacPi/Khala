@@ -14,7 +14,8 @@ case class UserInfoMinimal(
                             firstName: String,
                             lastName: String,
                             headline: String,
-                            //Photo
+                          //By defaut point to the anonymous head.
+                            urlPhoto: String,
                             urlUserInfo: String,
                             urlPaymentInfo: String
 
@@ -25,9 +26,10 @@ object UserInfoMinimal {
 
   implicit val userInfoMinimal: Reads[UserInfoMinimal] = (
     (JsPath \ "email").read[String] and
-    (JsPath \ "firstName").read[String] and
+      (JsPath \ "firstName").read[String] and
       (JsPath \ "lastName").read[String] and
       (JsPath \ "headline").read[String] and
+      (JsPath \ "urlPhoto").read[String] and
       (JsPath \ "urlUserInfo").read[String] and
       (JsPath \ "urlPaymentInfo").read[String]
     ) (UserInfoMinimal.apply _)
@@ -38,6 +40,7 @@ object UserInfoMinimal {
       "firstName" -> userInfoMinimal.firstName,
       "lastName" -> userInfoMinimal.lastName,
       "headline" -> userInfoMinimal.headline,
+      "urlPhoto" -> userInfoMinimal.urlPhoto,
       "urlUserInfo" -> userInfoMinimal.urlUserInfo,
       "urlPaymentInfo" -> userInfoMinimal.urlPaymentInfo
     )

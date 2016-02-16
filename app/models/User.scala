@@ -46,7 +46,7 @@ object User {
       )
       user.id match {
         case None => json
-        case Some(id) => json.++(Json.obj("_id" -> id))
+        case Some(id) =>(Json.obj("_id" -> id)).++(json)
 
       }
     }
