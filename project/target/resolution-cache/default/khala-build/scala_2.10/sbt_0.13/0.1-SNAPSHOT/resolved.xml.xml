@@ -4,7 +4,7 @@
 		module="khala-build"
 		revision="0.1-SNAPSHOT"
 		status="integration"
-		publication="20160216152829"
+		publication="20160216164511"
 		e:sbtVersion="0.13" e:scalaVersion="2.10"
 	>
 		<description>
