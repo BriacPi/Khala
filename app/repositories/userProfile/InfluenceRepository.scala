@@ -23,28 +23,20 @@ object InfluenceRepository extends InfluenceRepository {
   val collectionArticle: BSONCollection = MongoDBProxy.db.collection("articles")
 
 
-  def getByUser(user: User) = {
+  def getByUser(user: User): Future[List[Article]] = ArticleRepository.getByAuthor(user)
 
-    val futureListArticles: Future[List[Article]] = ArticleRepository.getByAuthor(user)
-    val futureNbLikes: Future[List[List[Object]]] = futureListArticles.map {
-      list => list.map {
-        article => List(article, LikeRepository.getNumberLikes(article))
-      }
-    }
+  //  def getByEmail(email: String) = {
+  //    val futureOptionUser: Future[Option[User]] = UserRepository.getByEmail(email)
+  //    val futureListArticles: Future[List[Article]] = ArticleRepository.getByEmail(email)
+  ////    val futureNbFollowers
+  //
+  //    //check if we need to flatMap it, in which case they come in couples.
+  //    val futureNbLikes: Future[List[List[Object]]] = futureListArticles.map {
+  //      list => list.map {
+  //        article => List(article,LikeRepository.getNumberLikes(article))
+  //      }
+  //    }
+  //  }
+  //}
 
-  }
 }
-
-//  def getByEmail(email: String) = {
-//    val futureOptionUser: Future[Option[User]] = UserRepository.getByEmail(email)
-//    val futureListArticles: Future[List[Article]] = ArticleRepository.getByEmail(email)
-////    val futureNbFollowers
-//
-//    //check if we need to flatMap it, in which case they come in couples.
-//    val futureNbLikes: Future[List[List[Object]]] = futureListArticles.map {
-//      list => list.map {
-//        article => List(article,LikeRepository.getNumberLikes(article))
-//      }
-//    }
-//  }
-//}

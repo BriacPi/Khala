@@ -34,7 +34,7 @@ object ArticleRepository extends ArticleRepository {
       val id = doc.getAs[BSONObjectID]("_id") match {
         case None => None
         case Some(id) =>
-          Some(id.toString())
+          Some(id.toString().substring(14, 38))
       }
       val title = doc.getAs[String]("title").get
       val content = doc.getAs[String]("content").get
@@ -56,7 +56,7 @@ object ArticleRepository extends ArticleRepository {
 
   implicit object articleWriter extends BSONDocumentWriter[Article] {
     def write(a: Article): BSONDocument = {
-//      print("lolilol")
+      //      print("lolilol")
       def doc: BSONDocument = BSONDocument(
         "title" -> a.title,
         "content" -> a.content,
@@ -67,8 +67,8 @@ object ArticleRepository extends ArticleRepository {
       )
       a.id match {
         case None => doc
-        case Some(id) => val bsonID = BSONObjectID(id)
-          doc.add("_id" -> bsonID)
+        case Some(id) =>
+          doc.add("_id" -> BSONObjectID(id))
       }
     }
   }
@@ -81,7 +81,9 @@ object ArticleRepository extends ArticleRepository {
     article.id match {
       case None =>
         val creationDate = BSONDateTime(DateTime.now().getMillis())
-        val insertQuery = query.add(BSONDocument("creationDate" -> creationDate,
+        val insertQuery = query.add(BSONDocument(
+          "_id" -> BSONObjectID.generate,
+          "creationDate" -> creationDate,
           "lastUpdate" -> creationDate,
           "nbModification" -> 0,
           "author_id" -> author.id.get))
@@ -109,7 +111,7 @@ object ArticleRepository extends ArticleRepository {
   }
 
   //Article id!
-  def getById(id: BSONObjectID): Future[Option[Article]] = {
+  def getById(id: String): Future[Option[Article]] = {
     val query = BSONDocument("_id" -> id)
     val futureOption: Future[Option[BSONDocument]] = collectionArticle.find(query).cursor[BSONDocument]().headOption
     val futureArticle: Future[Option[Article]] = futureOption.map(opt =>
@@ -122,14 +124,13 @@ object ArticleRepository extends ArticleRepository {
     futureArticle
   }
 
-  def getById(id: String): Future[Option[Article]] = getById(BSONObjectID(id))
 
   //Author email!
 
 
-  def getByAuthor(authorId: BSONObjectID): Future[List[Article]] = {
+  def getByAuthor(authorId: String): Future[List[Article]] = {
     val query = BSONDocument("author_id" -> authorId)
-    val futureOption: Future[List[BSONDocument]] = collectionUser.find(query).cursor[BSONDocument]().collect[List]()
+    val futureOption: Future[List[BSONDocument]] = collectionArticle.find(query).cursor[BSONDocument]().collect[List]()
     futureOption.map(list =>
       list.map {
         doc => articleReader.read(doc)
@@ -137,7 +138,6 @@ object ArticleRepository extends ArticleRepository {
 
   }
 
-  def getByAuthor(authorId: String): Future[List[Article]] = getByAuthor(BSONObjectID(authorId))
 
   def getByAuthor(author: User): Future[List[Article]] = getByAuthor(author.id.get)
 
@@ -147,8 +147,7 @@ object ArticleRepository extends ArticleRepository {
     val futureArticle = futureOption.flatMap(option =>
       option match {
         case None => Future.successful(List())
-        case Some(doc) => articleReader.read(doc)
-          getByAuthor(doc.getAs[BSONObjectID]("_id").get)
+        case Some(userDoc) => getByAuthor(UserRepository.userReader.read(userDoc))
       }
     )
     futureArticle

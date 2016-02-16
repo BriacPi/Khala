@@ -57,7 +57,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
         else if (article.title.length() > 300) Future.successful(Ok(Json.obj("message" -> "error.titleTooLong")))
         else {
           ArticleRepository.save(request.identity, article)
-          Future.successful(Ok(Json.obj("message" -> "content.updateSuccessful")))
+          Future.successful(Ok(Json.obj("message" -> "article.updateSuccessful")))
         }
       }
 
@@ -94,19 +94,17 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   //  }
   //}
 
-  def likes(article: Article): Action[AnyContent] = SecuredAction.async { implicit request => {
-
+  def likesOrUnlikes(article: Article): Action[AnyContent] = SecuredAction.async { implicit request => {
     val articleFutureOptionId: Future[Option[Article]] = ArticleRepository.getById(article.id.get)
-    articleFutureOptionId.map {
-      case None => Ok(Json.obj("error.messages:" -> "error.noArticleFound.text"))
+    articleFutureOptionId.flatMap {
+      case None => Future.successful(Ok(Json.obj("error.messages:" -> "error.noArticleFound.text")))
       case Some(articleId) => {
-        LikeRepository.create(
-          request.identity.id.get, article.id.get)
-        Ok(Json.obj("messages:" -> "the user successfully liked the article"))
+        LikeRepository.createOrRemove(request.identity.id.get, article.id.get).map {
+          s => Ok(Json.obj("messages:" -> s))
+        }
       }
     }
   }
-
   }
 
   //  def getNbLikes(title: String) = Action.async { implicit request => {

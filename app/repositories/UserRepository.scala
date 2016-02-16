@@ -28,7 +28,7 @@ object UserRepository extends UserRepository {
 
       val optionId = doc.getAs[BSONObjectID]("_id") match {
         case None => None
-        case Some(id) => Some(id.toString())
+        case Some(id) => Some(id.toString().substring(14,38))
       }
       //check the implicit conversion
       User(optionId,
@@ -78,10 +78,21 @@ object UserRepository extends UserRepository {
   def save(user: User): Future[User] = {
     val futureOptionExistingUser: Future[Option[User]] = getByEmail(user.email)
     user.id match {
+
+        //the user is in creation
       case None => {
         futureOptionExistingUser.flatMap { optionExistingUser =>
           optionExistingUser match {
-            case None => val newUser: BSONDocument = userWriter.write(user).add(BSONDocument("registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
+
+
+            case None =>
+//              println("111111111111111111")
+              val newId: BSONObjectID = BSONObjectID.generate
+//              println(newId)
+//              println("22222222222222222222")
+              val newUser: BSONDocument = userWriter.write(user).add(BSONDocument(
+              "_id" -> newId,
+              "registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
               val future = collectionUser.insert(newUser)
               val futureOptionUser = getByEmail(user.email)
               futureOptionUser.map { optionUser =>
@@ -91,6 +102,8 @@ object UserRepository extends UserRepository {
                 }
               }
               Future.successful(user)
+
+            //the email is already in use
             case Some(existingUser) =>
               Future.failed(new Throwable("error.emailInUse.text"))
           }
