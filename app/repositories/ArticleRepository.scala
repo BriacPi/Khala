@@ -3,13 +3,16 @@ package repositories
 import java.io.Serializable
 import models.Article
 import play.api.libs.json.{JsObject, Json}
+import reactivemongo.api.commands.UpdateWriteResult
 import repositories._
-import scala.util.{Failure, Success}
+
 import models._
 import _root_.utils.MongoDBProxy
 import org.joda.time.DateTime
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.bson._
+
+import scala.util.{Failure, Success}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

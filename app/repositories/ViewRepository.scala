@@ -1,14 +1,15 @@
-package repositories.userProfile
+package repositories
 
-import models.{View, Article, User}
-import models.userProfile.UserInfoMinimal
+import _root_.utils.MongoDBProxy
+import models.{Article, View}
 import org.joda.time.DateTime
 import reactivemongo.api.collections.bson.BSONCollection
+import reactivemongo.api.commands.UpdateWriteResult
 import reactivemongo.bson._
-import _root_.utils.MongoDBProxy
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.{Success, Failure}
 
 /**
   * Created by corpus on 17/02/2016.
@@ -63,11 +64,32 @@ object ViewRepository extends ViewRepository {
     val futureOptionViews: Future[List[BSONDocument]] = collectionView.find(query).cursor[BSONDocument]().collect[List]()
     futureOptionViews.map {
       list => list.map {
-      viewDoc => viewReader.read(viewDoc)
+        viewDoc => viewReader.read(viewDoc)
       }
     }
 
   }
 
   def getByArticle(article: Article): Future[List[View]] = getByArticle(article.id.get)
+
+
+  def viewArticle(userId: String, articleId: String) = {
+    val selector = BSONDocument("_id" -> BSONObjectID(articleId))
+    val modifier = BSONDocument("$inc" -> BSONDocument("nbViews" -> 1))
+    val future1: Future[UpdateWriteResult] = collectionArticle.update(selector, modifier)
+
+    val newView = BSONDocument("user_id" -> userId, "article_id" -> articleId, "creationDate" -> BSONDateTime(DateTime.now().getMillis()))
+    val future2 = collectionView.insert(newView)
+
+    future1.onComplete {
+      case Failure(e) => throw e
+      case Success(writeResult) =>
+        println(s"successfully incremented the number of views: $writeResult")
+        future2.onComplete {
+          case Failure(e) => throw e
+          case Success(writeResult) =>
+            println(s"successfully inserted the new View: $writeResult")
+        }
+    }
+  }
 }

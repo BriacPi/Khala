@@ -4,8 +4,7 @@ import javax.inject.Inject
 
 import models.Article
 import org.joda.time.DateTime
-import repositories.userProfile.ViewRepository
-import repositories.{LikeRepository, UserRepository, ArticleRepository}
+import repositories.{ViewRepository, LikeRepository, UserRepository, ArticleRepository}
 
 import play.api.data.Form
 import play.api.data.Forms._
@@ -43,11 +42,14 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   )
 
   def article(articleID: String) = UserAwareAction { implicit request =>
+    val fakeUserId = ""
+    ViewRepository.viewArticle(fakeUserId, articleID)
     Ok(views.html.content.article(articleID))
 
   }
 
   def writeArticle() = SecuredAction { implicit request =>
+
     Ok(views.html.content.writeArticle(newArticleForm))
   }
 
