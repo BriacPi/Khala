@@ -38,18 +38,16 @@ object ArticleRepository extends ArticleRepository {
       }
       val title = doc.getAs[String]("title").get
       val content = doc.getAs[String]("content").get
-      //
-      //      val q = BSONDocument("_id" -> doc.getAs[BSONObjectID]("userId").get)
-      //      val userDoc = collection.find(q).cursor[BSONDocument]().collect[List]().value.get.get.head
-      //      val author = UserRepository.userReader.read(userDoc)
-
+      val tag1= doc.getAs[String]("tag1").getOrElse("")
+      val tag2 = doc.getAs[String]("tag2")
       val creationDate = doc.getAs[BSONDateTime]("creationDate").map(dt => new DateTime(dt.value)).getOrElse(DateTime.now())
       val lastUpdate = doc.getAs[BSONDateTime]("lastUpdate").map(dt => new DateTime(dt.value)).getOrElse(DateTime.now())
       val nbLikes = doc.getAs[Int]("nbLikes").getOrElse(0)
       val nbComments = doc.getAs[Int]("nbComments").getOrElse(0)
       val nbViews = doc.getAs[Int]("nbViews").getOrElse(0)
 
-      Article(id, title, content, creationDate, lastUpdate, nbLikes, nbComments,nbViews)
+
+      Article(id, title, content, tag1,tag2,creationDate, lastUpdate, nbLikes, nbComments, nbViews)
       //how to not to build them
 
     }
@@ -57,7 +55,6 @@ object ArticleRepository extends ArticleRepository {
 
   implicit object articleWriter extends BSONDocumentWriter[Article] {
     def write(a: Article): BSONDocument = {
-      //      print("lolilol")
       def doc: BSONDocument = BSONDocument(
         "title" -> a.title,
         "content" -> a.content,
@@ -65,12 +62,21 @@ object ArticleRepository extends ArticleRepository {
         "nbComments" -> a.nbComments,
         "nbViews" -> a.nbViews,
         "creationDate" -> BSONDateTime(a.creationDate.getMillis),
-        "lastUpdate" -> BSONDateTime(a.lastUpdate.getMillis)
+        "lastUpdate" -> BSONDateTime(a.lastUpdate.getMillis),
+        "tag1" -> a.tag1
       )
       a.id match {
-        case None => doc
+        case None => {
+          a.tag2 match {
+            case None => doc
+            case Some(tag2) => doc.add("tag2" -> a.tag2)
+          }
+        }
         case Some(id) =>
-          doc.add("_id" -> BSONObjectID(id))
+          a.tag2 match {
+            case None => doc.add("_id" -> id)
+            case Some(tag2) => doc.add("_id" -> id,"tag2" -> a.tag2)
+          }
       }
     }
   }
@@ -82,16 +88,16 @@ object ArticleRepository extends ArticleRepository {
 
     //Cannot user a generic article.id.getOrElse in a selector as it will force an id!
     article.id match {
-        //the article is in creation
+      //the article is in creation
       case None =>
         val creationDate = BSONDateTime(DateTime.now().getMillis())
-        val sameTitleSameAuthorQuery = BSONDocument("author_id" -> author.id.get,"title" -> article.title)
+        val sameTitleSameAuthorQuery = BSONDocument("author_id" -> author.id.get, "title" -> article.title)
         val futureOptionSameTitleArticle = collectionArticle.find(sameTitleSameAuthorQuery).cursor[BSONDocument]().
           headOption
         futureOptionSameTitleArticle.flatMap {
           opt =>
-            opt match  {
-                // Here we force the title to be different for the same user, otherwise nothing is done
+            opt match {
+              // Here we force the title to be different for the same user, otherwise nothing is done
               case Some(doc) => Future.successful(article)
               case None =>
                 val insertQuery = query.add(BSONDocument(
@@ -222,9 +228,25 @@ object ArticleRepository extends ArticleRepository {
     return futureId
   }
 
+  def getTopArticle(user: User, sortQuery: BSONDocument): Future[Option[Article]] = {
+    val query = BSONDocument("author_id" -> user.id.get)
+    val futureOptionTopArticle: Future[Option[BSONDocument]] = collectionArticle.find(query).
+      sort(BSONDocument("nbViews" -> -1)).cursor[BSONDocument]().headOption
+    futureOptionTopArticle.map {
+      optionTopArticle => optionTopArticle match {
+        case None => None
+        case Some(topArticleDoc) => Some(articleReader.read(topArticleDoc))
+      }
+    }
+  }
+
+  def getTopArticleByViews(user: User): Future[Option[Article]] = {
+    val sortQuery = BSONDocument("nbViews" -> -1)
+    getTopArticle(user, sortQuery)
+  }
+
 
 }
-
 
 
 

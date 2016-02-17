@@ -34,13 +34,13 @@ class UserProfileController @Inject()(ws: WSClient)(val env: AuthenticationEnvir
     }
   }
   }
-
-  def getInfluence() = SecuredAction.async { implicit request => {
-    def futureOptionInfluence = InfluenceRepository.getByUser(request.identity)
-    futureOptionInfluence.map {
-      case None => Ok(Json.obj("influence" -> ""))
-      case Some(influence) => Ok(Influence.influenceWriter.writes(influence))
-    }
-  }
-  }
+//
+//  def getInfluence() = SecuredAction.async { implicit request => {
+//    def futureOptionInfluence = InfluenceRepository.getByUser(request.identity)
+//    futureOptionInfluence.map {
+//      case None => Ok(Json.obj("influence" -> ""))
+//      case Some(influence) => Ok(Influence.influenceWriter.writes(influence))
+//    }
+//  }
+//  }
 }

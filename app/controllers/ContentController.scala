@@ -4,6 +4,7 @@ import javax.inject.Inject
 
 import models.Article
 import org.joda.time.DateTime
+import repositories.userProfile.ViewRepository
 import repositories.{LikeRepository, UserRepository, ArticleRepository}
 
 import play.api.data.Form
@@ -30,6 +31,8 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
       "id" -> ignored(None: Option[String]),
       "title" -> nonEmptyText,
       "content" -> nonEmptyText,
+      "tag1" -> nonEmptyText,
+      "tag2" -> optional(text),
       "creationDate" -> ignored(DateTime.now()),
       "lastUpdate" -> ignored(DateTime.now()),
       "nbLikes" -> ignored(0),
@@ -67,7 +70,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
   def getAllArticles() = Action.async { implicit request => {
     val futureArticles: Future[List[Article]] = ArticleRepository.getAllArticles()
-    val futureJson: Future[List[JsValue]] = futureArticles.map { list => list.map {
+    val futureJson: Future[List[JsValue]] = futureArticles.map { list => Article.shorten(list).map {
       article => Article.articleWriter.writes(article)
     }
     }
@@ -88,6 +91,22 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
     }
   }
   }
+
+  def getTopArticleByViews(): Action[AnyContent] = SecuredAction.async { implicit request => {
+    val futureOptionTopArticle: Future[Option[Article]] = ArticleRepository.getTopArticleByViews(request.identity)
+    futureOptionTopArticle.map {
+      optionTopArticle => optionTopArticle match {
+        case None => Ok(Json.obj("topArticle" -> ""))
+        case Some(topArticle) => Ok(Article.articleWriter.writes(topArticle))
+      }
+    }
+  }
+  }
+//
+//  def getViewsByArticle(article: Article) = Action.async() { implicit request => {
+//    ViewRepository.getByArticle(article)
+//  }
+//  }
 
   //  def articleToLike() = SecuredAction { implicit request => {
   //    Ok(views.html.demo(articleTitleForm))
