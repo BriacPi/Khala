@@ -6,13 +6,11 @@ import {ArticleService} from './article.service.ts';
     selector: 'my-app',
     template: `
     <div class="row">
-        <div class="col-sm-2"></div>
-        <div class="col-sm-8">
+        <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
             <article-list>
                 Top Articles
             </article-list>
         </div>
-        <div class="col-sm-2"></div>
     </div>
     `,
     styleUrls: ['js/articles/component.css'],
