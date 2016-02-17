@@ -42,11 +42,11 @@ GET         /common/img/*file                  controllers.MyAssets.commonImg(pa
 #Content management
 GET         /write-article                     controllers.ContentController.writeArticle()
 POST        /api/save-article                  controllers.ContentController.saveArticle()
-GET         /api/get-all-articles              controllers.ContentController.getAllArticles()
-GET         /api/get-articles-by-author        controllers.ContentController.getArticlesByAuthor()
+GET         /api/all-articles              controllers.ContentController.getAllArticles()
+GET         /api/articles-by-author        controllers.ContentController.getArticlesByAuthor()
 #GET         /likeArticle                controllers.ContentController.articleToLike()
 
 #UserProfile Management
-GET         /api/get-user                          controllers.UserProfileController.getUser()
-GET         /api/get-user-info-minimal             controllers.UserProfileController.getUserInfoMinimal()
-GET         /api/get-influence                     controllers.UserProfileController.getInfluence()
+GET         /api/user                          controllers.UserProfileController.getUser()
+GET         /api/user-info-minimal             controllers.UserProfileController.getUserInfoMinimal()
+GET         /api/influence                     controllers.UserProfileController.getInfluence()
