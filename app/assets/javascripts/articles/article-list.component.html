@@ -1,48 +1,13 @@
 <div   *ngFor="#article of articles"  >
-        <div >
-            <div>
-                <div >
-                    <a href="https://medium.com/@PaulCantor" >
-                        <img src="https://cdn-images-1.medium.com/fit/c/36/36/1*guuliiJ_lHbady7Y0OFh-g.jpeg"  alt="Go to the profile of Paul Cantor">
-                    </a>
-                    </div>
-                    <div>
-                    <a href="https://medium.com/@PaulCantor" >Paul Cantor</a>
-                    <span >
-                        {{article.creationDate|date}}
-                        <span >4 min read</span>
-                    </span>
-                </div>
-            </div>
-        </div>
-        <div >
-            <div >
-                <a href="/article/id/{{article._id}}">
-                    <div >
-                        <section >
-                                <div>
-                                    <h3>{{article.title}}</h3>
-                                    <p >{{article.content}}</p>
-                                </div>
-                        </section>
-                    </div>
-                </a>
-            </div>
-            <div >
-                <div >
-                    <a href="/article/id/{{article._id}}">Read more…"></a>
-                </div>
-                <div>
-                    <div >
-                        <button >
-                        </button>
-                    </div>
-                    <div >
-                            <a >{{article.nbComments}} responses</a>
-                            <button>
-                            </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="post-preview">
+        <a href="/article/id/{{article._id}}">
+            <h2 class="post-title">
+                {{article.title}}
+            </h2>
+            <h3 class="post-subtitle">
+                {{article.content}}
+            </h3>
+        </a>
+        <p class="post-meta">Posted by <a href="#">Start Bootstrap</a> on {{article.creationDate|date}}</p>
+    </div>
 </div>
