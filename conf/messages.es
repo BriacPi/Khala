@@ -126,9 +126,11 @@ mail.sign=Equipo MyWeb
 
 ################################################################################################
 #CONTENT
-
-content.updateSuccessful=
+default.profile.large=/img/profile_default_large
+article.updateSuccessful=
 article.title=
 article.content=
+article.tag1 =
+article.tag2 =
 like.add.success =
 like.remove.success =

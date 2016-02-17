@@ -34,6 +34,7 @@ class UserProfileController @Inject()(ws: WSClient)(val env: AuthenticationEnvir
     }
   }
   }
+
 //
 //  def getInfluence() = SecuredAction.async { implicit request => {
 //    def futureOptionInfluence = InfluenceRepository.getByUser(request.identity)

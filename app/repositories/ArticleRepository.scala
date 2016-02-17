@@ -36,7 +36,7 @@ object ArticleRepository extends ArticleRepository {
           Some(id.toString().substring(14, 38))
       }
       val title = doc.getAs[String]("title").get
-      val content = doc.getAs[String]("content").get
+      val content = doc.getAs[String]("content").getOrElse("content.notFound")
       val tag1 = doc.getAs[String]("tag1").getOrElse("")
       val tag2 = doc.getAs[String]("tag2")
       val creationDate = doc.getAs[BSONDateTime]("creationDate").map(dt => new DateTime(dt.value)).getOrElse(DateTime.now())
@@ -244,23 +244,27 @@ object ArticleRepository extends ArticleRepository {
     getTopArticle(user, sortQuery)
   }
 
-  def getAuthor(articleId: String): Future[JsObject] = {
-    val query = BSONDocument("author_id" -> BSONObjectID(articleId))
+  def getAuthorMini(articleId: String): Future[JsObject] = {
+    val query = BSONDocument("_id" -> BSONObjectID(articleId))
     val futureOptionArticle: Future[Option[BSONDocument]] = collectionArticle.find(query).
       cursor[BSONDocument]().headOption
     futureOptionArticle.flatMap {
       optionArticle => optionArticle match {
         case None => Future.successful(Json.obj("firstName" -> "",
-          "lastName" -> ""))
+          "lastName" -> "",
+          "urlPhotoProfile" -> "/img/profile_default_large"))
         case Some(article) =>
           val authorId = article.getAs[String]("author_id").get
           val queryUser = BSONDocument("_id" -> BSONObjectID(authorId))
           collectionUser.find(queryUser).cursor[BSONDocument]().headOption.map {
             optionUser => optionUser match {
               case None => Json.obj("firstName" -> "",
-                "lastName" -> "")
+                "lastName" -> "",
+                "urlPhotoProfile" -> "/img/profile_default_large"
+              )
               case Some(user) => Json.obj("firstName" -> (user.getAs[String]("firstName").get),
-                "lastName" -> (user.getAs[String]("lastName").get))
+                "lastName" -> (user.getAs[String]("lastName").get),
+                "urlPhotoProfile" -> user.getAs[String]("urlPhotoProfile").get)
             }
           }
       }
@@ -268,7 +272,30 @@ object ArticleRepository extends ArticleRepository {
     }
   }
 
-  def getAuthor(article: Article): Future[JsObject] = getAuthor(article.id.get)
+  def getAuthorMini(article: Article): Future[JsObject] = getAuthorMini(article.id.get)
+
+
+  def getAuthor(articleId:String): Future[Option[JsObject]] = {
+    val query = BSONDocument("_id" -> BSONObjectID(articleId))
+    val futureOptionArticle: Future[Option[BSONDocument]] = collectionArticle.find(query).
+      cursor[BSONDocument]().headOption
+    futureOptionArticle.flatMap {
+      optionArticle => optionArticle match {
+        case None => Future.successful(None)
+        case Some(article) =>
+          val authorId = article.getAs[String]("author_id").get
+          val queryUser = BSONDocument("_id" -> BSONObjectID(authorId))
+          collectionUser.find(queryUser).cursor[BSONDocument]().headOption.map {
+            optionUser => optionUser match {
+              case None => None
+              case Some(user) => Some(User.userWriter.writes(UserRepository.userReader.read(user)))
+            }
+          }
+      }
+
+    }
+  }
+
 }
 
 

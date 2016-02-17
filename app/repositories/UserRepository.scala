@@ -74,6 +74,7 @@ object UserRepository extends UserRepository {
                 "_id" -> BSONObjectID.generate,
                 "nbFollowers" -> 0,
                 "nbFollowings" -> 0,
+                "urlPhotoProfile" -> "/img/profile_default_large",
                 "registrationDate" -> BSONDateTime(DateTime.now().getMillis())))
               val future = collectionUser.insert(newUser)
               val futureOptionUser = getByEmail(user.email)

@@ -108,10 +108,22 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   }
   }
 
+  def getAuthorMini(articleId: String): Action[AnyContent] = UserAwareAction.async {
+    implicit request => {
+      ArticleRepository.getAuthorMini(articleId).map {
+        json => Ok(json)
+      }
+    }
+  }
+
   def getAuthor(articleId: String): Action[AnyContent] = UserAwareAction.async {
     implicit request => {
-      ArticleRepository.getAuthor(articleId).map{
-        json => Ok(json)
+      ArticleRepository.getAuthor(articleId).map {
+        optionJson => optionJson match {
+          case None => Ok(Json.obj("user" -> "user.notFound"))
+          case Some(jsonAuthor) => Ok(jsonAuthor)
+        }
+
       }
     }
   }

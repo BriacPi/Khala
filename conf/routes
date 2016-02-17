@@ -3,59 +3,60 @@
 # ~~~~
 
 # Authentication pages
-GET         /signup                          controllers.Auth.startSignUp
-POST        /signup                          controllers.Auth.handleStartSignUp
-GET         /signup/:token                   controllers.Auth.signUp(token: String)
-GET         /signin                          controllers.Auth.signIn
-POST        /authenticate                    controllers.Auth.authenticate
-GET         /signout                         controllers.Auth.signOut
-GET         /reset-password                  controllers.Auth.forgotPassword
-POST        /reset-password                  controllers.Auth.handleForgotPassword
-GET         /reset-password/:token           controllers.Auth.resetPassword(token: String)
-POST        /reset-password/:token           controllers.Auth.handleResetPassword(token: String)
-GET         /change-password                 controllers.Auth.changePassword
-POST        /change-password                 controllers.Auth.handleChangePassword
-GET         /denied                          controllers.Auth.accessDenied
+GET         /signup                                controllers.Auth.startSignUp
+POST        /signup                                controllers.Auth.handleStartSignUp
+GET         /signup/:token                         controllers.Auth.signUp(token: String)
+GET         /signin                                controllers.Auth.signIn
+POST        /authenticate                          controllers.Auth.authenticate
+GET         /signout                               controllers.Auth.signOut
+GET         /reset-password                        controllers.Auth.forgotPassword
+POST        /reset-password                        controllers.Auth.handleForgotPassword
+GET         /reset-password/:token                 controllers.Auth.resetPassword(token: String)
+POST        /reset-password/:token                 controllers.Auth.handleResetPassword(token: String)
+GET         /change-password                       controllers.Auth.changePassword
+POST        /change-password                       controllers.Auth.handleChangePassword
+GET         /denied                                controllers.Auth.accessDenied
 
 
 # Home page
-GET         /                                controllers.Application.index
-GET         /settings                        controllers.Application.settings
-GET         /myaccount                       controllers.Application.myAccount
-GET         /myprofile                       controllers.Application.myProfile
+GET         /                                      controllers.Application.index
+GET         /settings                              controllers.Application.settings
+GET         /myaccount                             controllers.Application.myAccount
+GET         /myprofile                             controllers.Application.myProfile
 
-GET         /lang/$lang<(en|es)>             controllers.Application.selectLang(lang: String)
+GET         /lang/$lang<(en|es)>                   controllers.Application.selectLang(lang: String)
 
 
 # Map static resources from the /public folder to the /assets URL path
-GET         /public/*file                    controllers.MyAssets.public(path="/public", file: Asset)
-GET         /lib/*file                       controllers.MyAssets.lib(path="/public/lib", file: Asset)
-GET         /javascripts/*file               controllers.MyAssets.javascripts(path="/public/javascripts", file: Asset)
-GET         /css/*file                       controllers.MyAssets.css(path="/public/stylesheets", file: Asset)
-GET         /js/*file                        controllers.MyAssets.js(path="/public/javascripts", file: Asset)
-GET         /img/*file                       controllers.MyAssets.img(path="/public/images", file: Asset)
-GET         /common/css/*file                controllers.MyAssets.commonCss(path="/public/lib/common/stylesheets", file: Asset)
-GET         /common/js/*file                 controllers.MyAssets.commonJs(path="/public/lib/common/javascripts", file: Asset)
-GET         /common/img/*file                controllers.MyAssets.commonImg(path="/public/lib/common/images", file: Asset)
+GET         /public/*file                          controllers.MyAssets.public(path="/public", file: Asset)
+GET         /lib/*file                             controllers.MyAssets.lib(path="/public/lib", file: Asset)
+GET         /javascripts/*file                     controllers.MyAssets.javascripts(path="/public/javascripts", file: Asset)
+GET         /css/*file                             controllers.MyAssets.css(path="/public/stylesheets", file: Asset)
+GET         /js/*file                              controllers.MyAssets.js(path="/public/javascripts", file: Asset)
+GET         /img/*file                             controllers.MyAssets.img(path="/public/images", file: Asset)
+GET         /common/css/*file                      controllers.MyAssets.commonCss(path="/public/lib/common/stylesheets", file: Asset)
+GET         /common/js/*file                       controllers.MyAssets.commonJs(path="/public/lib/common/javascripts", file: Asset)
+GET         /common/img/*file                      controllers.MyAssets.commonImg(path="/public/lib/common/images", file: Asset)
 
 
 #Content Management
-GET         /write-article                   controllers.ContentController.writeArticle()
-POST        /api/save-article                controllers.ContentController.saveArticle()
-GET         /api/all-articles                controllers.ContentController.getAllArticles()
-GET         /api/articles-by-author          controllers.ContentController.getArticlesByAuthor()
-GET         /api/top-article-by-views        controllers.ContentController.getTopArticleByViews()
+GET         /write-article                         controllers.ContentController.writeArticle()
+POST        /api/save-article                      controllers.ContentController.saveArticle()
+GET         /api/all-articles                      controllers.ContentController.getAllArticles()
+GET         /api/articles-by-author                controllers.ContentController.getArticlesByAuthor()
+GET         /api/top-article-by-views              controllers.ContentController.getTopArticleByViews()
 #GET         /likeArticle                controllers.ContentController.articleToLike()
-GET         /api/hasliked/:articleId         controllers.ContentController.hasLiked(articleId:String)
-GET         /api/getAuthor/:articleId        controllers.ContentController.getAuthor(articleId)
+GET         /api/has-liked/:articleId              controllers.ContentController.hasLiked(articleId:String)
+GET         /api/get-author-mini/:articleId        controllers.ContentController.getAuthorMini(articleId)
+GET         /api/get-author/:articleId             controllers.ContentController.getAuthor(articleId)
 
-GET         /article/id/:articleId           controllers.ContentController.article(articleId:String)
+GET         /article/id/:articleId                 controllers.ContentController.article(articleId:String)
 
 
 #UserProfile Management
-GET         /api/user                        controllers.UserProfileController.getUser()
-GET         /api/user-info-minimal           controllers.UserProfileController.getUserInfoMinimal()
+GET         /api/user                              controllers.UserProfileController.getUser()
+GET         /api/user-info-minimal                 controllers.UserProfileController.getUserInfoMinimal()
 #GET         /api/influence                 controllers.UserProfileController.getInfluence()
 
 #Settings Management
-POST        /api/upload                      controllers.SettingsController.upload()
+POST        /api/upload                            controllers.SettingsController.upload()

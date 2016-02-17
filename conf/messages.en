@@ -127,9 +127,11 @@ mail.sign=Team MyWeb
 
 ################################################################################################
 #CONTENT
-
+default.profile.large=/img/profile_default_large
 article.updateSuccessful = Perfect! Your article just got even better!
 article.title = Here the title of your masterpiece!
 article.content = Pour your thoughts here.
+article.tag1 = What theme describes best your article.
+article.tag2 = A secondary tag that helps the first tag to describe your article
 like.add.success = You just liked this article.
 like.remove.success = Hum, I have to think a bit more before liking it.
