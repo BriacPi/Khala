@@ -1,0 +1,13 @@
+@(articleID:String)(implicit user: Option[User], messages: Messages)
+
+@import views.html.tags.auth._
+@import controllers.routes
+
+@views.html.templates.default(title = "Article", user, tab = "article") {
+
+
+
+  <h1>@Messages("article") </h1>
+
+
+  }

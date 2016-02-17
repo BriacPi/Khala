@@ -46,6 +46,7 @@ GET         /api/all-articles                controllers.ContentController.getAl
 GET         /api/articles-by-author          controllers.ContentController.getArticlesByAuthor()
 GET         /api/top-article-by-views        controllers.ContentController.getTopArticleByViews()
 #GET         /likeArticle                controllers.ContentController.articleToLike()
+GET         /article/id/:articleID                    controllers.ContentController.article(articleID:String)
 
 #UserProfile Management
 GET         /api/user                        controllers.UserProfileController.getUser()

@@ -3,15 +3,55 @@
 @import views.html.tags.auth._
 @import controllers.routes
 
-@servicesString(user: User) = @{ user.services match {
-	case Nil => "none"
-	case head :: Nil => head
-	case init :+ last => init.mkString(", ") + " " + Messages("and") + " " + last
-}}
-
 @views.html.templates.default(title = "Home", loggedUser, tab = "index") {
-		
+
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+			<!-- 1. Load libraries -->
+			<!-- IE required polyfills, in this exact order -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.19.20/system-polyfills.js"></script>
+
+		<script src="https://code.angularjs.org/2.0.0-beta.6/angular2-polyfills.js"></script>
+		<script src="https://code.angularjs.org/tools/system.js"></script>
+		<script src="https://code.angularjs.org/tools/typescript.js"></script>
+		<script src="https://code.angularjs.org/2.0.0-beta.6/Rx.js"></script>
+		<script src="https://code.angularjs.org/2.0.0-beta.6/angular2.dev.js"></script>
+		<script src="https://code.angularjs.org/2.0.0-beta.6/http.dev.js"></script>
+		<script>
+
+				System.config({
+					//use typescript for compilation
+					transpiler: 'typescript',
+					//typescript compiler options
+					typescriptOptions: {
+						emitDecoratorMetadata: true
+					},
+
+					//packages defines our app package
+					packages: {
+						articles: {
+							main: './main.ts',
+							defaultExtension: 'ts'
+						}
+					}
+				});
+				System.import('/js/articles/main.ts')
+						.catch(console.error.bind(console));
+		</script>
+			<!-- 2. Configure SystemJS -->
 
 
-	}
+
+	</head>
+
+		<!-- 3. Display the application -->
+	<body>
+		<my-app>Loading...</my-app>
+	</body>
+
+
+
+
+
+}
 	

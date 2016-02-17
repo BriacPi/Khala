@@ -1,18 +1,18 @@
 import {Injectable}     from 'angular2/core';
 import {Http, Response} from 'angular2/http';
-import {UserInfo}       from './user-info.ts';
+import {Article}        from './article.ts';
 import {Observable}     from 'rxjs/Observable';
 
 
 @Injectable()
-export class UserInfoService {
+export class ArticleService {
     constructor (private http: Http) {}
 
-    private _userInfoUrl = '/api/user-info-minimal';
+    private _allArticlesUrl = '/api/all-articles';
 
-    getUserInfo () {
-        return this.http.get(this._userInfoUrl)
-            .map(res => <UserInfo[]> res.json())
+    getAllArticles () {
+        return this.http.get(this._allArticlesUrl)
+            .map(res => <Article[]> res.json().articles)
             .do(data => console.log(data)) // eyeball results in the console
             .catch(this.handleError);
     }

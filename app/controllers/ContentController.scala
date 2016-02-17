@@ -40,6 +40,10 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
       "nbViews" -> ignored(0)
     )(Article.apply)(Article.unapply)
   )
+  def article(articleID:String) = UserAwareAction{implicit request =>
+    Ok(views.html.content.article(articleID))
+
+  }
 
   def writeArticle() = SecuredAction { implicit request =>
     Ok(views.html.content.writeArticle(newArticleForm))
