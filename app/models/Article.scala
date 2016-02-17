@@ -73,7 +73,7 @@ object Article {
   }
 
 
-  def shorten(article: Article): Article = article.copy(content = article.content.substring(0, 140) + "...")
+  def shorten(article: Article): Article = article.copy(content = article.content.take(140) + "...")
 
 
   def shorten(listArticle: List[Article]): List[Article] = {
