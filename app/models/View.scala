@@ -19,7 +19,7 @@ case class View(
 object View {
 
 
-  implicit val userReader: Reads[View] = (
+  implicit val viewReader: Reads[View] = (
     //readNullable manages option
     (JsPath \ "_id").readNullable[String] and
       (JsPath \ "user_id").read[String] and
@@ -27,7 +27,7 @@ object View {
       (JsPath \ "creationDate").read[DateTime]
     ) (View.apply _)
 
-  implicit val userWriter = new Writes[View] {
+  implicit val viewWriter = new Writes[View] {
     def writes(view: View): JsObject = {
       def json = Json.obj(
         "user_id" -> view.user_id,

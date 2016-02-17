@@ -1,6 +1,6 @@
 package models.userProfile
 
-import models.{Article, Tag}
+import models.{Article, Tagging}
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
@@ -16,7 +16,7 @@ case class Influence(
                       nbArticles: Int,
                       nbViews: Int,
                       //at most three
-                     bestTags: List[Tag]
+                     bestTags: List[Tagging]
                     )
 
 //
