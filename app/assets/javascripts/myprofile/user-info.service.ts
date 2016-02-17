@@ -8,7 +8,7 @@ import {Observable}     from 'rxjs/Observable';
 export class UserInfoService {
     constructor (private http: Http) {}
 
-    private _userInfoUrl = '/api/user-info-minimal';
+    private _userInfoUrl = '/api/get-user-info-minimal';
 
     getUserInfo () {
         return this.http.get(this._userInfoUrl)
