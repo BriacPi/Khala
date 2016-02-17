@@ -109,6 +109,7 @@ error.emailInUse.text=Sorry, the email you entered is already in use.
 error.noSuchArticle.text=Sorry, the article you are referring to does not exist.
 error.emptyTitle=Hey, it's very unlikely someone's going to read an article without a title!
 error.titleTooLong=Sorry, the title of an article is limited to 300 characters.
+error.noArticleFound=Sorry, no article corresponding to the criteria has been found.
 
 ################################################################################################
 # MAILS

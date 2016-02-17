@@ -109,7 +109,7 @@ error.emailInUse.text = Sorry, the email you entered is already in use.
 error.noSuchArticle.text=Sorry, the article you are referring to does not exist.
 error.emptyTitle=
 error.titleTooLong=
-
+error.noArticleFound=
 ################################################################################################
 # MAILS
 

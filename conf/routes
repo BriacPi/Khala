@@ -46,7 +46,11 @@ GET         /api/all-articles                controllers.ContentController.getAl
 GET         /api/articles-by-author          controllers.ContentController.getArticlesByAuthor()
 GET         /api/top-article-by-views        controllers.ContentController.getTopArticleByViews()
 #GET         /likeArticle                controllers.ContentController.articleToLike()
-GET         /article/id/:articleID                    controllers.ContentController.article(articleID:String)
+GET         /api/hasliked/:articleId         controllers.ContentController.hasLiked(articleId:String)
+GET         /api/getAuthor/:articleId        controllers.ContentController.getAuthor(articleId)
+
+GET         /article/id/:articleId           controllers.ContentController.article(articleId:String)
+
 
 #UserProfile Management
 GET         /api/user                        controllers.UserProfileController.getUser()

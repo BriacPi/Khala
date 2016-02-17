@@ -2,17 +2,16 @@ package repositories
 
 import java.io.Serializable
 import models.Article
+import play.api.libs.json.{JsObject, Json}
 import repositories._
 import scala.util.{Failure, Success}
 import models._
-import utils.MongoDBProxy
+import _root_.utils.MongoDBProxy
 import org.joda.time.DateTime
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.bson._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-
-import reactivemongo.bson.BSONObjectID
 
 /**
   * Created by corpus on 05/02/2016.
@@ -38,7 +37,7 @@ object ArticleRepository extends ArticleRepository {
       }
       val title = doc.getAs[String]("title").get
       val content = doc.getAs[String]("content").get
-      val tag1= doc.getAs[String]("tag1").getOrElse("")
+      val tag1 = doc.getAs[String]("tag1").getOrElse("")
       val tag2 = doc.getAs[String]("tag2")
       val creationDate = doc.getAs[BSONDateTime]("creationDate").map(dt => new DateTime(dt.value)).getOrElse(DateTime.now())
       val lastUpdate = doc.getAs[BSONDateTime]("lastUpdate").map(dt => new DateTime(dt.value)).getOrElse(DateTime.now())
@@ -47,7 +46,7 @@ object ArticleRepository extends ArticleRepository {
       val nbViews = doc.getAs[Int]("nbViews").getOrElse(0)
 
 
-      Article(id, title, content, tag1,tag2,creationDate, lastUpdate, nbLikes, nbComments, nbViews)
+      Article(id, title, content, tag1, tag2, creationDate, lastUpdate, nbLikes, nbComments, nbViews)
       //how to not to build them
 
     }
@@ -75,7 +74,7 @@ object ArticleRepository extends ArticleRepository {
         case Some(id) =>
           a.tag2 match {
             case None => doc.add("_id" -> id)
-            case Some(tag2) => doc.add("_id" -> id,"tag2" -> a.tag2)
+            case Some(tag2) => doc.add("_id" -> id, "tag2" -> a.tag2)
           }
       }
     }
@@ -245,7 +244,31 @@ object ArticleRepository extends ArticleRepository {
     getTopArticle(user, sortQuery)
   }
 
+  def getAuthor(articleId: String): Future[JsObject] = {
+    val query = BSONDocument("author_id" -> BSONObjectID(articleId))
+    val futureOptionArticle: Future[Option[BSONDocument]] = collectionArticle.find(query).
+      cursor[BSONDocument]().headOption
+    futureOptionArticle.flatMap {
+      optionArticle => optionArticle match {
+        case None => Future.successful(Json.obj("firstName" -> "",
+          "lastName" -> ""))
+        case Some(article) =>
+          val authorId = article.getAs[String]("author_id").get
+          val queryUser = BSONDocument("_id" -> BSONObjectID(authorId))
+          collectionUser.find(queryUser).cursor[BSONDocument]().headOption.map {
+            optionUser => optionUser match {
+              case None => Json.obj("firstName" -> "",
+                "lastName" -> "")
+              case Some(user) => Json.obj("firstName" -> (user.getAs[String]("firstName").get),
+                "lastName" -> (user.getAs[String]("lastName").get))
+            }
+          }
+      }
 
+    }
+  }
+
+  def getAuthor(article: Article): Future[JsObject] = getAuthor(article.id.get)
 }
 
 

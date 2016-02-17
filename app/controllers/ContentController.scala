@@ -40,7 +40,8 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
       "nbViews" -> ignored(0)
     )(Article.apply)(Article.unapply)
   )
-  def article(articleID:String) = UserAwareAction{implicit request =>
+
+  def article(articleID: String) = UserAwareAction { implicit request =>
     Ok(views.html.content.article(articleID))
 
   }
@@ -72,7 +73,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   }
   }
 
-  def getAllArticles() = Action.async { implicit request => {
+  def getAllArticles() = UserAwareAction.async { implicit request => {
     val futureArticles: Future[List[Article]] = ArticleRepository.getAllArticles()
     val futureJson: Future[List[JsValue]] = futureArticles.map { list => Article.shorten(list).map {
       article => Article.articleWriter.writes(article)
@@ -100,22 +101,40 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
     val futureOptionTopArticle: Future[Option[Article]] = ArticleRepository.getTopArticleByViews(request.identity)
     futureOptionTopArticle.map {
       optionTopArticle => optionTopArticle match {
-        case None => Ok(Json.obj("topArticle" -> ""))
+        case None => Ok(Json.obj("topArticle" -> "error.noArticleFound"))
         case Some(topArticle) => Ok(Article.articleWriter.writes(topArticle))
       }
     }
   }
   }
-//
-//  def getViewsByArticle(article: Article) = Action.async() { implicit request => {
-//    ViewRepository.getByArticle(article)
-//  }
-//  }
+
+  def getAuthor(articleId: String): Action[AnyContent] = UserAwareAction.async {
+    implicit request => {
+      ArticleRepository.getAuthor(articleId).map{
+        json => Ok(json)
+      }
+    }
+  }
+
+  //
+  //  def getViewsByArticle(article: Article) = Action.async() { implicit request => {
+  //    ViewRepository.getByArticle(article)
+  //  }
+  //  }
 
   //  def articleToLike() = SecuredAction { implicit request => {
   //    Ok(views.html.demo(articleTitleForm))
   //  }
   //}
+
+  def hasLiked(articleId: String): Action[AnyContent] = SecuredAction.async { implicit request => {
+    val futureBool = LikeRepository.hasLiked(request.identity.id.get, articleId)
+    futureBool.map { bool =>
+      if (bool) Ok(Json.obj("hasLiked" -> "true"))
+      else Ok(Json.obj("hasLiked" -> "false"))
+    }
+  }
+  }
 
   def likesOrUnlikes(article: Article): Action[AnyContent] = SecuredAction.async { implicit request => {
     val articleFutureOptionId: Future[Option[Article]] = ArticleRepository.getById(article.id.get)
