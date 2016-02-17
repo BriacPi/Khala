@@ -17,13 +17,18 @@ case class Article(
                     tag2: Option[String],
                     creationDate: DateTime,
                     lastUpdate: DateTime,
+
+                    // https://en.wikipedia.org/wiki/Words_per_minute: I tool 1150 CPM,
+                    // Maybe adapt to languages?
+                    readingTime: Int = 0,
                     nbLikes: Int = 0,
                     nbComments: Int = 0,
                     nbViews: Int = 0
-
                     //in DB:
                     //author_id = field "_id" in collection "users" but as string (so only the hex part)
-                  )
+                  ) {
+
+}
 
 
 object Article {
@@ -35,6 +40,7 @@ object Article {
       (JsPath \ "tag2").readNullable[String] and
       (JsPath \ "creationDate").read[DateTime] and
       (JsPath \ "lastUpdate").read[DateTime] and
+      (JsPath \ "readingTime").read[Int] and
       (JsPath \ "nbLikes").read[Int] and
       (JsPath \ "nbComments").read[Int] and
       (JsPath \ "nbViews").read[Int]
@@ -46,6 +52,7 @@ object Article {
       def json = Json.obj(
         "title" -> a.title,
         "content" -> a.content,
+        "readingTime" -> a.readingTime,
         "nbLikes" -> a.nbLikes,
         "nbComments" -> a.nbComments,
         "nbViews" -> a.nbViews,
@@ -69,9 +76,7 @@ object Article {
       }
     }
 
-
   }
-
 
   def shorten(article: Article): Article = article.copy(content = article.content.take(140) + "...")
 

@@ -36,17 +36,21 @@ object ArticleRepository extends ArticleRepository {
           Some(id.toString().substring(14, 38))
       }
       val title = doc.getAs[String]("title").get
-      val content = doc.getAs[String]("content").getOrElse("content.notFound")
-      val tag1 = doc.getAs[String]("tag1").getOrElse("")
+      val content = doc.getAs[String]("content").getOrElse[String]("content.notFound")
+      val tag1 = doc.getAs[String]("tag1").getOrElse[String]("")
       val tag2 = doc.getAs[String]("tag2")
-      val creationDate = doc.getAs[BSONDateTime]("creationDate").map(dt => new DateTime(dt.value)).getOrElse(DateTime.now())
-      val lastUpdate = doc.getAs[BSONDateTime]("lastUpdate").map(dt => new DateTime(dt.value)).getOrElse(DateTime.now())
-      val nbLikes = doc.getAs[Int]("nbLikes").getOrElse(0)
-      val nbComments = doc.getAs[Int]("nbComments").getOrElse(0)
-      val nbViews = doc.getAs[Int]("nbViews").getOrElse(0)
+      val creationDate = doc.getAs[BSONDateTime]("creationDate").map(dt => new DateTime(dt.value))
+        .getOrElse[DateTime](DateTime.now())
+      val lastUpdate = doc.getAs[BSONDateTime]("lastUpdate").map(dt => new DateTime(dt.value))
+        .getOrElse[DateTime](DateTime.now())
+      val readingTime = doc.getAs[Int]("readingTime").getOrElse[Int](0)
 
+      println(readingTime)
+      val nbLikes = doc.getAs[Int]("nbLikes").getOrElse[Int](0)
+      val nbComments = doc.getAs[Int]("nbComments").getOrElse[Int](0)
+      val nbViews = doc.getAs[Int]("nbViews").getOrElse[Int](0)
 
-      Article(id, title, content, tag1, tag2, creationDate, lastUpdate, nbLikes, nbComments, nbViews)
+      Article(id, title, content, tag1, tag2, creationDate, lastUpdate, readingTime, nbLikes, nbComments, nbViews)
       //how to not to build them
 
     }
@@ -57,6 +61,7 @@ object ArticleRepository extends ArticleRepository {
       def doc: BSONDocument = BSONDocument(
         "title" -> a.title,
         "content" -> a.content,
+        "readingTime" -> a.readingTime,
         "nbLikes" -> a.nbLikes,
         "nbComments" -> a.nbComments,
         "nbViews" -> a.nbViews,
@@ -81,9 +86,11 @@ object ArticleRepository extends ArticleRepository {
   }
 
   //authenticated action only so I won't check the existence of the user.
-  def save(author: User, article: Article): Future[Article] = {
+  def save(author: User, articleIncreation: Article): Future[Article] = {
     //user is supposed to be legitimate
+    val article = articleIncreation.copy(readingTime = articleIncreation.content.length() / 1150)
     val query: BSONDocument = ArticleRepository.articleWriter.write(article)
+    println(article.readingTime)
 
     //Cannot user a generic article.id.getOrElse in a selector as it will force an id!
     article.id match {
@@ -155,7 +162,8 @@ object ArticleRepository extends ArticleRepository {
     val futureOption: Future[List[BSONDocument]] = collectionArticle.find(query).cursor[BSONDocument]().collect[List]()
     futureOption.map(list =>
       list.map {
-        doc => articleReader.read(doc)
+        doc =>
+          articleReader.read(doc)
       })
 
   }
@@ -275,7 +283,7 @@ object ArticleRepository extends ArticleRepository {
   def getAuthorMini(article: Article): Future[JsObject] = getAuthorMini(article.id.get)
 
 
-  def getAuthor(articleId:String): Future[Option[JsObject]] = {
+  def getAuthor(articleId: String): Future[Option[JsObject]] = {
     val query = BSONDocument("_id" -> BSONObjectID(articleId))
     val futureOptionArticle: Future[Option[BSONDocument]] = collectionArticle.find(query).
       cursor[BSONDocument]().headOption

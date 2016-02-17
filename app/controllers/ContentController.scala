@@ -35,6 +35,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
       "tag2" -> optional(text),
       "creationDate" -> ignored(DateTime.now()),
       "lastUpdate" -> ignored(DateTime.now()),
+      "readingTime" -> ignored(0),
       "nbLikes" -> ignored(0),
       "nbComments" -> ignored(0),
       "nbViews" -> ignored(0)
