@@ -1,4 +1,6 @@
-export interface UserInfo {
+import {AuthorInfo} from './author-info.ts';
+
+export class UserInfo {
     constructor(
     _id:string,
     title:string,
@@ -8,6 +10,7 @@ export interface UserInfo {
     nbViews:number,
     creationDate:number,
     lastUpdate:number) { }
+
 
 }
 
