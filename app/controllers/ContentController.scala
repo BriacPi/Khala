@@ -133,39 +133,5 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
     }
   }
 
-  //
-  //  def getViewsByArticle(article: Article) = Action.async() { implicit request => {
-  //    ViewRepository.getByArticle(article)
-  //  }
-  //  }
-
-  //  def articleToLike() = SecuredAction { implicit request => {
-  //    Ok(views.html.demo(articleTitleForm))
-  //  }
-  //}
-
-  def hasLiked(articleId: String): Action[AnyContent] = SecuredAction.async { implicit request => {
-    val futureBool = LikeRepository.hasLiked(request.identity.id.get, articleId)
-    futureBool.map { bool =>
-      if (bool) Ok(Json.obj("hasLiked" -> "true"))
-      else Ok(Json.obj("hasLiked" -> "false"))
-    }
-  }
-  }
-
-  def likesOrUnlikes(articleId: String): Action[AnyContent] = SecuredAction.async { implicit request => {
-    LikeRepository.createOrRemove(request.identity.id.get, articleId).map {
-      s => Ok(Json.obj("messages:" -> s))
-    }
-  }
-  }
-
-  //  def getNbLikes(title: String) = Action.async { implicit request => {
-  //    val futureInt: Future[Int] = LikeRepository.getLikesByTitle(title);
-  //    futureInt.map { nbLikes =>
-  //      Ok(Json.obj("messages:" -> "there is" + nbLikes" likes for this article!"))
-  //    }
-  //  }
-  //  }
 
 }

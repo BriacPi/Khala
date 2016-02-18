@@ -35,7 +35,7 @@ object TagRepository extends TagRepository {
     }
   }
 
-  implicit object userWriter extends BSONDocumentWriter[Tag] {
+  implicit object tagWriter extends BSONDocumentWriter[Tag] {
 
     def write(tag: Tag): BSONDocument = {
       BSONDocument(
