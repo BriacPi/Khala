@@ -20,7 +20,7 @@ case class Article(
 
                     // https://en.wikipedia.org/wiki/Words_per_minute: I tool 1150 CPM,
                     // Maybe adapt to languages?
-                    readingTime: Int = 0,
+                    readingTime: Int = 1,
                     nbLikes: Int = 0,
                     nbComments: Int = 0,
                     nbViews: Int = 0
@@ -83,7 +83,7 @@ object Article {
 
   def shorten(listArticle: List[Article]): List[Article] = {
     listArticle.map {
-      article => shorten(article)
+      shorten
     }
   }
 }

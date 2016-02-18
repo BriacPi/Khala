@@ -45,85 +45,88 @@ object LikeRepository extends LikeRepository {
       else true
     }
   }
-    def createOrRemove(userId: String, articleId: String): Future[String] = {
-      val selector = BSONDocument("article_id" -> articleId)
-      val query = selector.add(BSONDocument("user_id" -> userId))
-      val futureBool = hasLiked(userId, articleId)
 
-      futureBool.map { bool =>
+  def createOrRemove(userId: String, articleId: String): Future[String] = {
+    val selector = BSONDocument("_id" -> BSONObjectID(articleId))
+    val query = BSONDocument("user_id" -> userId, "article_id" -> articleId)
+    val futureBool = hasLiked(userId, articleId)
 
-        if (bool) {
-          val modifier = BSONDocument("$inc" -> BSONDocument("nbLikes" -> -1))
+    futureBool.map { bool =>
+
+      if (bool) {
+        val modifier = BSONDocument("$inc" -> BSONDocument("nbLikes" -> -1))
+        collectionArticle.update(selector, modifier)
+        def future: Future[WriteResult] = collectionLike.remove(query)
+        future.onComplete {
+          case Failure(e) => throw e
+          case Success(writeResult) =>
+        }
+        "like.remove.success"
+      }
+      else {
+        val modifier = BSONDocument(
+          "$inc" -> BSONDocument("nbLikes" -> 1))
+        val insertQuery = query.add(BSONDocument("$set" -> BSONDocument("creationDate" ->
+          BSONDateTime(DateTime.now().getMillis()))))
           collectionArticle.update(selector, modifier)
-          def future: Future[WriteResult] = collectionLike.remove(query)
-          future.onComplete {
-            case Failure(e) => throw e
-            case Success(writeResult) =>
-          }
-          "like.remove.success"
-        }
-        else {
-          val modifier = BSONDocument("$set" -> BSONDocument("creationDate" -> BSONDateTime(DateTime.now().getMillis())),
-            "$inc" -> BSONDocument("nbLikes" -> 1))
-          collectionArticle.update(selector, modifier)
 
-          def future: Future[WriteResult] = collectionLike.insert(query)
-          future.onComplete {
-            case Failure(e) => throw e
-            case Success(writeResult) =>
-          }
-          "like.add.success"
+        def future: Future[WriteResult] = collectionLike.insert(insertQuery)
+        future.onComplete {
+          case Failure(e) => throw e
+          case Success(writeResult) =>
         }
+        "like.add.success"
       }
-    }
-
-
-    def createOrRemove(user: User, article: Article): Future[String] = createOrRemove(user.id.get, article.id.get)
-
-    //already have likes
-    def getNumberLikes(article: Article): Future[Int] = {
-
-      val futureOptionArticle: Future[Option[Article]] = ArticleRepository.getById(article.id.getOrElse(""))
-
-      val futureNumberArticles: Future[Int] = futureOptionArticle.flatMap {
-        case None => Future {
-          0
-        }
-        case Some(articleFound) => {
-          val query = BSONDocument("article_id" -> BSONObjectID(articleFound.id.get))
-          val command = Count(query)
-          val result: Future[CountResult] = collectionLike.runCommand(command)
-
-          result.map { res =>
-            val numberArticles = res.value
-            numberArticles
-          }
-        }
-      }
-      return futureNumberArticles
-    }
-
-    def getLikesByTitle(title: String): Future[Int] = {
-      val futureArticleOptionId: Future[Option[BSONObjectID]] = ArticleRepository.getOneIdByTitle(title)
-
-      val futureNumberArticles: Future[Int] = futureArticleOptionId.flatMap {
-        case None => Future {
-          0
-        }
-
-        case Some(articleId) => {
-
-          val query = BSONDocument("article_id" -> articleId)
-          val command = Count(query)
-          val result: Future[CountResult] = collectionLike.runCommand(command)
-
-          result.map { res =>
-            val numberArticles = res.value
-            numberArticles
-          }
-        }
-      }
-      return futureNumberArticles
     }
   }
+
+
+  def createOrRemove(user: User, article: Article): Future[String] = createOrRemove(user.id.get, article.id.get)
+
+  //already have likes
+  def getNumberLikes(article: Article): Future[Int] = {
+
+    val futureOptionArticle: Future[Option[Article]] = ArticleRepository.getById(article.id.getOrElse(""))
+
+    val futureNumberArticles: Future[Int] = futureOptionArticle.flatMap {
+      case None => Future {
+        0
+      }
+      case Some(articleFound) => {
+        val query = BSONDocument("article_id" -> BSONObjectID(articleFound.id.get))
+        val command = Count(query)
+        val result: Future[CountResult] = collectionLike.runCommand(command)
+
+        result.map { res =>
+          val numberArticles = res.value
+          numberArticles
+        }
+      }
+    }
+    return futureNumberArticles
+  }
+
+  def getLikesByTitle(title: String): Future[Int] = {
+    val futureArticleOptionId: Future[Option[BSONObjectID]] = ArticleRepository.getOneIdByTitle(title)
+
+    val futureNumberArticles: Future[Int] = futureArticleOptionId.flatMap {
+      case None => Future {
+        0
+      }
+
+      case Some(articleId) => {
+
+        val query = BSONDocument("article_id" -> articleId)
+        val command = Count(query)
+        val result: Future[CountResult] = collectionLike.runCommand(command)
+
+        result.map { res =>
+          val numberArticles = res.value
+          numberArticles
+        }
+      }
+    }
+    return futureNumberArticles
+  }
+}
 

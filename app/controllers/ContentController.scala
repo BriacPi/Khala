@@ -91,7 +91,9 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   def getArticlesByAuthor(): Action[AnyContent] = SecuredAction.async { implicit request => {
     val futureArticles: Future[List[Article]] = ArticleRepository.getByAuthor(request.identity)
     val futureJson: Future[List[JsValue]] = futureArticles.map { list => list.map {
-      article => Article.articleWriter.writes(article)
+
+      article => println(article.creationDate)
+        Article.articleWriter.writes(article)
     }
     }
     futureJson.map { jsonList =>
@@ -151,15 +153,9 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   }
   }
 
-  def likesOrUnlikes(article: Article): Action[AnyContent] = SecuredAction.async { implicit request => {
-    val articleFutureOptionId: Future[Option[Article]] = ArticleRepository.getById(article.id.get)
-    articleFutureOptionId.flatMap {
-      case None => Future.successful(Ok(Json.obj("error.messages:" -> "error.noArticleFound.text")))
-      case Some(articleId) => {
-        LikeRepository.createOrRemove(request.identity.id.get, article.id.get).map {
-          s => Ok(Json.obj("messages:" -> s))
-        }
-      }
+  def likesOrUnlikes(articleId: String): Action[AnyContent] = SecuredAction.async { implicit request => {
+    LikeRepository.createOrRemove(request.identity.id.get, articleId).map {
+      s => Ok(Json.obj("messages:" -> s))
     }
   }
   }

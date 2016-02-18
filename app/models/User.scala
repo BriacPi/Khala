@@ -5,7 +5,7 @@ import org.joda.time.DateTime
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import utils.silhouette.IdentitySilhouette
-import com.mohiva.play.silhouette.impl.util.BCryptPasswordHasher
+
 
 case class User(
                  id: Option[String] = None,
@@ -31,7 +31,7 @@ object User {
       (JsPath \ "firstName").read[String] and
       (JsPath \ "lastName").read[String] and
       (JsPath \ "password").read[String] and
-      (JsPath \ "dateRegistration").read[List[String]]
+      (JsPath \ "services").read[List[String]]
     ) (User.apply _)
 
   implicit val userWriter = new Writes[User] {

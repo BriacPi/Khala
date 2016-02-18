@@ -52,7 +52,6 @@ object UserRepository extends UserRepository {
         "lastName" -> user.lastName,
         "password" -> user.password,
         "services" -> user.services
-
       )
       user.id match {
         case None => doc
@@ -165,5 +164,15 @@ object UserRepository extends UserRepository {
       }
     }
   }
+  def getPhotoProfileUrl(userId: String): Future[String] = {
 
+    val query = BSONDocument("_id" -> BSONObjectID(userId))
+    collectionUser.find(query).cursor[BSONDocument]().headOption.map {
+      opt => opt match {
+        case None => ""
+        case Some(userDoc) => userDoc.getAs[String]("urlPhotoProfile").get
+      }
+    }
+
+  }
 }
