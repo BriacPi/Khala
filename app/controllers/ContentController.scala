@@ -4,7 +4,8 @@ import javax.inject.Inject
 
 import models.Article
 import org.joda.time.DateTime
-import repositories.{ViewRepository, LikeRepository, UserRepository, ArticleRepository}
+import play.api.libs.iteratee.Enumeratee
+import repositories.{ViewRepository, ArticleRepository}
 
 import play.api.data.Form
 import play.api.data.Forms._
@@ -14,6 +15,10 @@ import play.api.libs.ws.WSClient
 import play.api.mvc._
 import reactivemongo.bson.{BSONObjectID, BSONDocument}
 import utils.silhouette.{AuthenticationEnvironment, AuthenticationController}
+import play.api.cache._
+import play.api.mvc._
+import javax.inject.Inject
+import scala.concurrent.duration._
 
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,7 +28,8 @@ import scala.concurrent.Future
   * Created by corpus on 11/02/2016.
   */
 
-class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironment, val messagesApi: MessagesApi) extends AuthenticationController with I18nSupport {
+class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironment, val messagesApi: MessagesApi,
+                                                val cache: CacheApi) extends AuthenticationController with I18nSupport {
 
   val newArticleForm: Form[Article] = Form(
     mapping(
@@ -77,8 +83,8 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   }
 
   def getAllArticles() = UserAwareAction.async { implicit request => {
-    val futureArticles: Future[List[Article]] = ArticleRepository.getAllArticles()
-    val futureJson: Future[List[JsValue]] = futureArticles.map { list => Article.shorten(list).map {
+    val futureArticles: Future[Array[Article]] = ArticleRepository.getAllArticles()
+    val futureJson: Future[Array[JsValue]] = futureArticles.map { list => Article.shorten(list).map {
       article => Article.articleWriter.writes(article)
     }
     }
@@ -133,5 +139,28 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
     }
   }
 
+  def getTopArticlesByViews(first: Int, last: Int): Action[AnyContent] = UserAwareAction.async {
+    implicit request => {
+      val futureTopArticles: Future[Array[Article]] = cache.getOrElse[Future[Array[Article]]]("futureTopArticles") {
+        ArticleRepository.getTopArticlesByViews(24)
+      }
+      futureTopArticles.map {
+        topArticles => val size = topArticles.length
+          def realLast = {
+            if (last >= size) size - 1
+            else last
+          }
 
+          def realFirst = {
+            if (first < 0) 0
+            else first
+          }
+          if (realFirst >= size) Ok(Json.obj("error mesage" -> "no content"))
+          else Ok(Json.obj("articles" -> topArticles.slice(realFirst, realLast)))
+      }
+
+
+    }
+
+  }
 }

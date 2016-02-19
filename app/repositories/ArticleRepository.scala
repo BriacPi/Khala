@@ -2,6 +2,7 @@ package repositories
 
 import java.io.Serializable
 import models.Article
+import play.api.libs.iteratee.{Enumeratee, Enumerator}
 import play.api.libs.json.{JsObject, Json}
 import reactivemongo.api.commands.UpdateWriteResult
 import repositories._
@@ -48,7 +49,6 @@ object ArticleRepository extends ArticleRepository {
         .getOrElse[DateTime](DateTime.now())
       val readingTime = doc.getAs[Int]("readingTime").getOrElse[Int](0)
 
-      println(readingTime)
       val nbLikes = doc.getAs[Int]("nbLikes").getOrElse[Int](0)
       val nbComments = doc.getAs[Int]("nbComments").getOrElse[Int](0)
       val nbViews = doc.getAs[Int]("nbViews").getOrElse[Int](0)
@@ -93,8 +93,6 @@ object ArticleRepository extends ArticleRepository {
     //user is supposed to be legitimate
     val article = articleIncreation.copy(readingTime = articleIncreation.content.length() / 1150)
     val query: BSONDocument = ArticleRepository.articleWriter.write(article)
-    println(article.readingTime)
-
     //Cannot user a generic article.id.getOrElse in a selector as it will force an id!
     article.id match {
       //the article is in creation
@@ -200,12 +198,14 @@ object ArticleRepository extends ArticleRepository {
     }
   }
 
-  def getAllArticles(): Future[List[Article]] = {
-    val query = BSONDocument()
-    val futureList: Future[List[BSONDocument]] = collectionArticle.find(query).cursor[BSONDocument]().collect[List]()
-    val futureArticles: Future[List[Article]] = futureList.map {
-      list => {
-        list.map {
+  def getAllArticles(): Future[Array[Article]] = {
+    val myDuration: Long = (1000 * 3600 * 24).toLong
+    val query = BSONDocument("creationDate" -> BSONDocument("$gt" ->
+      BSONDateTime(DateTime.now().minus(myDuration).getMillis())))
+    val futureArray: Future[Array[BSONDocument]] = collectionArticle.find(query).cursor[BSONDocument]().collect[Array]()
+    val futureArticles: Future[Array[Article]] = futureArray.map {
+      array => {
+        array.map {
           doc => articleReader.read(doc)
         }
       }
@@ -241,7 +241,7 @@ object ArticleRepository extends ArticleRepository {
   def getTopArticle(user: User, sortQuery: BSONDocument): Future[Option[Article]] = {
     val query = BSONDocument("author_id" -> user.id.get)
     val futureOptionTopArticle: Future[Option[BSONDocument]] = collectionArticle.find(query).
-      sort(BSONDocument("nbViews" -> -1)).cursor[BSONDocument]().headOption
+      sort(sortQuery).cursor[BSONDocument]().headOption
     futureOptionTopArticle.map {
       optionTopArticle => optionTopArticle match {
         case None => None
@@ -307,6 +307,37 @@ object ArticleRepository extends ArticleRepository {
     }
   }
 
+  //  def getTopArticlesByViews(timeFrameInHour: Int): Enumerator[Article] = {
+  //    val myDuration: Long = (1000*3600*timeFrameInHour).toLong
+  //    val query = BSONDocument("creationDate" -> BSONDocument("$gt" ->
+  //      BSONDateTime(DateTime.now().minus(myDuration).getMillis())))
+  //
+  //    val enumerateTopArticlesDoc: Enumerator[BSONDocument] = collectionArticle.find(query).
+  //      sort(BSONDocument("nbViews" -> -1)).cursor[BSONDocument]().enumerate()
+  //    val  enumerateTopArticles: Enumerator[Article] =
+  //      enumerateTopArticlesDoc through Enumeratee.map(ArticleRepository.articleReader.read)
+  //    enumerateTopArticles
+  //  }
+
+  def getTopArticlesByViews(timeFrameInHour: Int): Future[Array[Article]] = {
+    val myDuration: Long = (1000 * 3600 * timeFrameInHour).toLong
+    val query = BSONDocument("creationDate" -> BSONDocument("$gt" ->
+      BSONDateTime(DateTime.now().minus(myDuration).getMillis())))
+
+    //limit to 200 that we'll get in Cache.
+    val futureArray: Future[Array[BSONDocument]] = collectionArticle.find(query).cursor[BSONDocument]().
+      collect[Array](200)
+
+    val futureArticles: Future[Array[Article]] = futureArray.map {
+      array => {
+        array.map {
+          doc => articleReader.read(doc)
+        }
+      }
+    }
+
+    return futureArticles
+  }
 }
 
 

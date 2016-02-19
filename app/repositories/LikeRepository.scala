@@ -66,8 +66,8 @@ object LikeRepository extends LikeRepository {
       else {
         val modifier = BSONDocument(
           "$inc" -> BSONDocument("nbLikes" -> 1))
-        val insertQuery = query.add(BSONDocument("$set" -> BSONDocument("creationDate" ->
-          BSONDateTime(DateTime.now().getMillis()))))
+        val insertQuery = query.add( BSONDocument("creationDate" ->
+          BSONDateTime(DateTime.now().getMillis())))
           collectionArticle.update(selector, modifier)
 
         def future: Future[WriteResult] = collectionLike.insert(insertQuery)

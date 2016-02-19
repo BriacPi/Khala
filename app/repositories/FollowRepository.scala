@@ -76,7 +76,7 @@ object FollowRepository extends FollowRepository {
         //Unfollowing
         case None =>
           collectionFollow.remove(query)
-          "follow.delete.success"
+          "follow.remove.success"
         case Some(follow) => val insertQuery = query.add("crationDate" -> BSONDateTime(DateTime.now().getMillis()))
           collectionFollow.insert(insertQuery)
           getFollow(followerId, authorId)

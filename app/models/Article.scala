@@ -86,4 +86,7 @@ object Article {
       shorten
     }
   }
+  def shorten (arrayArticle: Array[Article]): Array[Article] = {
+    arrayArticle.map(shorten)
+  }
 }
