@@ -1,6 +1,7 @@
 import {Component, OnInit} from 'angular2/core';
 import {Article} from './article.ts';
 import {ArticleService} from './article.service.ts';
+import {ArticleComponent} from './article.component.ts';
 
 
 
@@ -8,7 +9,8 @@ import {ArticleService} from './article.service.ts';
     selector: 'article-list',
     templateUrl: 'js/articles/article-list.component.html',
     styleUrls: ['js/articles/article-list.component.css'],
-    providers: [ArticleService]
+    providers: [ArticleService],
+    directives:[ArticleComponent]
 })
 
 export class ArticleListComponent implements OnInit {

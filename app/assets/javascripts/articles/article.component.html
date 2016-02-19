@@ -1,0 +1,17 @@
+<div class="post-preview">
+    <a href="/article/id/{{article._id}}">
+        <h2 class="post-title">
+            {{article.title}}
+        </h2>
+        <h3 class="post-subtitle">
+            {{article.content}}
+        </h3>
+    </a>
+    <div *ngIf="authorInfo">
+        <p class="post-meta">Posted by
+            <a href="#">{{authorInfo.firstName}} {{authorInfo.lastName}} </a>on {{article.creationDate|date}}
+        </p>
+    </div>
+
+
+</div>
