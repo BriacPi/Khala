@@ -12,31 +12,29 @@ import Implicits._
 
 class PasswordInfoDAO extends DelegableAuthInfoDAO[PasswordInfo] {
 
-  def add(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] =
+  def add(loginInfo: LoginInfo, authInfo: PasswordInfo) =
     update(loginInfo, authInfo)
 
-  def find(loginInfo: LoginInfo): Future[Option[PasswordInfo]] =
-    UserRepository.getByEmail(loginInfo).map {
-      case Some(user) if user.emailConfirmed => Some(user.password)
-      case _ => None
+  def find(loginInfo: LoginInfo) =
+    UserRepository.getByEmail(loginInfo) match {
+      case Some(user) if user.emailConfirmed => Future.successful(Some(user.password))
+      case _ => Future.successful(None)
     }
 
-  def remove(loginInfo: LoginInfo): Future[Unit] = Future{UserRepository.remove(loginInfo)}
+  def remove(loginInfo: LoginInfo) = Future.successful(UserRepository.remove(loginInfo))
 
-  def save(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] =
-  find(loginInfo).flatMap {
-    case Some(_) => update(loginInfo, authInfo)
-    case None => add(loginInfo, authInfo)
-  }
+  def save(loginInfo: LoginInfo, authInfo: PasswordInfo) =
+    find(loginInfo).flatMap {
+      case Some(_) => update(loginInfo, authInfo)
+      case None => add(loginInfo, authInfo)
+    }
 
-  def update(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] =
-    UserRepository.getByEmail(loginInfo).map {
+  def update(loginInfo: LoginInfo, authInfo: PasswordInfo) =
+    UserRepository.getByEmail(loginInfo) match {
       case Some(user) => {
         val newUser = user.copy(password = authInfo)
-        println(user.password)
         UserRepository.save(newUser)
-        println(authInfo)
-        authInfo
+        Future.successful(authInfo)
       }
       case _ => {
         throw new Exception("PasswordInfoDAO - update : the user must exists to update its password")

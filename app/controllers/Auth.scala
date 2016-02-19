@@ -1,6 +1,7 @@
 package controllers
 
 import models._
+import org.joda.time.DateTime
 import utils.silhouette._
 import utils.silhouette.Implicits._
 import com.mohiva.play.silhouette.api.{ LoginInfo, SignUpEvent, LoginEvent, LogoutEvent }
@@ -34,13 +35,14 @@ class Auth @Inject() (val env: AuthenticationEnvironment, val messagesApi: Messa
 
   val signUpForm = Form(
     mapping(
-      "id" -> ignored(None: Option[String]),
+      "id" -> ignored(None: Option[Long]),
       "email" -> email.verifying(maxLength(250)),
       "emailConfirmed" -> ignored(false),
       "firstName" -> nonEmptyText,
       "lastName" -> nonEmptyText,
       "password" -> nonEmptyText.verifying(minLength(6)),
-			"services" -> ignored(List("user"))
+			"services" -> ignored(List("user")) ,
+      "registrationDate" -> ignored(DateTime.now())
     )(User.apply)(User.unapply)
   )
 

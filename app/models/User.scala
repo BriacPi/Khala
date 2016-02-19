@@ -8,13 +8,14 @@ import utils.silhouette.IdentitySilhouette
 
 
 case class User(
-                 id: Option[String] = None,
+                 id: Option[Long] = None,
                  email: String,
                  emailConfirmed: Boolean,
                  firstName: String,
                  lastName: String,
                  password: String,
-                 services: List[String]
+                 services: List[String],
+                 registrationDate: DateTime
                ) extends IdentitySilhouette {
   def key = email
 
@@ -22,33 +23,33 @@ case class User(
 }
 
 object User {
-
-  implicit val userReader: Reads[User] = (
-    //readNullable manages option
-    (JsPath \ "_id").readNullable[String] and
-      (JsPath \ "email").read[String] and
-      (JsPath \ "emailConfirmed").read[Boolean] and
-      (JsPath \ "firstName").read[String] and
-      (JsPath \ "lastName").read[String] and
-      (JsPath \ "password").read[String] and
-      (JsPath \ "services").read[List[String]]
-    ) (User.apply _)
-
-  implicit val userWriter = new Writes[User] {
-    def writes(user: User): JsObject = {
-      def json = Json.obj(
-        "email" -> user.email,
-        "emailConfirmed" -> user.emailConfirmed,
-        "firstName" -> user.firstName,
-        "lastName" -> user.lastName,
-        "password" -> user.password,
-        "services" -> user.services
-      )
-      user.id match {
-        case None => json
-        case Some(id) =>(Json.obj("_id" -> id)).++(json)
-
-      }
-    }
-  }
+//
+//  implicit val userReader: Reads[User] = (
+//    //readNullable manages option
+//    (JsPath \ "_id").readNullable[Long] and
+//      (JsPath \ "email").read[String] and
+//      (JsPath \ "emailConfirmed").read[Boolean] and
+//      (JsPath \ "firstName").read[String] and
+//      (JsPath \ "lastName").read[String] and
+//      (JsPath \ "password").read[String] and
+//      (JsPath \ "services").read[List[String]] and
+//    ) (User.apply _)
+//
+//  implicit val userWriter = new Writes[User] {
+//    def writes(user: User): JsObject = {
+//      def json = Json.obj(
+//        "email" -> user.email,
+//        "emailConfirmed" -> user.emailConfirmed,
+//        "firstName" -> user.firstName,
+//        "lastName" -> user.lastName,
+//        "password" -> user.password,
+//        "services" -> user.services
+//      )
+//      user.id match {
+//        case None => json
+//        case Some(id) =>(Json.obj("_id" -> id)).++(json)
+//
+//      }
+//    }
+//  }
 }

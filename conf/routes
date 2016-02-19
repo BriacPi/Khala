@@ -40,21 +40,21 @@ GET         /common/img/*file                                  controllers.MyAss
 
 
 #Content Management
-GET         /write-article                                     controllers.ContentController.writeArticle()
-POST        /api/save-article                                  controllers.ContentController.saveArticle()
-GET         /api/all-articles                                  controllers.ContentController.getAllArticles()
-GET         /api/articles-by-author                            controllers.ContentController.getArticlesByAuthor()
-GET         /api/top-article-by-views                          controllers.ContentController.getTopArticleByViews()
-GET         /api/author-mini/:articleId                        controllers.ContentController.getAuthorMini(articleId)
-GET         /api/author/:articleId                             controllers.ContentController.getAuthor(articleId)
-GET         /api/top-articles-by-views/:firstId/:lastId        controllers.ContentController.getTopArticlesByViews(firstId: Int, lastId: Int)
+#GET         /write-article                                     controllers.ContentController.writeArticle()
+#POST        /api/save-article                                  controllers.ContentController.saveArticle()
+#GET         /api/all-articles                                  controllers.ContentController.getAllArticles()
+#GET         /api/articles-by-author                            controllers.ContentController.getArticlesByAuthor()
+#GET         /api/top-article-by-views                          controllers.ContentController.getTopArticleByViews()
+#GET         /api/author-mini/:articleId                        controllers.ContentController.getAuthorMini(articleId)
+#GET         /api/author/:articleId                             controllers.ContentController.getAuthor(articleId)
+#GET         /api/top-articles-by-views/:firstId/:lastId        controllers.ContentController.getTopArticlesByViews(firstId: Int, lastId: Int)
+#
+#GET         /article/id/:articleId                             controllers.ContentController.article(articleId:String)
 
-GET         /article/id/:articleId                             controllers.ContentController.article(articleId:String)
 
-
-#UserProfile Management
-GET         /api/user                                          controllers.UserProfileController.getUser()
-GET         /api/user-info-minimal                             controllers.UserProfileController.getUserInfoMinimal()
+##UserProfile Management
+#GET         /api/user                                          controllers.UserProfileController.getUser()
+#GET         /api/user-info-minimal                             controllers.UserProfileController.getUserInfoMinimal()
 #GET         /api/influence                 controllers.UserProfileController.getInfluence()
 
 #Settings Management
@@ -62,10 +62,10 @@ POST        /api/upload                                        controllers.Setti
 
 #Relationship Management
 
-GET         /api/has-liked/article/:articleId                  controllers.RelationshipController.hasLiked(articleId)
-GET         /api/likes-or-unlikes/article/:articleId           controllers.RelationshipController.likesOrUnlikes(articleId)
-GET         /api/has-followed/author/:authorId                 controllers.RelationshipController.hasFollowed(authorId)
-GET         /api/follows-or-unfollows/author/:authorId         controllers.RelationshipController.followsOrUnfollows(authorId)
+#GET         /api/has-liked/article/:articleId                  controllers.RelationshipController.hasLiked(articleId)
+#GET         /api/likes-or-unlikes/article/:articleId           controllers.RelationshipController.likesOrUnlikes(articleId)
+#GET         /api/has-followed/author/:authorId                 controllers.RelationshipController.hasFollowed(authorId)
+#GET         /api/follows-or-unfollows/author/:authorId         controllers.RelationshipController.followsOrUnfollows(authorId)
 
 
 #
