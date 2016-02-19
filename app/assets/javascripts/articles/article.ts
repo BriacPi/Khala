@@ -9,7 +9,10 @@ export class UserInfo {
     nbComments:number,
     nbViews:number,
     creationDate:number,
-    lastUpdate:number) { }
+    lastUpdate:number,
+    readingTime:number,
+    tag1:string,
+    tag2:string) { }
 
 
 }

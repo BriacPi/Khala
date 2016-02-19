@@ -7,11 +7,13 @@
             {{article.content}}
         </h3>
     </a>
-    <div *ngIf="authorInfo">
-        <p class="post-meta">Posted by
-            <a href="#">{{authorInfo.firstName}} {{authorInfo.lastName}} </a>on {{article.creationDate|date}}
-        </p>
-    </div>
-
+    <p class="post-meta">Posted by
+        <a *ngIf="authorInfo" href="#">{{authorInfo.firstName}} {{authorInfo.lastName}}</a> on {{article.creationDate|date}} - {{article.readingTime}} mn read -
+        <a href="#">{{article.tag1}}</a> <a *ngIf="article.tag2" href="#">{{article.tag2}}</a>
+    </p>
+    <p>
+        <i class="fa fa-heart"></i>  <i class="fa fa-comments"></i>
+    </p>
 
 </div>
+<hr>
