@@ -19,8 +19,8 @@ import scala.concurrent.duration._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import models.{ArticleStats, Article}
-import repositories.{ViewRepository, ArticleRepository}
+import models.{ArticleStats, Article, User}
+import repositories.{UserRepository, ViewRepository, ArticleRepository}
 
 
 //
@@ -107,33 +107,25 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
   def viewArticle(articleId: Long) = UserAwareAction { implicit request => {
     request.identity match {
-      case None => ViewRepository.create(0.toLong,articleId)
-      case Some(user) => ViewRepository.create(user.id.get,articleId)
+      case None => ViewRepository.create(0.toLong, articleId)
+      case Some(user) => ViewRepository.create(user.id.get, articleId)
     }
     Ok(Json.obj("articles" -> "views successful"))
 
   }
   }
 
-  //  def getAuthorMini(articleId: String): Action[AnyContent] = UserAwareAction.async {
-  //    implicit request => {
-  //      ArticleRepository.getAuthorMini(articleId).map {
-  //        json => Ok(json)
-  //      }
-  //    }
-  //  }
-  //
-  //  def getAuthor(articleId: String): Action[AnyContent] = UserAwareAction.async {
-  //    implicit request => {
-  //      ArticleRepository.getAuthor(articleId).map {
-  //        optionJson => optionJson match {
-  //          case None => Ok(Json.obj("user" -> "user.notFound"))
-  //          case Some(jsonAuthor) => Ok(jsonAuthor)
-  //        }
-  //
-  //      }
-  //    }
-  //  }
+  def getAuthorByArticle(articleId: Long) = UserAwareAction {
+    implicit request => {
+      UserRepository.getAuthorByArticle(articleId) match
+      {
+        case None => Ok(Json.obj("user" -> "user.notFound"))
+        case Some(author) => Ok(Json.obj("user" -> User.userWriter.writes(author)))
+      }
+
+    }
+  }
+
   //
   //  def getTopArticlesByViews(first: Int, last: Int): Action[AnyContent] = UserAwareAction.async {
   //    implicit request => {

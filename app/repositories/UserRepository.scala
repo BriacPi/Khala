@@ -110,4 +110,20 @@ object UserRepository extends UserRepository {
       ).executeUpdate()
     }
   }
+
+  def getAuthorByArticle(articleId: Long): Option[User] = {
+    DB.withConnection { implicit c =>
+      SQL(
+        """
+        SELECT users.*
+        FROM users
+        INNER JOIN articles ON articles.author_id = users.id
+        WHERE articles.id = {articleId}
+        """
+      ).on(
+        "articleId" -> articleId
+      ).as(recordMapper.singleOpt)
+    }
+
+  }
 }

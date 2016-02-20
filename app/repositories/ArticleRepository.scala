@@ -259,9 +259,9 @@ object ArticleRepository extends ArticleRepository {
 
   }
 
-  def getArticleStat(articleId: Long): Option[ArticleStats] = {
+  def getArticleStat(articleId: Long) = {
 
-    DB.withConnection { implicit current =>
+    val optArticle: Option[Article] =  DB.withConnection { implicit current =>
       SQL(
         """
           SELECT *
@@ -271,7 +271,8 @@ object ArticleRepository extends ArticleRepository {
       )
         .on("id" -> articleId)
         .as(recordMapperArticle.singleOpt)
-    } match {
+    }
+    optArticle match {
       case None => None
       case Some(article) => Some(ArticleStats.fromArticle(article, getViews(article.id.get).getOrElse(0),
         getLikes(article.id.get).getOrElse(0), getComments(article.id.get).getOrElse(0)))

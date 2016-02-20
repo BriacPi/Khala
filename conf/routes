@@ -46,8 +46,7 @@ GET         /api/all-article                       controllers.ContentController
 #GET         /api/article-views/:articleId        controllers.ContentController.getViews(articelId:Long)
 GET         /api/article-stats-by-author           controllers.ContentController.getArticleStatsByAuthor()
 GET         /api/top-article-stats-by-views        controllers.ContentController.getTopArticleStatsByViews()
-#GET         /api/author-mini/:articleId                        controllers.ContentController.getAuthorMini(articleId)
-#GET         /api/author/:articleId                             controllers.ContentController.getAuthor(articleId)
+GET         /api/author-by-article/:articleId                             controllers.ContentController.getAuthorByArticle(articleId: Long)
 #GET         /api/top-articles-by-views/:firstId/:lastId        controllers.ContentController.getTopArticlesByViews(firstId: Int, lastId: Int)
 #
 GET         /view-article/:articleId               controllers.ContentController.viewArticle(articleId:Long)
