@@ -43,11 +43,11 @@ object LikeRepository extends LikeRepository {
       SQL(
         """
         DELETE FROM likes
-        WHERE likes.user_id = {userId} and likes.articleId = {articleId}
+        WHERE likes.user_id = {userId} and likes.article_id = {article_id}
         """).
         on(
           "userId" -> userId,
-          "articleId" -> articleId
+          "article_id" -> articleId
         ).executeUpdate()
     }
   }
@@ -58,11 +58,11 @@ object LikeRepository extends LikeRepository {
       SQL(
         """
       SELECT likes.id from likes
-    WHERE likes.user_id = {userId} and likes.articleId = {articleId}
+      WHERE likes.user_id = {userId} and likes.article_id = {article_id}
         """
       ).
         on("userId" -> userId,
-          "articleId" -> articleId
+          "article_id" -> articleId
         )
         .as(recordMapperId.singleOpt) match {
         case None => false
