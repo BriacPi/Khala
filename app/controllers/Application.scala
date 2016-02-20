@@ -14,7 +14,7 @@ class Application @Inject() (val env: AuthenticationEnvironment, val messagesApi
 
   def index = UserAwareAction.async { implicit request =>
     Future.successful(Ok(views.html.index()))
-  }
+}
 
   def myAccount = SecuredAction.async { implicit request =>
     Future.successful(Ok(views.html.myAccount()))
