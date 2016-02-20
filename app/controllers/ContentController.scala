@@ -37,6 +37,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
       "creationDate" -> ignored(DateTime.now()),
       "lastUpdate" -> ignored(DateTime.now()),
       "title" -> nonEmptyText,
+      "summary" -> optional(text),
       "content" -> nonEmptyText,
       "nbModifications" -> ignored(0),
       "readingTime" -> ignored(1),
@@ -117,8 +118,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
   def getAuthorByArticle(articleId: Long) = UserAwareAction {
     implicit request => {
-      UserRepository.getAuthorByArticle(articleId) match
-      {
+      UserRepository.getAuthorByArticle(articleId) match {
         case None => Ok(Json.obj("user" -> "user.notFound"))
         case Some(author) => Ok(Json.obj("user" -> User.userWriter.writes(author)))
       }

@@ -58,7 +58,7 @@ object LikeRepository extends LikeRepository {
       SQL(
         """
       SELECT likes.id from likes
-    WHERE likes.user_id = {userId} and likes.articleId = {articleId}
+    WHERE likes.user_id = {userId} and likes.article_id = {articleId}
         """
       ).
         on("userId" -> userId,

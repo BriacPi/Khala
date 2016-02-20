@@ -27,15 +27,16 @@ trait ArticleRepository {
       get[DateTime]("articles.creation_date") ~
       get[DateTime]("articles.last_update") ~
       str("articles.title") ~
+      str("articles.summary") ~
       str("articles.content") ~
       int("articles.nb_modifications") ~
       int("articles.reading_time") ~
       str("articles.tag1") ~
       str("articles.tag2") map {
-      case id ~ creationDate ~ lastUpdate ~ title ~ content ~ nbModifications ~
+      case id ~ creationDate ~ lastUpdate ~ title ~ summary ~ content ~ nbModifications ~
         readingTime ~ tag1 ~ tag2 => {
         Article(Some(id), creationDate, lastUpdate,
-          title, content, nbModifications, readingTime, tag1, Some(tag2))
+          title, Some(summary), content, nbModifications, readingTime, tag1, Some(tag2))
       }
     }
   }
@@ -106,14 +107,17 @@ object ArticleRepository extends ArticleRepository {
     DB.withConnection { implicit c =>
       SQL(
         """
-        insert into articles (author_id,creation_date,last_update,title,content,nb_modifications,reading_time, tag1, tag2) values
-        ({author_id},{creation_date},{last_update},{title},{content},{nb_modifications},{reading_time}, {tag1},{tag2})
+        insert into articles (author_id,creation_date,last_update,title,summary,content,
+        nb_modifications,reading_time, tag1, tag2) values
+        ({author_id},{creation_date},{last_update},{title},{summary},{content},
+        {nb_modifications},{reading_time}, {tag1},{tag2})
         """
       ).on(
         'author_id -> authorId,
         'creation_date -> new Timestamp(article.creationDate.getMillis()),
         'last_update -> new Timestamp(article.lastUpdate.getMillis()),
         'title -> article.title,
+        'summary -> article.summary.getOrElse(""),
         'content -> article.content,
         'nb_modifications -> article.nbModifications,
         'reading_time -> article.content.length / 1150,
@@ -129,13 +133,14 @@ object ArticleRepository extends ArticleRepository {
     DB.withConnection { implicit c =>
       SQL(
         """
-        update  articles set last_update ={last_update},title={title},content={content},
-        nbModifications={nbModifications} readingTime={readingTime} where id ={id}
+        update  articles set last_update ={last_update},title={title},summary={summary},content={content},
+        nbModifications={nbModifications},readingTime={readingTime} where id ={id}
         """
       ).on(
         'id -> article.id.get,
         'last_update -> new Timestamp(DateTime.now().getMillis()),
         'title -> article.title,
+        'summary -> article.summary.getOrElse(""),
         'content -> article.content,
         'nbModifications -> (article.nbModifications + 1),
         'readingTime -> article.content.length / 1150
@@ -152,7 +157,7 @@ object ArticleRepository extends ArticleRepository {
   }
 
 
-  def getViews(articleId: Long): Option[Int] = {
+  def getViews(articleId: Long) = {
     DB.withConnection { implicit current =>
       SQL(
         """
@@ -163,10 +168,10 @@ object ArticleRepository extends ArticleRepository {
       )
         .on("articleId" -> articleId)
         .as(recordMapperArticleViews.singleOpt)
-    }
+    }.getOrElse(0)
   }
 
-  def getLikes(articleId: Long): Option[Int] = {
+  def getLikes(articleId: Long)= {
     DB.withConnection { implicit current =>
       SQL(
         """
@@ -177,10 +182,10 @@ object ArticleRepository extends ArticleRepository {
       )
         .on("articleId" -> articleId)
         .as(recordMapperArticleLikes.singleOpt)
-    }
+    }.getOrElse(0)
   }
 
-  def getComments(articleId: Long): Option[Int] = {
+  def getComments(articleId: Long)= {
     DB.withConnection { implicit current =>
       SQL(
         """
@@ -191,7 +196,7 @@ object ArticleRepository extends ArticleRepository {
       )
         .on("articleId" -> articleId)
         .as(recordMapperArticleComments.singleOpt)
-    }
+    }.getOrElse(0)
   }
 
   def getAllArticles(): List[Article] = {
@@ -230,8 +235,8 @@ object ArticleRepository extends ArticleRepository {
 
     listArticle.map { article =>
 
-      ArticleStats.fromArticle(Article.shorten(article), getViews(article.id.get).getOrElse(0),
-        getLikes(article.id.get).getOrElse(0), getComments(article.id.get).getOrElse(0))
+      ArticleStats.fromArticle(Article.shorten(article), getViews(article.id.get),
+        getLikes(article.id.get), getComments(article.id.get))
     }
 
   }
@@ -252,14 +257,14 @@ object ArticleRepository extends ArticleRepository {
         .toList
     }
     listArticle.map { article =>
-      ArticleStats.fromArticle(Article.shorten(article), getViews(article.id.get).getOrElse(0),
-        getLikes(article.id.get).getOrElse(0), getComments(article.id.get).getOrElse(0))
+      ArticleStats.fromArticle(Article.shorten(article), getViews(article.id.get),
+        getLikes(article.id.get), getComments(article.id.get))
     }
 
 
   }
 
-  def getArticleStat(articleId: Long) = {
+  def getArticleStat(articleId: Long): Option[ArticleStats] = {
 
     val optArticle: Option[Article] =  DB.withConnection { implicit current =>
       SQL(
@@ -274,8 +279,8 @@ object ArticleRepository extends ArticleRepository {
     }
     optArticle match {
       case None => None
-      case Some(article) => Some(ArticleStats.fromArticle(article, getViews(article.id.get).getOrElse(0),
-        getLikes(article.id.get).getOrElse(0), getComments(article.id.get).getOrElse(0)))
+      case Some(article) => Some(ArticleStats.fromArticle(article, getViews(article.id.get),
+        getLikes(article.id.get), getComments(article.id.get)))
     }
   }
 }

@@ -14,6 +14,7 @@ case class Article(
                     creationDate: DateTime,
                     lastUpdate: DateTime,
                     title: String,
+                    summary: Option[String],
                     content: String,
                     nbModifications: Int,
                     readingTime: Int,
@@ -32,6 +33,7 @@ object Article {
       (JsPath \ "creationDate").read[DateTime] and
       (JsPath \ "lastUpdate").read[DateTime] and
       (JsPath \ "title").read[String] and
+      (JsPath \ "title").readNullable[String] and
       (JsPath \ "content").read[String] and
       (JsPath \ "nbModifications").read[Int] and
       (JsPath \ "readingTime").read[Int] and
@@ -49,18 +51,13 @@ object Article {
         "creationDate" -> article.creationDate,
         "lastUpdate" -> article.lastUpdate,
         "title" -> article.title,
+        "summary" -> article.summary.getOrElse[String](""),
         "content" -> article.content,
         "nbModifications" -> article.nbModifications,
         "readingTime" -> article.readingTime,
         "tag1" -> article.tag1,
+        "tag2" -> article.tag2.getOrElse[String]("")
 
-        //        "nbViews" -> article.nbViews,
-        //      "nbLikes" -> article.nbLikes,
-        //      "comments" -> article.nbComments,
-        "tag2" -> (article.tag2 match {
-          case None => ""
-          case Some(tag) => tag
-        })
       )
       article.id match {
         case None => json
@@ -87,6 +84,7 @@ case class ArticleStats(
                          creationDate: DateTime,
                          lastUpdate: DateTime,
                          title: String,
+                         summary: Option[String],
                          content: String,
                          nbModifications: Int,
                          readingTime: Int,
@@ -100,7 +98,7 @@ case class ArticleStats(
 object ArticleStats {
 
   def fromArticle(article: Article, nbViews: Int, nbLikes: Int, nbComments: Int): ArticleStats = {
-    ArticleStats(article.id.get, article.creationDate, article.lastUpdate, article.title, article.content,
+    ArticleStats(article.id.get, article.creationDate, article.lastUpdate, article.title,article.summary, article.content,
       article.nbModifications, article.readingTime, article.tag1, article.tag2, nbViews, nbLikes, nbComments)
   }
 
@@ -111,6 +109,7 @@ object ArticleStats {
         "creationDate" -> articleStats.creationDate,
         "lastUpdate" -> articleStats.lastUpdate,
         "title" -> articleStats.title,
+        "summary" -> articleStats.summary.getOrElse[String](""),
         "content" -> articleStats.content,
         "nbModifications" -> articleStats.nbModifications,
         "readingTime" -> articleStats.readingTime,
@@ -118,10 +117,7 @@ object ArticleStats {
         "nbViews" -> articleStats.nbViews,
         "nbLikes" -> articleStats.nbLikes,
         "nbComments" -> articleStats.nbComments,
-        "tag2" -> (articleStats.tag2 match {
-          case None => ""
-          case Some(tag) => tag
-        })
+        "tag2" -> articleStats.tag2.getOrElse[String]("")
       )
     }
 

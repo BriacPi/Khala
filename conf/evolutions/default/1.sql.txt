@@ -20,6 +20,7 @@ AUTHOR_ID INT NOT NULL,
 CREATION_DATE timestamp NOT NULL,
 LAST_UPDATE timestamp NOT NULL,
 TITLE  TEXT NOT NULL,
+SUMMARY TEXT,
 CONTENT  TEXT NOT NULL,
 NB_MODIFICATIONS  INT NOT NULL,
 READING_TIME  INT NOT NULL,
@@ -68,7 +69,7 @@ CREATE TABLE IF NOT EXISTS taggings(
 ID SERIAL PRIMARY KEY NOT NULL,
 TAG_NAME char(100) NOT NULL,
 ARTICLE_ID INT NOT NULL,
-TAG_TIME  timestamp NOT NULL
+TAGGING_DATE  timestamp NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS follows(
@@ -87,9 +88,6 @@ GROUP BY articles.id
 );
 
 
-
-
-
 CREATE MATERIALIZED VIEW IF NOT EXISTS articles_likes AS(
 SELECT articles.id AS article_id,
 COUNT(likes.id) AS nb_likes
@@ -105,6 +103,10 @@ FROM articles
 LEFT JOIN comments ON articles.id = comments.article_id
 GROUP BY articles.id
 );
+
+REFRESH MATERIALIZED VIEW articles_views;
+REFRESH MATERIALIZED VIEW articles_likes;
+REFRESH MATERIALIZED VIEW articles_comments;
 
 # --- !Downs
 
