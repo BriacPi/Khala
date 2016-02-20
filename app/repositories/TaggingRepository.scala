@@ -13,7 +13,7 @@ import repositories.TagRepository
 /**
   * Created by corpus on 20/02/2016.
   */
-class TaggingRepository {
+trait TaggingRepository {
 
 }
 
