@@ -40,9 +40,9 @@ GET         /common/img/*file                                  controllers.MyAss
 
 
 #Content Management
-#GET         /write-article                                     controllers.ContentController.writeArticle()
-#POST        /api/save-article                                  controllers.ContentController.saveArticle()
-#GET         /api/all-articles                                  controllers.ContentController.getAllArticles()
+GET         /write-article                                     controllers.ContentController.writeArticle()
+POST        /api/save-article                                  controllers.ContentController.saveArticle()
+GET         /api/all-articles                                  controllers.ContentController.getAllArticles()
 #GET         /api/articles-by-author                            controllers.ContentController.getArticlesByAuthor()
 #GET         /api/top-article-by-views                          controllers.ContentController.getTopArticleByViews()
 #GET         /api/author-mini/:articleId                        controllers.ContentController.getAuthorMini(articleId)

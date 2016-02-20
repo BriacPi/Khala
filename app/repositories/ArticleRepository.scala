@@ -6,7 +6,7 @@ package repositories
 
 
 import scala.util.{Failure, Success}
-import models.{Article}
+import models.{Article,User}
 import org.joda.time.DateTime
 
 
@@ -23,17 +23,18 @@ import java.sql.Timestamp
 trait ArticleRepository {
   private[repositories] val recordMapper = {
     long("articles.id") ~
-      long("articles.author_id") ~
       get[DateTime]("articles.creation_date") ~
       get[DateTime]("articles.last_update") ~
       str("articles.title") ~
       str("articles.content") ~
       int("articles.nb_modifications") ~
-      int("articles.reading_time") map {
-      case id ~ author_id ~ creationDate ~ lastUpdate ~ title ~ content ~ nbModifications ~
-        readingTime => {
-        Article(Some(id), author_id, creationDate, lastUpdate,
-          title, content, nbModifications, readingTime)
+      int("articles.reading_time") ~
+      str("articles.tag1") ~
+      str("articles.tag2") map {
+      case id ~ creationDate ~ lastUpdate ~ title ~ content ~ nbModifications ~
+        readingTime ~ tag1 ~ tag2 => {
+        Article(Some(id), creationDate, lastUpdate,
+          title, content, nbModifications, readingTime, tag1, Some(tag2))
       }
     }
   }
@@ -43,39 +44,62 @@ trait ArticleRepository {
 object ArticleRepository extends ArticleRepository {
 
   def getById(articleId: Long): Option[Article] = {
-      DB.withConnection { implicit current =>
-        SQL(
-          """
-          SELECT articles.*
+    DB.withConnection { implicit current =>
+      SQL(
+        """
+          SELECT *
           FROM articles
           WHERE articles.id = {id}
-          """
-        )
-          .on("id" -> articleId)
-          .as(recordMapper.singleOpt)
-      }
+        """
+      )
+        .on("id" -> articleId)
+        .as(recordMapper.singleOpt)
+    }
   }
 
-  def create(article: Article) = {
+  def getByAuthotAndTitle(authorId: Long, title: String): Option[Article] = {
+    DB.withConnection { implicit current =>
+      SQL(
+        """
+          SELECT *
+          FROM articles
+          WHERE articles.author_id = {authorId} AND articles.title = {title}
+        """
+      )
+        .on(
+          "authorId" -> authorId,
+          "title" -> title
+        )
+        .as(recordMapper.singleOpt)
+    }
+
+  }
+
+  def create(authorId: Long, article: Article): Option[Article]= {
+
     DB.withConnection { implicit c =>
       SQL(
         """
-        insert into articles (author_id,creation_date,last_update,title,content,_nb_modifications,reading_time) values
-        ({author_id},{creation_date},{last_update},{title},{content},{nb_modifications},{reading_time})
+        insert into articles (author_id,creation_date,last_update,title,content,nb_modifications,reading_time, tag1, tag2) values
+        ({author_id},{creation_date},{last_update},{title},{content},{nb_modifications},{reading_time}, {tag1},{tag2})
         """
       ).on(
-        'author_id -> article.author_id,
+        'author_id -> authorId,
         'creation_date -> new Timestamp(article.creationDate.getMillis()),
         'last_update -> new Timestamp(article.lastUpdate.getMillis()),
         'title -> article.title,
         'content -> article.content,
         'nb_modifications -> article.nbModifications,
-        'readingTime -> article.readingTime
+        'reading_time -> article.content.length/1150,
+        'tag1 -> article.tag1,
+        'tag2 -> article.tag2.getOrElse[String]("")
       ).executeInsert()
     }
+    getByAuthotAndTitle(authorId,article.title)
   }
 
-  def update(article:Article) = {
+  def update(article: Article) = {
+
     DB.withConnection { implicit c =>
       SQL(
         """ 
@@ -87,26 +111,35 @@ object ArticleRepository extends ArticleRepository {
         'last_update -> new Timestamp(DateTime.now().getMillis()),
         'title -> article.title,
         'content -> article.content,
-        'nbModifications -> (article.nbModifications+1),
-        'readingTime -> article.content.length/1150
+        'nbModifications -> (article.nbModifications + 1),
+        'readingTime -> article.content.length / 1150
       ).executeUpdate()
     }
     getById(article.id.get)
   }
-//
-//  def getAllArticles() = {
-//    DB.withConnection { implicit current =>
-//      SQL(
-//        """
-//          SELECT articles.*
-//          FROM articles
-//          WHERE articles.creationDate>{nowMinus1Day}
-//        """
-//      )
-//        .on("nowMinus1Day" -> DateTime.now().)
-//        .as(recordMapper *)
-//        .toList
-//    }
-//
-//  }
+
+  def save(author: User, article: Article) = {
+    article.id match {
+      case None => create(author.id.get,article)
+      case Some(id) => update(article)
+    }
+  }
+
+
+  def getAllArticles(): List[Article] = {
+    val datetime: Timestamp = new Timestamp(DateTime.now().minusHours(24).getMillis())
+
+    DB.withConnection { implicit current =>
+      SQL(
+        """
+          SELECT * FROM articles
+          WHERE articles.creation_date > {nowMinus1Day}
+        """
+      )
+        .on("nowMinus1Day" -> datetime)
+        .as(recordMapper *)
+        .toList
+    }
+
+  }
 }
