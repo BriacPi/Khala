@@ -94,7 +94,7 @@ object ArticleRepository extends ArticleRepository {
     getById(article.id.get)
   }
 
-  def getAll() = {
+  def getAllArticles() = {
     DB.withConnection { implicit current =>
       SQL(
         """
