@@ -13,7 +13,7 @@ import play.api.Play.current
   */
 trait TagRepository {
   private[repositories] val recordMapperName = {
-    long("tags.name") map {
+    str("tags.name") map {
       case name => {
         name
       }
@@ -29,7 +29,7 @@ object TagRepository extends TagRepository {
       SQL(
         """
       SELECT * from tags
-    WHERE tags.name = {name}
+      WHERE tags.name = {name}
         """
       ).
         on(

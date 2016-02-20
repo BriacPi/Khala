@@ -141,7 +141,7 @@ object ArticleRepository extends ArticleRepository {
 
 
 
-  def update(article: Article) = {
+  def update(authorId: Long, article: Article): String = {
 
     DB.withConnection { implicit c =>
       SQL(
@@ -159,13 +159,20 @@ object ArticleRepository extends ArticleRepository {
         'readingTime -> article.content.length / 1150
       ).executeUpdate()
     }
+    val newArticle: Option[Article] = getByAuthorAndTitle(authorId, article.title)
+    TaggingRepository.removeFromArticle(article.id.get)
+    TaggingRepository.create(article.tag1, newArticle.get.id.get)
+    article.tag2 match {
+      case None =>
+      case Some(tag2) => TaggingRepository.create(tag2, newArticle.get.id.get)
+    }
     "article.update.success"
   }
 
   def save(author: User, article: Article): String = {
     article.id match {
       case None => create(author.id.get, article)
-      case Some(id) => update(article)
+      case Some(id) => update(author.id.get,article)
     }
   }
 

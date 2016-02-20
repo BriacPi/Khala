@@ -14,7 +14,13 @@ import repositories.TagRepository
   * Created by corpus on 20/02/2016.
   */
 trait TaggingRepository {
-
+  private[repositories] val recordMapperName = {
+    str("tags.name") map {
+      case name => {
+        name
+      }
+    }
+  }
 }
 
 object TaggingRepository extends TaggingRepository {
@@ -49,5 +55,39 @@ object TaggingRepository extends TaggingRepository {
         ).executeUpdate()
       "tag.remove.success"
     }
+  }
+
+  def exists(tagName: String, articleId: Long): Boolean = {
+    DB.withConnection { implicit c =>
+      SQL(
+        """
+      SELECT tags.name from tags
+      WHERE tags.name = {name} and tags.article_id = {article_id}
+        """
+      ).
+        on("name" ->tagName,
+          "article_id" -> articleId
+        )
+        .as(recordMapperName.singleOpt) match {
+        case None => false
+        case Some(name) => true
+      }
+
+    }
+  }
+
+  def removeFromArticle(articleId: Long) = {
+    DB.withConnection { implicit c =>
+      SQL(
+        """
+        DELETE FROM taggings
+        WHERE taggings.article_id = {articleId}
+        """).
+        on(
+          "articleId" -> articleId
+        ).executeUpdate()
+      "tags.remove.success"
+    }
+
   }
 }
