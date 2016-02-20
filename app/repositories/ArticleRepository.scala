@@ -93,19 +93,20 @@ object ArticleRepository extends ArticleRepository {
     }
     getById(article.id.get)
   }
-
-  def getAllArticles() = {
-    DB.withConnection { implicit current =>
-      SQL(
-        """
-          SELECT articles.*
-          FROM articles
-        """
-      )
-        .on("enabled" -> true)
-        .as(recordMapper *)
-        .toList
-    }
-
-  }
+//
+//  def getAllArticles() = {
+//    DB.withConnection { implicit current =>
+//      SQL(
+//        """
+//          SELECT articles.*
+//          FROM articles
+//          WHERE articles.creationDate>{nowMinus1Day}
+//        """
+//      )
+//        .on("nowMinus1Day" -> DateTime.now().)
+//        .as(recordMapper *)
+//        .toList
+//    }
+//
+//  }
 }
