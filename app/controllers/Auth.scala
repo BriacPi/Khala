@@ -41,7 +41,7 @@ class Auth @Inject() (val env: AuthenticationEnvironment, val messagesApi: Messa
       "firstName" -> nonEmptyText,
       "lastName" -> nonEmptyText,
       "password" -> nonEmptyText.verifying(minLength(6)),
-			"services" -> ignored(List("user")) ,
+			"services" -> ignored("user") ,
       "registrationDate" -> ignored(DateTime.now())
     )(User.apply)(User.unapply)
   )
@@ -66,7 +66,7 @@ class Auth @Inject() (val env: AuthenticationEnvironment, val messagesApi: Messa
         val loginInfo: LoginInfo = user.email
         env.identityService.retrieve(loginInfo).flatMap {
           case Some(_) => Future.successful(BadRequest(viewsAuth.signUp(signUpForm.withError("email", Messages("auth.user.notunique")))))
-          case None => {
+          case None =>
             val token = MailTokenUser(user.email, isSignUp = true)
             for {
               savedUser <- env.identityService.save(user)
@@ -76,7 +76,6 @@ class Auth @Inject() (val env: AuthenticationEnvironment, val messagesApi: Messa
               Mailer.welcome(savedUser, link = routes.Auth.signUp(token.id).absoluteURL())
               Ok(viewsAuth.almostSignedUp(savedUser))
             }
-          }
         }
       }
     )
@@ -87,9 +86,9 @@ class Auth @Inject() (val env: AuthenticationEnvironment, val messagesApi: Messa
    */
   def signUp(tokenId: String) = Action.async { implicit request =>
     env.tokenService.retrieve(tokenId).flatMap {
-      case Some(token) if (token.isSignUp && !token.isExpired) => {
+      case Some(token) if token.isSignUp && !token.isExpired =>
         env.identityService.retrieve(token.email).flatMap {
-          case Some(user) => {
+          case Some(user) =>
             env.authenticatorService.create(user.email).flatMap { authenticator =>
               if (!user.emailConfirmed) {
                 env.identityService.save(user.copy(emailConfirmed = true)).map { newUser =>
@@ -105,14 +104,11 @@ class Auth @Inject() (val env: AuthenticationEnvironment, val messagesApi: Messa
                 result
               }
             }
-          }
           case None => Future.failed(new IdentityNotFoundException("Couldn't find user"))
         }
-      }
-      case Some(token) => {
+      case Some(token) =>
         env.tokenService.consume(tokenId)
         notFoundDefault
-      }
       case None => notFoundDefault
     }
   }
