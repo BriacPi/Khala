@@ -1,6 +1,7 @@
 package controllers
 
 import models._
+import repositories.ArticleRepository
 import utils.silhouette._
 import play.api._
 import play.api.mvc._
@@ -13,8 +14,9 @@ import javax.inject.Inject
 class Application @Inject() (val env: AuthenticationEnvironment, val messagesApi: MessagesApi) extends AuthenticationController {
 
   def index = UserAwareAction.async { implicit request =>
-    Future.successful(Ok(views.html.index()))
-}
+    val listArticles = ArticleRepository.getAllArticles().map(Article.shorten)
+    Future.successful(Ok(views.html.index(listArticles)))
+  }
 
   def myAccount = SecuredAction.async { implicit request =>
     Future.successful(Ok(views.html.myAccount()))

@@ -1,4 +1,4 @@
-@()(implicit loggedUser: Option[User], messages: Messages)
+@(articles:List[Article])(implicit loggedUser: Option[User], messages: Messages)
 
 @import views.html.tags.auth._
 @import controllers.routes
@@ -16,7 +16,28 @@
 	</head>
 
 	<body>
-
+		<div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+			@for(article <- articles){
+			<div class="post-preview">
+				<a href= "/article/id/@article.id">
+					<h2 class="post-title">
+						@article.title
+					</h2>
+					<h3 class="post-subtitle">
+						@article.content
+					</h3>
+				</a>
+				<p class="post-meta">Posted by
+					<a ></a> on @article.creationDate - @article.readingTime mn read -
+					<a href="#">@article.tag1</a>
+				</p>
+				<p>
+					<i class="fa fa-heart"></i>  <i class="fa fa-comments"></i>
+				</p>
+			</div>
+			}
+		</div>
+		<hr>
 	</body>
 
 
