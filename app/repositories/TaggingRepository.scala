@@ -18,7 +18,7 @@ trait TaggingRepository {
 }
 
 object TaggingRepository extends TaggingRepository {
-  def create(tagName: String, articleId: String) = {
+  def create(tagName: String, articleId: Long) = {
     TagRepository.create((tagName))
 
     DB.withConnection { implicit c =>
@@ -35,7 +35,7 @@ object TaggingRepository extends TaggingRepository {
     }
   }
 
-  def remove(tagName: String, articleId: String) = {
+  def remove(tagName: String, articleId: Long) = {
 
     DB.withConnection { implicit c =>
       SQL(

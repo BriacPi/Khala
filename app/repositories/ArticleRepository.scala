@@ -103,7 +103,7 @@ object ArticleRepository extends ArticleRepository {
   }
 
   def create(authorId: Long, article: Article): Option[Article] = {
-
+    TaggingRepository.create(article.tag1,article.id.get)
     DB.withConnection { implicit c =>
       SQL(
         """
@@ -171,7 +171,7 @@ object ArticleRepository extends ArticleRepository {
     }.getOrElse(0)
   }
 
-  def getLikes(articleId: Long)= {
+  def getLikes(articleId: Long) = {
     DB.withConnection { implicit current =>
       SQL(
         """
@@ -185,7 +185,7 @@ object ArticleRepository extends ArticleRepository {
     }.getOrElse(0)
   }
 
-  def getComments(articleId: Long)= {
+  def getComments(articleId: Long) = {
     DB.withConnection { implicit current =>
       SQL(
         """
@@ -266,7 +266,7 @@ object ArticleRepository extends ArticleRepository {
 
   def getArticleStat(articleId: Long): Option[ArticleStats] = {
 
-    val optArticle: Option[Article] =  DB.withConnection { implicit current =>
+    val optArticle: Option[Article] = DB.withConnection { implicit current =>
       SQL(
         """
           SELECT *
