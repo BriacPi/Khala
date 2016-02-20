@@ -6,7 +6,7 @@ package repositories
 
 
 import scala.util.{Failure, Success}
-import models.Article
+import models.{Article}
 import org.joda.time.DateTime
 
 
@@ -42,7 +42,19 @@ trait ArticleRepository {
 
 object ArticleRepository extends ArticleRepository {
 
-  def getById(articleId: Long) = {}
+  def getById(articleId: Long): Option[Article] = {
+      DB.withConnection { implicit current =>
+        SQL(
+          """
+          SELECT articles.*
+          FROM articles
+          WHERE articles.id = {id}
+          """
+        )
+          .on("id" -> articleId)
+          .as(recordMapper.singleOpt)
+      }
+  }
 
   def create(article: Article) = {
     DB.withConnection { implicit c =>
@@ -61,5 +73,37 @@ object ArticleRepository extends ArticleRepository {
         'readingTime -> article.readingTime
       ).executeInsert()
     }
+  }
+
+  def update(article:Article) = {
+    DB.withConnection { implicit c =>
+      SQL(
+        """ 
+        update  articles set last_update ={last_update},title={title},content={content},
+        nbModifications={nbModifications} readingTime={readingTime} where id ={id}
+        """
+      ).on(
+        'id -> article.id.get,
+        'last_update -> new Timestamp(DateTime.now().getMillis()),
+        'title -> article.title,
+        'content -> article.content,
+        'nbModifications -> (article.nbModifications+1),
+        'readingTime -> article.content.length/1150
+      ).executeUpdate()
+    }
+    getById(article.id.get)
+  }
+
+  def getAll() = {
+    DB.withConnection { implicit current =>
+      SQL(
+        """
+          SELECT articles.*
+          FROM articles
+        """
+      )
+        .as(recordMapper.singleOpt)
+    }
+
   }
 }
