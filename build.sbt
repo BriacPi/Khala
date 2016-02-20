@@ -49,6 +49,7 @@ libraryDependencies ++= Seq(
 
 //Postgres
 libraryDependencies += jdbc
+libraryDependencies += evolutions
 libraryDependencies += "org.postgresql" % "postgresql" % "9.4.1207.jre7"
 
 
