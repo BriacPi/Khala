@@ -102,7 +102,9 @@ object ArticleRepository extends ArticleRepository {
           FROM articles
         """
       )
-        .as(recordMapper.singleOpt)
+        .on("enabled" -> true)
+        .as(recordMapper *)
+        .toList
     }
 
   }
