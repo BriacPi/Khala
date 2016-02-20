@@ -19,7 +19,7 @@ import scala.concurrent.duration._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import models.Article
+import models.{ArticleInfo, Article}
 import repositories.ArticleRepository
 
 
@@ -32,7 +32,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
                                                 val cache: CacheApi) extends AuthenticationController with I18nSupport {
 
   val newArticleForm: Form[Article] = Form(
-        mapping(
+    mapping(
       "id" -> ignored(None: Option[Long]),
       "creationDate" -> ignored(DateTime.now()),
       "lastUpdate" -> ignored(DateTime.now()),
@@ -44,14 +44,15 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
       "tag2" -> optional(text)
     )(Article.apply)(Article.unapply)
   )
-//
-//  def article(articleID: String) = UserAwareAction { implicit request =>
-//    val fakeUserId = ""
-//    ViewRepository.viewArticle(fakeUserId, articleID)
-//    Ok(views.html.content.article(articleID))
-//
-//  }
-//
+
+  //
+  //  def article(articleID: String) = UserAwareAction { implicit request =>
+  //    val fakeUserId = ""
+  //    ViewRepository.viewArticle(fakeUserId, articleID)
+  //    Ok(views.html.content.article(articleID))
+  //
+  //  }
+  //
   def writeArticle() = SecuredAction { implicit request =>
 
     Ok(views.html.content.writeArticle(newArticleForm))
@@ -63,7 +64,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
       error => {
 
         // Request payload is invalid.envisageable
-       BadRequest(views.html.content.writeArticle(newArticleForm))
+        BadRequest(views.html.content.writeArticle(newArticleForm))
       },
       article => {
         if (article.title.length() == 0) {
@@ -82,80 +83,70 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
   def getAllArticles() = UserAwareAction { implicit request => {
     val listArticles = ArticleRepository.getAllArticles().map(Article.shorten)
-
-      Ok(Json.obj("articles" -> listArticles.map(Article.articleWriter.writes)))
-    }
+    Ok(Json.obj("articles" -> listArticles.map(Article.articleWriter.writes)))
+  }
   }
 
 
-//
-//  def getArticlesByAuthor(): Action[AnyContent] = SecuredAction.async { implicit request => {
-//    val futureArticles: Future[List[Article]] = ArticleRepository.getByAuthor(request.identity)
-//    val futureJson: Future[List[JsValue]] = futureArticles.map { list => list.map {
-//
-//      article => println(article.creationDate)
-//        Article.articleWriter.writes(article)
-//    }
-//    }
-//    futureJson.map { jsonList =>
-//      Ok(Json.obj("articles" -> jsonList))
-//    }
-//  }
-//  }
-//
-//  def getTopArticleByViews(): Action[AnyContent] = SecuredAction.async { implicit request => {
-//    val futureOptionTopArticle: Future[Option[Article]] = ArticleRepository.getTopArticleByViews(request.identity)
-//    futureOptionTopArticle.map {
-//      optionTopArticle => optionTopArticle match {
-//        case None => Ok(Json.obj("topArticle" -> "error.noArticleFound"))
-//        case Some(topArticle) => Ok(Article.articleWriter.writes(topArticle))
-//      }
-//    }
-//  }
-//  }
-//
-//  def getAuthorMini(articleId: String): Action[AnyContent] = UserAwareAction.async {
-//    implicit request => {
-//      ArticleRepository.getAuthorMini(articleId).map {
-//        json => Ok(json)
-//      }
-//    }
-//  }
-//
-//  def getAuthor(articleId: String): Action[AnyContent] = UserAwareAction.async {
-//    implicit request => {
-//      ArticleRepository.getAuthor(articleId).map {
-//        optionJson => optionJson match {
-//          case None => Ok(Json.obj("user" -> "user.notFound"))
-//          case Some(jsonAuthor) => Ok(jsonAuthor)
-//        }
-//
-//      }
-//    }
-//  }
-//
-//  def getTopArticlesByViews(first: Int, last: Int): Action[AnyContent] = UserAwareAction.async {
-//    implicit request => {
-//      val futureTopArticles: Future[Array[Article]] = cache.getOrElse[Future[Array[Article]]]("futureTopArticles") {
-//        ArticleRepository.getTopArticlesByViews(24)
-//      }
-//      futureTopArticles.map {
-//        topArticles => val size = topArticles.length
-//          def realLast = {
-//            if (last >= size) size - 1
-//            else last
-//          }
-//
-//          def realFirst = {
-//            if (first < 0) 0
-//            else first
-//          }
-//          if (realFirst >= size) Ok(Json.obj("error mesage" -> "no content"))
-//          else Ok(Json.obj("articles" -> topArticles.slice(realFirst, realLast)))
-//      }
-//
-//
-//    }
-//
-//  }
+  def getArticleInfosByAuthor(): Action[AnyContent] = SecuredAction { implicit request => {
+    val listJsons: List[JsObject] = ArticleRepository.getArticleInfosByAuthor(request.identity.id.get).map {
+      articleInfo => ArticleInfo.articleInfoWriter.writes(articleInfo)
+    }
+    Ok(Json.obj("articles" -> listJsons))
+  }
+  }
+
+  def getTopArticleInfosByViews() = SecuredAction { implicit request => {
+    val listJsons: List[JsObject] = ArticleRepository.getTopArticleInfosByViews().map {
+      articleInfo => ArticleInfo.articleInfoWriter.writes(articleInfo)
+    }
+    Ok(Json.obj("articles" -> listJsons))
+
+  }
+  }
+
+  //  def getAuthorMini(articleId: String): Action[AnyContent] = UserAwareAction.async {
+  //    implicit request => {
+  //      ArticleRepository.getAuthorMini(articleId).map {
+  //        json => Ok(json)
+  //      }
+  //    }
+  //  }
+  //
+  //  def getAuthor(articleId: String): Action[AnyContent] = UserAwareAction.async {
+  //    implicit request => {
+  //      ArticleRepository.getAuthor(articleId).map {
+  //        optionJson => optionJson match {
+  //          case None => Ok(Json.obj("user" -> "user.notFound"))
+  //          case Some(jsonAuthor) => Ok(jsonAuthor)
+  //        }
+  //
+  //      }
+  //    }
+  //  }
+  //
+  //  def getTopArticlesByViews(first: Int, last: Int): Action[AnyContent] = UserAwareAction.async {
+  //    implicit request => {
+  //      val futureTopArticles: Future[Array[Article]] = cache.getOrElse[Future[Array[Article]]]("futureTopArticles") {
+  //        ArticleRepository.getTopArticlesByViews(24)
+  //      }
+  //      futureTopArticles.map {
+  //        topArticles => val size = topArticles.length
+  //          def realLast = {
+  //            if (last >= size) size - 1
+  //            else last
+  //          }
+  //
+  //          def realFirst = {
+  //            if (first < 0) 0
+  //            else first
+  //          }
+  //          if (realFirst >= size) Ok(Json.obj("error mesage" -> "no content"))
+  //          else Ok(Json.obj("articles" -> topArticles.slice(realFirst, realLast)))
+  //      }
+  //
+  //
+  //    }
+  //
+  //  }
 }

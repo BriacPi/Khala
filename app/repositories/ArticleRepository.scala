@@ -210,16 +210,15 @@ object ArticleRepository extends ArticleRepository {
     }
   }
 
-
-  def getArticlesByAuthor(authorId: Long): List[ArticleInfo] = {
-
+//return articles
+  def getArticleInfosByAuthor(authorId: Long): List[ArticleInfo] = {
     val listArticle: List[Article] = DB.withConnection { implicit current =>
       SQL(
         """
             SELECT articles.* FROM articles
             LEFT JOIN articles_views ON articles.id = articles_views.article_id
             WHERE articles.author_id = {authorId}
-            ORDER BY articels_views.nb_views
+            ORDER BY articles_views.nb_views DESC, articles.id DESC
         """
       )
         .on("authorId" -> authorId)
@@ -229,8 +228,32 @@ object ArticleRepository extends ArticleRepository {
 
     listArticle.map { article =>
 
-      ArticleInfo.fromArticle(article, getViews(article.id.get).get, getLikes(article.id.get).get, getComments(article.id.get).get)
+      ArticleInfo.fromArticle(Article.shorten(article), getViews(article.id.get).getOrElse(0),
+        getLikes(article.id.get).getOrElse(0), getComments(article.id.get).getOrElse(0))
     }
+
+  }
+
+  def getTopArticleInfosByViews() = {
+    val datetime: Timestamp = new Timestamp(DateTime.now().minusHours(24).getMillis())
+    val listArticle: List[Article] = DB.withConnection { implicit current =>
+      SQL(
+        """
+            SELECT articles.* FROM articles
+            LEFT JOIN articles_views ON articles.id = articles_views.article_id
+            WHERE articles.creation_date > {nowMinus1Day}
+            ORDER BY articles_views.nb_views DESC, articles.id DESC
+        """
+      )
+        .on("nowMinus1Day" -> datetime)
+        .as(recordMapperArticle *)
+        .toList
+    }
+    listArticle.map { article =>
+      ArticleInfo.fromArticle(Article.shorten(article), getViews(article.id.get).getOrElse(0),
+        getLikes(article.id.get).getOrElse(0), getComments(article.id.get).getOrElse(0))
+    }
+
 
   }
 }

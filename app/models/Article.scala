@@ -101,4 +101,24 @@ object ArticleInfo {
     ArticleInfo(article.id.get, article.creationDate, article.title, article.content, article.readingTime, article.tag1, article.tag2, nbViews, nbLikes, nbComments)
   }
 
+  implicit val articleInfoWriter = new Writes[ArticleInfo] {
+    def writes(articleInfo: ArticleInfo): JsObject = {
+      Json.obj(
+        "id" -> articleInfo.id,
+        "creationDate" -> articleInfo.creationDate,
+        "title" -> articleInfo.title,
+        "content" -> articleInfo.content,
+        "readingTime" -> articleInfo.readingTime,
+        "tag1" -> articleInfo.tag1,
+        "nbViews" -> articleInfo.nbViews,
+        "nbLikes" -> articleInfo.nbLikes,
+        "comments" -> articleInfo.nbComments,
+        "tag2" -> (articleInfo.tag2 match {
+          case None => ""
+          case Some(tag) => tag
+        })
+      )
+    }
+
+  }
 }
