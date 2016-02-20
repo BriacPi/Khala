@@ -19,8 +19,8 @@ import scala.concurrent.duration._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import models.{ArticleInfo, Article}
-import repositories.ArticleRepository
+import models.{ArticleStats, Article}
+import repositories.{ViewRepository, ArticleRepository}
 
 
 //
@@ -88,19 +88,29 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   }
 
 
-  def getArticleInfosByAuthor(): Action[AnyContent] = SecuredAction { implicit request => {
-    val listJsons: List[JsObject] = ArticleRepository.getArticleInfosByAuthor(request.identity.id.get).map {
-      articleInfo => ArticleInfo.articleInfoWriter.writes(articleInfo)
+  def getArticleStatsByAuthor(): Action[AnyContent] = SecuredAction { implicit request => {
+    val listJsons: List[JsObject] = ArticleRepository.getArticleStatsByAuthor(request.identity.id.get).map {
+      articleStat => ArticleStats.articleStatsWriter.writes(articleStat)
     }
     Ok(Json.obj("articles" -> listJsons))
   }
   }
 
-  def getTopArticleInfosByViews() = SecuredAction { implicit request => {
-    val listJsons: List[JsObject] = ArticleRepository.getTopArticleInfosByViews().map {
-      articleInfo => ArticleInfo.articleInfoWriter.writes(articleInfo)
+  def getTopArticleStatsByViews() = SecuredAction { implicit request => {
+    val listJsons: List[JsObject] = ArticleRepository.getTopArticleStatsByViews().map {
+      articleStats => ArticleStats.articleStatsWriter.writes(articleStats)
     }
     Ok(Json.obj("articles" -> listJsons))
+
+  }
+  }
+
+  def viewArticle(articleId: Long) = UserAwareAction { implicit request => {
+    request.identity match {
+      case None => ViewRepository.create(0.toLong,articleId)
+      case Some(user) => ViewRepository.create(user.id.get,articleId)
+    }
+    Ok(Json.obj("articles" -> "views successful"))
 
   }
   }

@@ -6,7 +6,7 @@ package repositories
 
 
 import scala.util.{Failure, Success}
-import models.{ArticleInfo, Article, User}
+import models.{ArticleStats, Article, User}
 import org.joda.time.DateTime
 
 
@@ -65,6 +65,7 @@ trait ArticleRepository {
     }
   }
 }
+
 
 object ArticleRepository extends ArticleRepository {
 
@@ -151,23 +152,6 @@ object ArticleRepository extends ArticleRepository {
   }
 
 
-  def getAllArticles(): List[Article] = {
-    val datetime: Timestamp = new Timestamp(DateTime.now().minusHours(24).getMillis())
-
-    DB.withConnection { implicit current =>
-      SQL(
-        """
-          SELECT * FROM articles
-          WHERE articles.creation_date > {nowMinus1Day}
-        """
-      )
-        .on("nowMinus1Day" -> datetime)
-        .as(recordMapperArticle *)
-        .toList
-    }
-
-  }
-
   def getViews(articleId: Long): Option[Int] = {
     DB.withConnection { implicit current =>
       SQL(
@@ -210,8 +194,26 @@ object ArticleRepository extends ArticleRepository {
     }
   }
 
-//return articles
-  def getArticleInfosByAuthor(authorId: Long): List[ArticleInfo] = {
+  def getAllArticles(): List[Article] = {
+    val datetime: Timestamp = new Timestamp(DateTime.now().minusHours(24).getMillis())
+
+    DB.withConnection { implicit current =>
+      SQL(
+        """
+          SELECT * FROM articles
+          WHERE articles.creation_date > {nowMinus1Day}
+        """
+      )
+        .on("nowMinus1Day" -> datetime)
+        .as(recordMapperArticle *)
+        .toList
+    }
+
+  }
+
+
+  //return articles
+  def getArticleStatsByAuthor(authorId: Long): List[ArticleStats] = {
     val listArticle: List[Article] = DB.withConnection { implicit current =>
       SQL(
         """
@@ -228,13 +230,13 @@ object ArticleRepository extends ArticleRepository {
 
     listArticle.map { article =>
 
-      ArticleInfo.fromArticle(Article.shorten(article), getViews(article.id.get).getOrElse(0),
+      ArticleStats.fromArticle(Article.shorten(article), getViews(article.id.get).getOrElse(0),
         getLikes(article.id.get).getOrElse(0), getComments(article.id.get).getOrElse(0))
     }
 
   }
 
-  def getTopArticleInfosByViews() = {
+  def getTopArticleStatsByViews() = {
     val datetime: Timestamp = new Timestamp(DateTime.now().minusHours(24).getMillis())
     val listArticle: List[Article] = DB.withConnection { implicit current =>
       SQL(
@@ -250,10 +252,29 @@ object ArticleRepository extends ArticleRepository {
         .toList
     }
     listArticle.map { article =>
-      ArticleInfo.fromArticle(Article.shorten(article), getViews(article.id.get).getOrElse(0),
+      ArticleStats.fromArticle(Article.shorten(article), getViews(article.id.get).getOrElse(0),
         getLikes(article.id.get).getOrElse(0), getComments(article.id.get).getOrElse(0))
     }
 
 
+  }
+
+  def getArticleStat(articleId: Long): Option[ArticleStats] = {
+
+    DB.withConnection { implicit current =>
+      SQL(
+        """
+          SELECT *
+          FROM articles
+          WHERE articles.id = {id}
+        """
+      )
+        .on("id" -> articleId)
+        .as(recordMapperArticle.singleOpt)
+    } match {
+      case None => None
+      case Some(article) => Some(ArticleStats.fromArticle(article, getViews(article.id.get).getOrElse(0),
+        getLikes(article.id.get).getOrElse(0), getComments(article.id.get).getOrElse(0)))
+    }
   }
 }

@@ -82,38 +82,43 @@ object Article {
 
 }
 
-case class ArticleInfo(
-                        id: Long,
-                        creationDate: DateTime,
-                        title: String,
-                        content: String,
-                        readingTime: Int,
-                        tag1: String,
-                        tag2: Option[String],
-                        nbViews: Int,
-                        nbLikes: Int,
-                        nbComments: Int
-                      )
+case class ArticleStats(
+                         id: Long,
+                         creationDate: DateTime,
+                         lastUpdate: DateTime,
+                         title: String,
+                         content: String,
+                         nbModifications: Int,
+                         readingTime: Int,
+                         tag1: String,
+                         tag2: Option[String],
+                         nbViews: Int,
+                         nbLikes: Int,
+                         nbComments: Int
+                       )
 
-object ArticleInfo {
+object ArticleStats {
 
-  def fromArticle(article: Article, nbViews: Int, nbLikes: Int, nbComments: Int): ArticleInfo = {
-    ArticleInfo(article.id.get, article.creationDate, article.title, article.content, article.readingTime, article.tag1, article.tag2, nbViews, nbLikes, nbComments)
+  def fromArticle(article: Article, nbViews: Int, nbLikes: Int, nbComments: Int): ArticleStats = {
+    ArticleStats(article.id.get, article.creationDate, article.lastUpdate, article.title, article.content,
+      article.nbModifications, article.readingTime, article.tag1, article.tag2, nbViews, nbLikes, nbComments)
   }
 
-  implicit val articleInfoWriter = new Writes[ArticleInfo] {
-    def writes(articleInfo: ArticleInfo): JsObject = {
+  implicit val articleStatsWriter = new Writes[ArticleStats] {
+    def writes(articleStats: ArticleStats): JsObject = {
       Json.obj(
-        "id" -> articleInfo.id,
-        "creationDate" -> articleInfo.creationDate,
-        "title" -> articleInfo.title,
-        "content" -> articleInfo.content,
-        "readingTime" -> articleInfo.readingTime,
-        "tag1" -> articleInfo.tag1,
-        "nbViews" -> articleInfo.nbViews,
-        "nbLikes" -> articleInfo.nbLikes,
-        "comments" -> articleInfo.nbComments,
-        "tag2" -> (articleInfo.tag2 match {
+        "id" -> articleStats.id,
+        "creationDate" -> articleStats.creationDate,
+        "lastUpdate" -> articleStats.lastUpdate,
+        "title" -> articleStats.title,
+        "content" -> articleStats.content,
+        "nbModifications" -> articleStats.nbModifications,
+        "readingTime" -> articleStats.readingTime,
+        "tag1" -> articleStats.tag1,
+        "nbViews" -> articleStats.nbViews,
+        "nbLikes" -> articleStats.nbLikes,
+        "nbComments" -> articleStats.nbComments,
+        "tag2" -> (articleStats.tag2 match {
           case None => ""
           case Some(tag) => tag
         })

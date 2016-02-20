@@ -42,15 +42,15 @@ GET         /common/img/*file             controllers.MyAssets.commonImg(path="/
 #Content Management
 GET         /write-article                controllers.ContentController.writeArticle()
 POST        /api/save-article             controllers.ContentController.saveArticle()
-GET         /api/all-articles             controllers.ContentController.getAllArticles()
+GET         /api/all-article             controllers.ContentController.getAllArticles()
 #GET         /api/article-views/:articleId        controllers.ContentController.getViews(articelId:Long)
-GET         /api/article-infos-by-author                            controllers.ContentController.getArticleInfosByAuthor()
-GET         /api/top-article-infos-by-views                          controllers.ContentController.getTopArticleInfosByViews()
+GET         /api/article-stats-by-author                            controllers.ContentController.getArticleStatsByAuthor()
+GET         /api/top-article-stats-by-views                          controllers.ContentController.getTopArticleStatsByViews()
 #GET         /api/author-mini/:articleId                        controllers.ContentController.getAuthorMini(articleId)
 #GET         /api/author/:articleId                             controllers.ContentController.getAuthor(articleId)
 #GET         /api/top-articles-by-views/:firstId/:lastId        controllers.ContentController.getTopArticlesByViews(firstId: Int, lastId: Int)
 #
-#GET         /article/id/:articleId                             controllers.ContentController.article(articleId:String)
+GET         /view-article/:articleId                             controllers.ContentController.viewArticle(articleId:Long)
 
 
 ##UserProfile Management
