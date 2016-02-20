@@ -104,9 +104,18 @@ LEFT JOIN comments ON articles.id = comments.article_id
 GROUP BY articles.id
 );
 
+CREATE MATERIALIZED VIEW IF NOT EXISTS authors_followers AS(
+SELECT users.id AS author_id,
+COUNT(follows.id) AS nb_follower
+FROM users 
+LEFT JOIN follows ON users.id = follows.author_id
+GROUP BY users.id
+);
+
 REFRESH MATERIALIZED VIEW articles_views;
 REFRESH MATERIALIZED VIEW articles_likes;
 REFRESH MATERIALIZED VIEW articles_comments;
+REFRESH MATERIALIZED VIEW authors_followers;
 
 # --- !Downs
 
