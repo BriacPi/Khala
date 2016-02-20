@@ -1,8 +1,10 @@
 package controllers
 
+import java.io.Serializable
 import javax.inject.Inject
 
 import org.joda.time.DateTime
+import play.api.data.validation.Constraints._
 import play.api.libs.iteratee.Enumeratee
 
 import play.api.data.Form
@@ -37,12 +39,12 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
       "creationDate" -> ignored(DateTime.now()),
       "lastUpdate" -> ignored(DateTime.now()),
       "title" -> nonEmptyText,
-      "summary" -> optional(text),
+      "summary" -> optional(text.verifying(maxLength(255))),
       "content" -> nonEmptyText,
       "nbModifications" -> ignored(0),
       "readingTime" -> ignored(1),
-      "tag1" -> nonEmptyText,
-      "tag2" -> optional(text)
+      "tag1" -> nonEmptyText.verifying(maxLength(100)),
+      "tag2" -> optional(text.verifying(maxLength(100)))
     )(Article.apply)(Article.unapply)
   )
 
@@ -73,8 +75,8 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
         }
         else if (article.title.length() > 300) Ok(Json.obj("message" -> "error.titleTooLong"))
         else {
-          ArticleRepository.save(request.identity, article)
-          Ok(Json.obj("message" -> "article.updateSuccessful"))
+          val s: String = ArticleRepository.save(request.identity, article)
+          Ok(Json.obj("message" -> s))
         }
       }
 

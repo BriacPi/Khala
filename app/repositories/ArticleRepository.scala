@@ -84,7 +84,7 @@ object ArticleRepository extends ArticleRepository {
     }
   }
 
-  def getByAuthotAndTitle(authorId: Long, title: String): Option[Article] = {
+  def getByAuthorAndTitle(authorId: Long, title: String): Option[Article] = {
     DB.withConnection { implicit current =>
       SQL(
         """
@@ -102,31 +102,44 @@ object ArticleRepository extends ArticleRepository {
 
   }
 
-  def create(authorId: Long, article: Article): Option[Article] = {
-    TaggingRepository.create(article.tag1,article.id.get)
-    DB.withConnection { implicit c =>
-      SQL(
-        """
+  def create(authorId: Long, article: Article): String = {
+    getByAuthorAndTitle(authorId, article.title) match {
+      case None => {
+        DB.withConnection { implicit c =>
+          SQL(
+            """
         insert into articles (author_id,creation_date,last_update,title,summary,content,
         nb_modifications,reading_time, tag1, tag2) values
         ({author_id},{creation_date},{last_update},{title},{summary},{content},
         {nb_modifications},{reading_time}, {tag1},{tag2})
-        """
-      ).on(
-        'author_id -> authorId,
-        'creation_date -> new Timestamp(article.creationDate.getMillis()),
-        'last_update -> new Timestamp(article.lastUpdate.getMillis()),
-        'title -> article.title,
-        'summary -> article.summary.getOrElse(""),
-        'content -> article.content,
-        'nb_modifications -> article.nbModifications,
-        'reading_time -> article.content.length / 1150,
-        'tag1 -> article.tag1,
-        'tag2 -> article.tag2.getOrElse[String]("")
-      ).executeInsert()
+            """
+          ).on(
+            'author_id -> authorId,
+            'creation_date -> new Timestamp(article.creationDate.getMillis()),
+            'last_update -> new Timestamp(article.lastUpdate.getMillis()),
+            'title -> article.title,
+            'summary -> article.summary.getOrElse(""),
+            'content -> article.content,
+            'nb_modifications -> article.nbModifications,
+            'reading_time -> article.content.length / 1150,
+            'tag1 -> article.tag1,
+            'tag2 -> article.tag2.getOrElse[String]("")
+          ).executeInsert()
+        }
+        val newArticle: Option[Article] = getByAuthorAndTitle(authorId, article.title)
+        TaggingRepository.create(article.tag1, newArticle.get.id.get)
+        article.tag2 match {
+          case None =>
+          case Some(tag2) => TaggingRepository.create(tag2, newArticle.get.id.get)
+        }
+        "article.add.success"
+      }
+      case Some(existingArticle) => "article.add.alreadyExists"
+      }
+
     }
-    getByAuthotAndTitle(authorId, article.title)
-  }
+
+
 
   def update(article: Article) = {
 
@@ -146,10 +159,10 @@ object ArticleRepository extends ArticleRepository {
         'readingTime -> article.content.length / 1150
       ).executeUpdate()
     }
-    getById(article.id.get)
+    "article.update.success"
   }
 
-  def save(author: User, article: Article) = {
+  def save(author: User, article: Article): String = {
     article.id match {
       case None => create(author.id.get, article)
       case Some(id) => update(article)

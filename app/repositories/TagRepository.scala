@@ -13,7 +13,7 @@ import play.api.Play.current
   */
 trait TagRepository {
   private[repositories] val recordMapperName = {
-    long("likes.name") map {
+    long("tags.name") map {
       case name => {
         name
       }

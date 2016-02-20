@@ -24,7 +24,7 @@ object TaggingRepository extends TaggingRepository {
     DB.withConnection { implicit c =>
       SQL(
         """
-        insert into taggins (tag_name,article_id,tagging_date) values
+        insert into taggings (tag_name,article_id,tagging_date) values
         ({tag_name},{article_id},{tagging_date})
         """
       ).on(
