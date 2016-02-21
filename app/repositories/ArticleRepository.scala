@@ -244,7 +244,7 @@ object ArticleRepository extends ArticleRepository {
             SELECT articles.* FROM articles
             LEFT JOIN articles_views ON articles.id = articles_views.article_id
             WHERE articles.author_id = {authorId}
-            ORDER BY articles_views.nb_views DESC, articles.id DESC
+            ORDER BY COALESCE(articles_views.nb_views,0) DESC, articles.id DESC
         """
       )
         .on("authorId" -> authorId)
@@ -261,18 +261,18 @@ object ArticleRepository extends ArticleRepository {
   }
 
   def getTopArticleStatsByViews() = {
-    val datetime: Timestamp = new Timestamp(DateTime.now().minusHours(24).getMillis())
+    val datetime: Timestamp = new Timestamp(DateTime.now().minusDays(5).getMillis())
     val listArticle: List[Article] = DB.withConnection { implicit current =>
       SQL(
         """
             SELECT articles.* FROM articles
             LEFT JOIN articles_views ON articles.id = articles_views.article_id
-            WHERE articles.creation_date > {nowMinus1Day}
+            WHERE articles.creation_date > {nowMinus5Day}
             ORDER BY articles_views.nb_views DESC, articles.id DESC
             LIMIT 200 OFFSET 0
         """
       )
-        .on("nowMinus1Day" -> datetime)
+        .on("nowMinus5Day" -> datetime)
         .as(recordMapperArticle *)
         .toList
     }
