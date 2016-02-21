@@ -147,6 +147,7 @@ REFRESH MATERIALIZED VIEW articles_comments;
 REFRESH MATERIALIZED VIEW articles_bookmarks;
 REFRESH MATERIALIZED VIEW authors_followers;
 REFRESH MATERIALIZED VIEW authors_articles;
+REFRESH MATERIALIZED VIEW tags_stats;
 
 # --- !Downs
 
@@ -161,4 +162,7 @@ DROP TABLE FOLLOWS;
 DROP TABLE articles_views;
 DROP TABLE articles_likes;
 DROP TABLE articles_comments;
+DROP TABLE articles_bookmarks
 DROP TABLE authors_followers;
+DROP TABLE authors_articles;
+DROP TABLE tags_stats
