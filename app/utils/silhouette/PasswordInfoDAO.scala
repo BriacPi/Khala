@@ -17,7 +17,7 @@ class PasswordInfoDAO extends DelegableAuthInfoDAO[PasswordInfo] {
 
   def find(loginInfo: LoginInfo) =
     UserRepository.getByEmail(loginInfo) match {
-      case Some(user) if user.emailConfirmed => Future.successful(Some(user.password))
+      case Some(user) if user.emailConfirmed =>  Future.successful(Some(user.password))
       case _ => Future.successful(None)
     }
 

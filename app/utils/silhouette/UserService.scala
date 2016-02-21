@@ -8,6 +8,8 @@ import repositories.UserRepository
 import scala.concurrent.Future
 
 class UserService extends IdentityService[User] {
-  def retrieve(loginInfo: LoginInfo): Future[Option[User]] = Future.successful(UserRepository.getByEmail(loginInfo))
+  def retrieve(loginInfo: LoginInfo): Future[Option[User]] = {
+    Future.successful(UserRepository.getByEmail(loginInfo))
+  }
   def save(user: User): Future[User] = Future.successful(UserRepository.save(user).get)
 }
