@@ -1,6 +1,7 @@
 package controllers
 
 import models._
+import play.api.routing.JavaScriptReverseRouter
 import repositories.ArticleRepository
 import utils.silhouette._
 import play.api._
@@ -10,6 +11,8 @@ import play.api.i18n.{ MessagesApi, Messages, Lang }
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits._
 import javax.inject.Inject
+
+
 
 class Application @Inject() (val env: AuthenticationEnvironment, val messagesApi: MessagesApi) extends AuthenticationController {
 
@@ -38,6 +41,13 @@ class Application @Inject() (val env: AuthenticationEnvironment, val messagesApi
     }.getOrElse {
       Redirect(routes.Application.index).withLang(Lang(lang))
     }
+  }
+  def javascriptRoutes = Action { implicit request =>
+    Ok(
+      JavaScriptReverseRouter("jsRoutes")(
+        routes.javascript.ContentController.likeUnlike
+      )
+    ).as("text/javascript")
   }
 
 }
