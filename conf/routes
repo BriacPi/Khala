@@ -41,6 +41,7 @@ GET         /common/img/*file                      controllers.MyAssets.commonIm
 
 #Content Management
 GET         /write-article                         controllers.ContentController.writeArticle()
+GET         /article/id/:id                           controllers.ContentController.article(id:Long)
 POST        /api/save-article                      controllers.ContentController.saveArticle()
 GET         /api/all-article                       controllers.ContentController.getAllArticles()
 #GET         /api/article-views/:articleId         controllers.ContentController.getViews(articelId:Long)

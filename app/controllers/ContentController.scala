@@ -56,6 +56,15 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   //
   //  }
   //
+  def article(id:Long) = UserAwareAction { implicit request => {
+    ArticleRepository.getById(id) match{
+      case Some(article) =>  Ok(views.html.content.article(article))
+      case None => Redirect(routes.Application.index)
+    }
+
+  }
+  }
+
   def writeArticle() = SecuredAction { implicit request =>
 
     Ok(views.html.content.writeArticle(newArticleForm))
@@ -122,7 +131,6 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
         case None => Ok(Json.obj("user" -> "user.notFound"))
         case Some(author) => Ok(Json.obj("user" -> User.userWriter.writes(author)))
       }
-
     }
   }
 
