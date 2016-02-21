@@ -12,6 +12,7 @@ import play.api.db.DB
 import scala.language.postfixOps
 import play.api.Play.current
 import java.sql.Timestamp
+
 /**
   * Created by corpus on 05/02/2016.
   */
@@ -31,7 +32,13 @@ trait UserRepository {
       }
     }
   }
-
+  private[repositories] val recordMapperPhoto = {
+    str("users.url_photo_profile") map {
+      case url_photo_profile => {
+        url_photo_profile
+      }
+    }
+  }
 }
 
 object UserRepository extends UserRepository {
@@ -51,6 +58,25 @@ object UserRepository extends UserRepository {
     }
   }
 
+  def getPhoto(userId: Long): String = {
+    DB.withConnection { implicit current =>
+      SQL(
+        """
+          SELECT users.url_photo_profile
+          FROM users
+          WHERE users.id = userId
+        """
+      )
+        .on("userId" -> userId)
+        .as(recordMapperPhoto.singleOpt)
+    } match {
+
+      case None => "img/profile_default_large"
+      case Some(url) => url
+    }
+
+  }
+
   def create(user: User): Option[User] = {
     DB.withConnection { implicit c =>
       SQL(
@@ -64,7 +90,7 @@ object UserRepository extends UserRepository {
         'first_name -> user.firstName,
         'last_name -> user.lastName,
         'password -> user.password,
-        'url_photo_profile-> "img/profile_default_large",
+        'url_photo_profile -> "img/profile_default_large",
         'services -> user.services,
         'registration_date -> new Timestamp(user.registrationDate.getMillis())
       ).executeInsert()

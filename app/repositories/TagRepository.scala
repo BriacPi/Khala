@@ -47,7 +47,7 @@ object TagRepository extends TagRepository {
   def create(tagName: String): String = {
     if (exists(tagName)) "tag.add.alreadyExists"
     else {
-      val lowerCaseTagName = tagName.toLowerCase()
+      val lowerCaseTagName: String = tagName.toLowerCase()
       DB.withConnection { implicit c =>
         SQL(
           """
@@ -58,6 +58,7 @@ object TagRepository extends TagRepository {
           'name -> lowerCaseTagName
         ).executeInsert()
       }
+      initializeTagStats(lowerCaseTagName)
       "tag.add.success"
     }
   }
@@ -71,9 +72,36 @@ object TagRepository extends TagRepository {
         WHERE tags.name = {name}
         """).
         on(
-          "name" ->lowerCaseTagName
+          "name" -> lowerCaseTagName
         ).executeUpdate()
       "tag.remove.success"
+    }
+  }
+
+  def initializeTagStats(lowerCaseTagName: String)= {
+    DB.withConnection { implicit c =>
+      SQL(
+        """
+        INSERT into tags_stats (name) values
+        ({name})
+        """
+      ).on(
+        'name -> lowerCaseTagName
+      ).executeInsert()
+    }
+  }
+
+  def deleteTagStats(lowerCaseTagName: String) = {
+    DB.withConnection { implicit c =>
+      SQL(
+        """
+        DELETE FROM tags_stats
+        WHERE tags_stats.tag_name = {name}
+        """).
+        on(
+          "name" -> lowerCaseTagName
+        ).executeUpdate()
+
     }
   }
 }
