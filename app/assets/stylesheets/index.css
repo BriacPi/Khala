@@ -1,0 +1,5 @@
+.author-photo {
+    width:50px; /* you can use % */
+    height: auto;
+    border-radius:25px;
+}
