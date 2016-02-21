@@ -176,7 +176,7 @@ object ArticleRepository extends ArticleRepository {
         """
       )
         .on(
-          "if" -> articleId
+          "id" -> articleId
         )
         .as(recordMapperArticleNbs.singleOpt)
     }
