@@ -74,15 +74,16 @@ object TagRepository extends TagRepository {
         on(
           "name" -> lowerCaseTagName
         ).executeUpdate()
+      deleteTagStats(lowerCaseTagName)
       "tag.remove.success"
     }
   }
 
-  def initializeTagStats(lowerCaseTagName: String)= {
+  def initializeTagStats(lowerCaseTagName: String) = {
     DB.withConnection { implicit c =>
       SQL(
         """
-        INSERT into tags_stats (name) values
+        INSERT into tags_stats (tag_name) values
         ({name})
         """
       ).on(
@@ -102,6 +103,20 @@ object TagRepository extends TagRepository {
           "name" -> lowerCaseTagName
         ).executeUpdate()
 
+    }
+  }
+
+  def updateNbArticles(name: String, modifier: Int) = {
+
+    DB.withConnection { implicit c =>
+      SQL(
+        """
+        update  tags_stats set nb_articles = nb_articles+{modifier} tag_name ={name}
+        """
+      ).on(
+        "name" -> name,
+        "modifier" -> modifier
+      ).executeUpdate()
     }
   }
 }
