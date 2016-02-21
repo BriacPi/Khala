@@ -74,7 +74,7 @@ object UserRepository extends UserRepository {
         """
           SELECT users.url_photo_profile
           FROM users
-          WHERE users.id = userId
+          WHERE users.id = {userId}
         """
       )
         .on("userId" -> userId)
@@ -100,7 +100,7 @@ object UserRepository extends UserRepository {
         'first_name -> user.firstName,
         'last_name -> user.lastName,
         'password -> user.password,
-        'url_photo_profile -> "img/profile_default_large",
+        'url_photo_profile -> "img/profile_default_large.png",
         'services -> user.services,
         'registration_date -> new Timestamp(user.registrationDate.getMillis())
       ).executeInsert()

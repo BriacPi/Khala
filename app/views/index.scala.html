@@ -67,10 +67,10 @@
 			<div class="col-xs-2 no-gutter" style="margin-top:30px;">
 				@UserRepository.getAuthorByArticle(article.id.get) match {
 					case Some(user) => {
-						<img src="@UserRepository.getAuthorByArticle(article.id.get)" class="user-icon" alt="user-image">
+						<img src="@UserRepository.getPhoto(user.id.get)" class="user-icon" alt="user-image">
 					}
 					case None => {
-						<img src="@UserRepository.getAuthorByArticle(article.id.get)" class="user-icon" alt="user-image">
+						<img src="lol" class="user-icon" alt="user-image">
 					}
 				}
 			</div>
