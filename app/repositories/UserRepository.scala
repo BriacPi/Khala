@@ -76,11 +76,13 @@ object UserRepository extends UserRepository {
     DB.withConnection { implicit c =>
       SQL(
         """ 
-        update  users set first_name ={first_name},last_name={last_name},password={password},
+        update  users set  email={email}, email_confirmed={email_confirmed}, first_name ={first_name},last_name={last_name},password={password},
         services={services} where id ={id}
         """
       ).on(
         'id -> user.id.get,
+        'email -> user.email,
+        'email_confirmed -> user.emailConfirmed,
         'first_name -> user.firstName,
         'last_name -> user.lastName,
         'password -> user.password,
