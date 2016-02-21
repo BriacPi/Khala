@@ -304,8 +304,8 @@ object ArticleRepository extends ArticleRepository {
       SQL(
         """
         update articles_stats
-        SET nb_views = nb_views+{modifier_views} nb_likes =nb_likes+{modifier_likes}
-        nb_comments =nb_comments+{modifier_comments} nb_bookmarks=nb_bookmarks+{modifier_bookmarks}
+        SET nb_views = nb_views+{modifier_views}, nb_likes =nb_likes+{modifier_likes},
+        nb_comments =nb_comments+{modifier_comments}, nb_bookmarks=nb_bookmarks+{modifier_bookmarks}
         WHERE article_id = {articleId}
         """
       ).on(

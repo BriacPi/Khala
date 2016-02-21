@@ -196,20 +196,20 @@ object UserRepository extends UserRepository {
     }
   }
 
-  def updateAuthorStats(authorId: Long, modifier: AuthorNbs): Unit = {
+  def updateAuthorStats(authorId: Long, modifier: AuthorNbs)= {
 
     DB.withConnection { implicit c =>
       SQL(
         """
-        update authors_stats
-        SET nb_followers=nb_followers+{modifier_followers}
+        UPDATE authors_stats
+        SET nb_followers=nb_followers+{modifier_followers},
         nb_articles =nb_articles+{modifier_articles}
         WHERE author_id = {authorId}
         """
       ).on(
-        "authorId" -> authorId,
-        "modifier_followers" -> modifier.nbFollowers,
-        "modifier_articles" -> modifier.nbArticles
+        'authorId -> authorId,
+        'modifier_followers -> modifier.nbFollowers,
+        'modifier_articles -> modifier.nbArticles
       ).executeUpdate()
     }
   }

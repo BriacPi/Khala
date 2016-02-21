@@ -84,7 +84,7 @@ article_id INT NOT NULL UNIQUE ,
 nb_views INT NOT NULL DEFAULT 0,
 nb_likes INT NOT NULL DEFAULT 0,
 nb_comments INT NOT NULL DEFAULT 0,
-nb_followers INT NOT NULL DEFAULT 0
+nb_bookmarks INT NOT NULL DEFAULT 0
 );
 
 
@@ -96,6 +96,7 @@ nb_articles INT NOT NULL DEFAULT 0
 
 
 CREATE TABLE IF NOT EXISTS tags_stats(
+id SERIAL PRIMARY KEY NOT NULL,
 tag_name varchar(100) NOT NULL UNIQUE,
 nb_articles Int NOT NULL DEFAULT 0
 );

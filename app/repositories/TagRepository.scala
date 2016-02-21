@@ -111,7 +111,8 @@ object TagRepository extends TagRepository {
     DB.withConnection { implicit c =>
       SQL(
         """
-        update  tags_stats set nb_articles = nb_articles+{modifier} tag_name ={lowerCaseTagName}
+        update  tags_stats set nb_articles = nb_articles+{modifier}
+        WHERE tag_name ={lowerCaseTagName}
         """
       ).on(
         "lowerCaseTagName" -> lowerCaseTagName,
