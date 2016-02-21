@@ -43,10 +43,10 @@ GET         /common/img/*file                      controllers.MyAssets.commonIm
 GET         /write-article                         controllers.ContentController.writeArticle()
 POST        /api/save-article                      controllers.ContentController.saveArticle()
 GET         /api/all-article                       controllers.ContentController.getAllArticles()
-#GET         /api/article-views/:articleId        controllers.ContentController.getViews(articelId:Long)
+#GET         /api/article-views/:articleId         controllers.ContentController.getViews(articelId:Long)
 GET         /api/article-stats-by-author           controllers.ContentController.getArticleStatsByAuthor()
 GET         /api/top-article-stats-by-views        controllers.ContentController.getTopArticleStatsByViews()
-GET         /api/author-by-article/:articleId                             controllers.ContentController.getAuthorByArticle(articleId: Long)
+GET         /api/author-by-article/:articleId      controllers.ContentController.getAuthorByArticle(articleId: Long)
 #GET         /api/top-articles-by-views/:firstId/:lastId        controllers.ContentController.getTopArticlesByViews(firstId: Int, lastId: Int)
 #
 GET         /view-article/:articleId               controllers.ContentController.viewArticle(articleId:Long)

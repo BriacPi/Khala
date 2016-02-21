@@ -4,7 +4,9 @@
 @import views.html.tags.auth._
 @import controllers.routes
 @import repositories.LikeRepository
+@import repositories.UserRepository
 @import repositories.ArticleRepository
+
 
 @views.html.templates.default(title = "Home", loggedUser, tab = "index") {
 
@@ -22,7 +24,7 @@
 	<body>
 		<div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1" >
 			@for(article <- articles){
-			<div class="post-preview" id="post" articleid="@article.id.get">
+			<div class="post-preview col-xs-10"  id="post" articleid="@article.id.get">
 				<a href= "/article/id/@article.id">
 					<h2 class="post-title">
 						@article.title
@@ -31,7 +33,15 @@
 						@article.content
 					</h3>
 				</a>
-				<p class="post-meta">Posted by
+				<p class="post-meta">Posted by @UserRepository.getAuthorByArticle(article.id.get) match {
+					case Some(user) => {
+						<a href="#">@user.firstName @user.lastName </a>
+					}
+					case None => {
+						<a href="#">Unknown </a>
+					}
+				}
+
 					<a ></a> on @article.creationDate.toString("dd MMM yyyy", lang.toLocale) - @article.readingTime mn read -
 					<a href="#">@article.tag1</a>
 				</p>
@@ -54,6 +64,18 @@
 					  <i class="fa fa-comments pull-right"></i>
 				</p>
 			</div>
+			<div class="col-xs-2 no-gutter" style="margin-top:30px;">
+				@UserRepository.getAuthorByArticle(article.id.get) match {
+					case Some(user) => {
+						<img src="@UserRepository.getAuthorByArticle(article.id.get)" class="user-icon" alt="user-image">
+					}
+					case None => {
+						<img src="@UserRepository.getAuthorByArticle(article.id.get)" class="user-icon" alt="user-image">
+					}
+				}
+			</div>
+
+
 			}
 		</div>
 		<hr>
