@@ -9,7 +9,6 @@ import org.joda.time.DateTime
 import play.api.db.DB
 import play.api.Play.current
 
-import repositories.ArticleRepository
 
 /**
   * Created by corpus on 20/02/2016.

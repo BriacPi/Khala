@@ -47,6 +47,7 @@ object TagRepository extends TagRepository {
   def create(tagName: String): String = {
     if (exists(tagName)) "tag.add.alreadyExists"
     else {
+      print("c'est pas normal")
       val lowerCaseTagName: String = tagName.toLowerCase()
       DB.withConnection { implicit c =>
         SQL(
