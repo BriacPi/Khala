@@ -8,6 +8,7 @@
 @import repositories.ArticleRepository
 
 
+
 @views.html.templates.default(title = "Home", loggedUser, tab = "index") {
 
 	<head>
@@ -25,7 +26,7 @@
 	<body>
 		<div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1" >
 			@for(article <- articles){
-			<div class="post-preview col-xs-10"  id="post" articleid="@article.id.get">
+			<div class="post-preview col-xs-10" >
 				<a href= "/article/id/@article.id">
 					<h2 class="post-title">
 						@article.title
@@ -36,7 +37,7 @@
 				</a>
 				<p class="post-meta">Posted by @UserRepository.getAuthorByArticle(article.id.get) match {
 					case Some(user) => {
-						<a href="#">@user.firstName @user.lastName </a>
+						<a href="#">@user.firstName @user.lastName</a>
 					}
 					case None => {
 						<a href="#">Unknown </a>
@@ -50,28 +51,33 @@
 					@loggedUser match {
 						case Some(user:models.User) => {
 							@if(LikeRepository.hasLiked(user.id.get,article.id.get)){
-									<a id="like-auth"  href="#"><i class="fa fa-heart"></i></a>
+									<a articleid="@article.id.get" class="like-auth"  href="#"><i class="fa fa-heart"></i></a>
 
 							}else{
-									<a id="like-auth"  href="#"><i class="fa fa-heart-o"></i></a>
+									<a articleid="@article.id.get" class="like-auth"  href="#"><i class="fa fa-heart-o"></i></a>
 							}
 
 						}
 						case None => {
-							<a href="/signin"><i id="like-unauth" class="fa fa-heart"></i></a>
+							<a href="/signin"><i class="like-unauth fa fa-heart"></i></a>
 						}
 					}
-					<span id="nblikes">@ArticleRepository.getLikes(article.id.get)</span>
-					  <i class="fa fa-comments pull-right"></i>
+					@ArticleRepository.getArticleNbs(article.id.get) match {
+						case Some(nbs) => {
+							<span id="nblikes">@nbs.nbLikes</span>
+							<span class="pull-right"><a href="#"><i class="fa fa-comments" style="margin-top: 4px;"></i></a> @nbs.nbComments</span>
+
+						}
+					}
 				</p>
 			</div>
 			<div class="col-xs-2 no-gutter" style="margin-top:30px;">
 				@UserRepository.getAuthorByArticle(article.id.get) match {
 					case Some(user) => {
-						<img class="author-photo" src="@UserRepository.getPhoto(user.id.get)" class="user-icon" alt="user-image">
+						<img href="#" class="author-photo" src="@UserRepository.getPhoto(user.id.get)" class="user-icon" alt="user-image">
 					}
 					case None => {
-						<img src="lol" class="user-icon" alt="user-image">
+						<img href="#" src="/img/profile_default_large.png"   alt="user-image">
 					}
 				}
 			</div>
