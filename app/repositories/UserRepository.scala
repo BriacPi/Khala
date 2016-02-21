@@ -202,7 +202,7 @@ object UserRepository extends UserRepository {
       SQL(
         """
         update authors_stats
-        SET nb_followers=nb_followers+{modifier_followers}
+        SET nb_followers=nb_followers+{modifier_followers},
         nb_articles =nb_articles+{modifier_articles}
         WHERE author_id = {authorId}
         """
