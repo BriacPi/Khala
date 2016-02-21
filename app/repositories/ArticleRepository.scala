@@ -108,7 +108,7 @@ object ArticleRepository extends ArticleRepository {
             'summary -> article.summary.getOrElse(""),
             'content -> article.content,
             'nb_modifications -> article.nbModifications,
-            'reading_time -> article.content.length / 1150,
+            'reading_time -> math.max(article.content.length / 1150,1),
             'tag1 -> article.tag1,
             'tag2 -> article.tag2.getOrElse[String]("")
           ).executeInsert()
@@ -145,7 +145,7 @@ object ArticleRepository extends ArticleRepository {
         'summary -> article.summary.getOrElse(""),
         'content -> article.content,
         'nbModifications -> (article.nbModifications + 1),
-        'readingTime -> article.content.length / 1150
+        'readingTime ->  math.max(article.content.length / 1150,1)
       ).executeUpdate()
     }
     val newArticle: Option[Article] = getByAuthorAndTitle(authorId, article.title)
@@ -190,16 +190,17 @@ object ArticleRepository extends ArticleRepository {
   }
 
   def getAllArticles(): List[Article] = {
-    val datetime: Timestamp = new Timestamp(DateTime.now().minusHours(24).getMillis())
+    val datetime: Timestamp = new Timestamp(DateTime.now().minusHours(5).getMillis())
 
     DB.withConnection { implicit current =>
       SQL(
         """
           SELECT * FROM articles
-          WHERE articles.creation_date > {nowMinus1Day}
+          WHERE articles.creation_date > {nowMinus5Day}
+          LIMIT 200
         """
       )
-        .on("nowMinus1Day" -> datetime)
+        .on("nowMinus5Day" -> datetime)
         .as(recordMapperArticle *)
         .toList
     }
@@ -253,7 +254,7 @@ object ArticleRepository extends ArticleRepository {
 
   }
 
-  def getArticleStat(articleId: Long): Option[ArticleStats] = {
+  def getArticleStats(articleId: Long): Option[ArticleStats] = {
 
     val optArticle: Option[Article] = DB.withConnection { implicit current =>
       SQL(

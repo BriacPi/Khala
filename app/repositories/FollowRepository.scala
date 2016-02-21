@@ -12,11 +12,6 @@ import play.api.Play.current
   * Created by corpus on 21/02/2016.
   */
 trait FollowRepository {
-
-}
-
-
-object FollowRepository extends FollowRepository {
   private[repositories] val recordMapperId = {
     long("follows.id") map {
       case id => {
@@ -24,6 +19,12 @@ object FollowRepository extends FollowRepository {
       }
     }
   }
+
+
+}
+
+
+object FollowRepository extends FollowRepository {
 
 
   def follows(followerId: Long, authorId: Long) = {
