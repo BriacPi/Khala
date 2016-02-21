@@ -12,7 +12,6 @@ import org.joda.time.DateTime
 
 import anorm.SqlParser._
 import anorm._
-import anorm.Sql._
 import play.api.db.DB
 import scala.language.postfixOps
 import play.api.Play.current
