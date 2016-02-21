@@ -66,10 +66,18 @@ TAGGING_DATE  timestamp NOT NULL
 
 CREATE TABLE IF NOT EXISTS follows(
 ID SERIAL PRIMARY KEY NOT NULL,
-FOLLOWER_id INT NOT NULL,
+FOLLOWER_ID INT NOT NULL,
 AUTHOR_ID INT NOT NULL,
 FOLLOW_DATE timestamp NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS bookmarks(
+ID SERIAL PRIMARY KEY NOT NULL,
+USER_ID INT NOT NULL,
+ARTICLE_ID INT NOT NULL,
+BOOKMARK_DATE timestamp NOT NULL
+);
+
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS articles_views AS(
 SELECT articles.id AS article_id,
@@ -96,6 +104,16 @@ LEFT JOIN comments ON articles.id = comments.article_id
 GROUP BY articles.id
 );
 
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS articles_bookmarks AS(
+SELECT articles.id AS article_id,
+COUNT(bookmarks.id) AS nb_bookmarks
+FROM articles 
+LEFT JOIN bookmarks ON articles.id = bookmarks.article_id
+GROUP BY articles.id
+);
+
+
 CREATE MATERIALIZED VIEW IF NOT EXISTS authors_followers AS(
 SELECT users.id AS author_id,
 COUNT(follows.id) AS nb_followers
@@ -112,11 +130,24 @@ LEFT JOIN articles ON users.id = articles.author_id
 GROUP BY users.id
 );
 
+CREATE MATERIALIZED VIEW IF NOT EXISTS tags_stats AS(
+
+SELECT tags.name AS tag_name,
+COUNT(DISTINCT taggings.article_id) AS nb_articles,
+SUM(articles_views.nb_views) as nb_views_total
+FROM tags 
+LEFT JOIN taggings ON tags.name = taggings.tag_name
+LEFT JOIN articles_views ON taggings.article_id = articles_views.article_id
+GROUP BY tags.name
+);
+
 REFRESH MATERIALIZED VIEW articles_views;
 REFRESH MATERIALIZED VIEW articles_likes;
 REFRESH MATERIALIZED VIEW articles_comments;
+REFRESH MATERIALIZED VIEW articles_bookmarks;
 REFRESH MATERIALIZED VIEW authors_followers;
 REFRESH MATERIALIZED VIEW authors_articles;
+REFRESH MATERIALIZED VIEW tags_stats;
 
 # --- !Downs
 
@@ -131,4 +162,7 @@ DROP TABLE FOLLOWS;
 DROP TABLE articles_views;
 DROP TABLE articles_likes;
 DROP TABLE articles_comments;
+DROP TABLE articles_bookmarks
 DROP TABLE authors_followers;
+DROP TABLE authors_articles;
+DROP TABLE tags_stats
