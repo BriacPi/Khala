@@ -87,7 +87,7 @@ object TagRepository extends TagRepository {
         ({name})
         """
       ).on(
-        'name -> lowerCaseTagName
+        "name" -> lowerCaseTagName
       ).executeInsert()
     }
   }
@@ -107,14 +107,14 @@ object TagRepository extends TagRepository {
   }
 
   def updateNbArticles(name: String, modifier: Int) = {
-
+    val lowerCaseTagName = name.toLowerCase()
     DB.withConnection { implicit c =>
       SQL(
         """
-        update  tags_stats set nb_articles = nb_articles+{modifier} tag_name ={name}
+        update  tags_stats set nb_articles = nb_articles+{modifier} tag_name ={lowerCaseTagName}
         """
       ).on(
-        "name" -> name,
+        "lowerCaseTagName" -> lowerCaseTagName,
         "modifier" -> modifier
       ).executeUpdate()
     }

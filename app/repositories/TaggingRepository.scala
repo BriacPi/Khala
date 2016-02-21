@@ -41,6 +41,7 @@ object TaggingRepository extends TaggingRepository {
             'tagging_date -> new Timestamp(DateTime.now().getMillis())
           ).executeInsert()
         }
+        TagRepository.updateNbArticles(tagName, 1)
         "tagging.add.success"
       }
       case None => "article.notFound"
@@ -62,6 +63,7 @@ object TaggingRepository extends TaggingRepository {
               "articleId" -> articleId
             ).executeUpdate()
         }
+        TagRepository.updateNbArticles(tagName, -1)
         "tagging.remove.success"
 
       }
@@ -73,8 +75,8 @@ object TaggingRepository extends TaggingRepository {
     DB.withConnection { implicit c =>
       SQL(
         """
-      SELECT tags.name from tags
-      WHERE tags.name = {name} and tags.article_id = {article_id}
+      SELECT taggings.tag_name from taggings
+      WHERE taggings.tag_name = {name} and taggings.article_id = {article_id}
         """
       ).
         on("name" -> tagName,
@@ -88,8 +90,32 @@ object TaggingRepository extends TaggingRepository {
     }
   }
 
-  def removeFromArticle(articleId: Long) = {
+  def tagsFromArticle(articleId: Long): List[String] = {
+    DB.withConnection { implicit c =>
+      SQL(
+        """
+      SELECT taggings.tag_name from taggings
+      WHERE taggings.article_id = {article_id}
+        """
+      ).
+        on(
+          "article_id" -> articleId
+        )
+        .as(recordMapperName *)
+        .toList
+    }
 
+  }
+
+  def howManyTagsForArticle(articleId: Long): Int = {
+    tagsFromArticle(articleId).length
+  }
+
+
+  def removeFromArticle(articleId: Long) = {
+    tagsFromArticle(articleId).map {
+      tag => TagRepository.updateNbArticles(tag, -1)
+    }
     DB.withConnection { implicit c =>
       SQL(
         """

@@ -4,6 +4,7 @@ import java.sql.Timestamp
 
 import anorm.SqlParser._
 import anorm._
+import models.AuthorNbs
 import org.joda.time.DateTime
 import play.api.db.DB
 import play.api.Play.current
@@ -39,6 +40,8 @@ object FollowRepository extends FollowRepository {
         'follow_date -> new Timestamp(DateTime.now().getMillis())
       ).executeInsert()
     }
+    UserRepository.updateAuthorStats(authorId,AuthorNbs(authorId,1,0))
+    "follow.success"
   }
 
   def unfollows(followerId: Long, authorId: Long) = {
@@ -54,6 +57,8 @@ object FollowRepository extends FollowRepository {
           "author_id" -> authorId
         ).executeUpdate()
     }
+    UserRepository.updateAuthorStats(authorId,AuthorNbs(authorId,-1,0))
+    "unfollow.success"
   }
 
   def hasFollowed(followerId: Long, authorId: Long): Boolean = {
@@ -79,11 +84,11 @@ object FollowRepository extends FollowRepository {
 
     if (hasFollowed(followerId, authorId)) {
       unfollows(followerId, authorId)
-      "follow.success"
+
     }
     else {
       follows(followerId, authorId)
-      "unfollow.success"
+
     }
 
   }

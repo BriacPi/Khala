@@ -6,7 +6,7 @@ package repositories
 
 
 import scala.util.{Failure, Success}
-import models.{ArticleStats, Article, User}
+import models._
 import org.joda.time.DateTime
 
 
@@ -40,28 +40,15 @@ trait ArticleRepository {
       }
     }
   }
-  private[repositories] val recordMapperArticleViews = {
-    long("articles_views.article_id") ~
-      int("articles_views.nb_views") map {
-      case id ~ nbViews => {
-        nbViews
-      }
-    }
-  }
-  private[repositories] val recordMapperArticleLikes = {
-    long("articles_likes.article_id") ~
-      int("articles_likes.nb_likes") map {
-      case id ~ nbViews => {
-        nbViews
-      }
-    }
-  }
+  private[repositories] val recordMapperArticleNbs = {
 
-  private[repositories] val recordMapperArticleComments = {
-    long("articles_comments.article_id") ~
-      int("articles_comments.nb_comments") map {
-      case id ~ nbViews => {
-        nbViews
+    long("articles_stats.article_id") ~
+      int("articles_stats.nb_views") ~
+      int("articles_stats.nb_likes") ~
+      int("articles_stats.nb_comments") ~
+      int("articles_stats.nb_bookmarks") map {
+      case id ~ nbViews ~ nbLikes ~ nbComments ~ nbBookmarks => {
+        ArticleNbs(id, nbViews, nbLikes, nbComments, nbBookmarks)
       }
     }
   }
@@ -108,10 +95,10 @@ object ArticleRepository extends ArticleRepository {
         DB.withConnection { implicit c =>
           SQL(
             """
-        insert into articles (author_id,creation_date,last_update,title,summary,content,
-        nb_modifications,reading_time, tag1, tag2) values
-        ({author_id},{creation_date},{last_update},{title},{summary},{content},
-        {nb_modifications},{reading_time}, {tag1},{tag2})
+              insert into articles (author_id,creation_date,last_update,title,summary,content,
+              nb_modifications,reading_time, tag1, tag2) values
+              ({author_id},{creation_date},{last_update},{title},{summary},{content},
+              {nb_modifications},{reading_time}, {tag1},{tag2})
             """
           ).on(
             'author_id -> authorId,
@@ -127,11 +114,14 @@ object ArticleRepository extends ArticleRepository {
           ).executeInsert()
         }
         val newArticle: Option[Article] = getByAuthorAndTitle(authorId, article.title)
+        initializeArticleStats(newArticle.get.id.get)
+        UserRepository.updateAuthorStats(authorId,AuthorNbs(authorId,0,1))
         TaggingRepository.create(article.tag1, newArticle.get.id.get)
         article.tag2 match {
           case None =>
           case Some(tag2) => TaggingRepository.create(tag2, newArticle.get.id.get)
         }
+
         "article.add.success"
       }
       case Some(existingArticle) => "article.add.alreadyExists"
@@ -176,46 +166,27 @@ object ArticleRepository extends ArticleRepository {
   }
 
 
-  def getViews(articleId: Long) = {
+  def getArticleNbs(articleId: Long): Option[ArticleNbs] = {
     DB.withConnection { implicit current =>
       SQL(
         """
           SELECT *
-          FROM articles_views
-          WHERE articles_views.article_id = {articleId}
+          FROM articles_stats
+          WHERE articles_stats.article_id={id}
         """
       )
-        .on("articleId" -> articleId)
-        .as(recordMapperArticleViews.singleOpt)
-    }.getOrElse(0)
+        .on(
+          "if" -> articleId
+        )
+        .as(recordMapperArticleNbs.singleOpt)
+    }
   }
 
   def getLikes(articleId: Long) = {
-    DB.withConnection { implicit current =>
-      SQL(
-        """
-          SELECT *
-          FROM articles_likes
-          WHERE articles_likes.article_id = {articleId}
-        """
-      )
-        .on("articleId" -> articleId)
-        .as(recordMapperArticleLikes.singleOpt)
-    }.getOrElse(0)
-  }
-
-  def getComments(articleId: Long) = {
-    DB.withConnection { implicit current =>
-      SQL(
-        """
-          SELECT *
-          FROM articles_comments
-          WHERE articles_comments.article_id = {articleId}
-        """
-      )
-        .on("articleId" -> articleId)
-        .as(recordMapperArticleComments.singleOpt)
-    }.getOrElse(0)
+    getArticleNbs(articleId) match {
+      case None => 0
+      case Some(articleNbs) => articleNbs.nbLikes
+    }
   }
 
   def getAllArticles(): List[Article] = {
@@ -254,8 +225,7 @@ object ArticleRepository extends ArticleRepository {
 
     listArticle.map { article =>
 
-      ArticleStats.fromArticle(Article.shorten(article), getViews(article.id.get),
-        getLikes(article.id.get), getComments(article.id.get))
+      ArticleStats.fromArticle(Article.shorten(article), getArticleNbs(article.id.get).get)
     }
 
   }
@@ -277,8 +247,7 @@ object ArticleRepository extends ArticleRepository {
         .toList
     }
     listArticle.map { article =>
-      ArticleStats.fromArticle(Article.shorten(article), getViews(article.id.get),
-        getLikes(article.id.get), getComments(article.id.get))
+      ArticleStats.fromArticle(Article.shorten(article), getArticleNbs(article.id.get).get)
     }
 
 
@@ -299,8 +268,53 @@ object ArticleRepository extends ArticleRepository {
     }
     optArticle match {
       case None => None
-      case Some(article) => Some(ArticleStats.fromArticle(article, getViews(article.id.get),
-        getLikes(article.id.get), getComments(article.id.get)))
+      case Some(article) => Some(ArticleStats.fromArticle(Article.shorten(article), getArticleNbs(article.id.get).get))
+    }
+  }
+
+  def initializeArticleStats(articleId: Long) = {
+    DB.withConnection { implicit c =>
+      SQL(
+        """
+        INSERT into articles_stats (article_id) values
+        ({id})
+        """
+      ).on(
+        "id" -> articleId
+      ).executeInsert()
+    }
+  }
+
+  def deleteArticleStats(articleId: Long) = {
+    DB.withConnection { implicit c =>
+      SQL(
+        """
+        DELETE FROM articles_stats
+        WHERE articles_stats.article_id= {id}
+        """).
+        on(
+          "id" -> articleId
+        ).executeUpdate()
+    }
+  }
+
+  def updateArticleStats(articleId: Long, modifier: ArticleNbs): Unit = {
+
+    DB.withConnection { implicit c =>
+      SQL(
+        """
+        update articles_stats
+        SET nb_views = nb_views+{modifier_views} nb_likes =nb_likes+{modifier_likes}
+        nb_comments =nb_comments+{modifier_comments} nb_bookmarks=nb_bookmarks+{modifier_bookmarks}
+        WHERE article_id = {articleId}
+        """
+      ).on(
+        "modifier_views" -> modifier.nbViews,
+        "modifier_likes" -> modifier.nbLikes,
+        "modifier_comments" -> modifier.nbComments,
+        "modifier_bookmarks" -> modifier.nbBookmarks,
+        "articleId" -> articleId
+      ).executeUpdate()
     }
   }
 }

@@ -55,3 +55,9 @@ object User {
     }
   }
 }
+
+case class AuthorNbs(
+                    id: Long,
+                    nbFollowers: Int,
+                    nbArticles: Int
+                  )

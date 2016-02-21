@@ -78,7 +78,13 @@ object Article {
 
 
 }
-
+case class ArticleNbs(
+                         id: Long,
+                         nbViews: Int,
+                         nbLikes: Int,
+                         nbComments: Int,
+                         nbBookmarks: Int
+                       )
 case class ArticleStats(
                          id: Long,
                          creationDate: DateTime,
@@ -92,14 +98,16 @@ case class ArticleStats(
                          tag2: Option[String],
                          nbViews: Int,
                          nbLikes: Int,
-                         nbComments: Int
+                         nbComments: Int,
+                         nbBookmarks: Int
                        )
 
 object ArticleStats {
 
-  def fromArticle(article: Article, nbViews: Int, nbLikes: Int, nbComments: Int): ArticleStats = {
+  def fromArticle(article: Article, articleNbs: ArticleNbs): ArticleStats = {
     ArticleStats(article.id.get, article.creationDate, article.lastUpdate, article.title,article.summary, article.content,
-      article.nbModifications, article.readingTime, article.tag1, article.tag2, nbViews, nbLikes, nbComments)
+      article.nbModifications, article.readingTime, article.tag1, article.tag2, articleNbs.nbViews,articleNbs.nbLikes,
+      articleNbs.nbComments,articleNbs.nbBookmarks)
   }
 
   implicit val articleStatsWriter = new Writes[ArticleStats] {
@@ -117,9 +125,11 @@ object ArticleStats {
         "nbViews" -> articleStats.nbViews,
         "nbLikes" -> articleStats.nbLikes,
         "nbComments" -> articleStats.nbComments,
+        "nbBookmarks" -> articleStats.nbBookmarks,
         "tag2" -> articleStats.tag2.getOrElse[String]("")
       )
     }
 
   }
 }
+

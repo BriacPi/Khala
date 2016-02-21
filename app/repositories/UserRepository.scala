@@ -2,7 +2,7 @@ package repositories
 
 
 import scala.util.{Failure, Success}
-import models.User
+import models.{AuthorNbs, ArticleNbs, User}
 import org.joda.time.DateTime
 
 
@@ -36,6 +36,16 @@ trait UserRepository {
     str("users.url_photo_profile") map {
       case url_photo_profile => {
         url_photo_profile
+      }
+    }
+  }
+
+  private[repositories] val recordMapperAuthorsNbs = {
+    long("authors_stats.author_id") ~
+      int("authors_stats.nb_followers") ~
+      int("authors_stats.nb_articles") map {
+      case id ~ nbFollowers ~ nbArticles => {
+        AuthorNbs(id, nbFollowers, nbArticles)
       }
     }
   }
@@ -158,4 +168,51 @@ object UserRepository extends UserRepository {
     }
 
   }
+
+
+  def initializeAuthorStats(authorId: Long) = {
+    DB.withConnection { implicit c =>
+      SQL(
+        """
+        INSERT into authors_stats (author_id) values
+        ({id})
+        """
+      ).on(
+        'id -> authorId
+      ).executeInsert()
+    }
+  }
+
+  def deleteAuthorStats(authorId: Long) = {
+    DB.withConnection { implicit c =>
+      SQL(
+        """
+        DELETE FROM authors_stats
+        WHERE authors_stats.author_id= {id}
+        """).
+        on(
+          "id" -> authorId
+        ).executeUpdate()
+    }
+  }
+
+  def updateAuthorStats(authorId: Long, modifier: AuthorNbs): Unit = {
+
+    DB.withConnection { implicit c =>
+      SQL(
+        """
+        update authors_stats
+        SET nb_followers=nb_followers+{modifier_followers}
+        nb_articles =nb_articles+{modifier_articles}
+        WHERE author_id = {authorId}
+        """
+      ).on(
+        "authorId" -> authorId,
+        "modifier_followers" -> modifier.nbFollowers,
+        "modifier_articles" -> modifier.nbArticles
+      ).executeUpdate()
+    }
+  }
+
+
 }
