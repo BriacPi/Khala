@@ -50,11 +50,11 @@ GET         /api/author-by-article/:articleId                             contro
 #GET         /api/top-articles-by-views/:firstId/:lastId        controllers.ContentController.getTopArticlesByViews(firstId: Int, lastId: Int)
 #
 GET         /view-article/:articleId               controllers.ContentController.viewArticle(articleId:Long)
-PUT         /like_unlike/:articleId                controllers.ContentController.likeUnlike(articleId: Long)
+GET         /like-unlike/:articleId                controllers.ContentController.likeUnlike(articleId: Long)
 
 
 ##UserProfile Management
-#GET         /api/user                                          controllers.UserProfileController.getUser()
+GET         /api/user                                          controllers.UserProfileController.getUser()
 #GET         /api/user-info-minimal                             controllers.UserProfileController.getUserInfoMinimal()
 #GET         /api/influence                 controllers.UserProfileController.getInfluence()
 

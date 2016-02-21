@@ -139,8 +139,11 @@ class Auth @Inject() (val env: AuthenticationEnvironment, val messagesApi: Messa
     signInForm.bindFromRequest.fold(
       formWithErrors => Future.successful(BadRequest(viewsAuth.signIn(formWithErrors))),
       formData => {
+
         val (identifier, password, rememberMe) = formData
+
         env.credentialsProvider.authenticate(Credentials(identifier, password)).flatMap { loginInfo =>
+
           env.identityService.retrieve(loginInfo).flatMap {
             case Some(user) => for {
               authenticator <- env.authenticatorService.create(loginInfo).map(env.authenticatorWithRememberMe(_, rememberMe))
@@ -153,7 +156,9 @@ class Auth @Inject() (val env: AuthenticationEnvironment, val messagesApi: Messa
             case None => Future.failed(new IdentityNotFoundException("Couldn't find user"))
           }
         }.recover {
-          case e: ProviderException => Redirect(routes.Auth.signIn).flashing("error" -> Messages("auth.credentials.incorrect"))
+
+          case e: ProviderException =>
+            Redirect(routes.Auth.signIn).flashing("error" -> Messages("auth.credentials.incorrect"))
         }
       }
     )
@@ -301,7 +306,7 @@ class Auth @Inject() (val env: AuthenticationEnvironment, val messagesApi: Messa
 
   /**
    * Shows an error page when the user tries to get to an area without the necessary roles.
-   */
+  */
   def accessDenied = UserAwareAction.async { implicit request =>
     Future.successful(Ok(viewsAuth.accessDenied()))
   }

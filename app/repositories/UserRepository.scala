@@ -73,16 +73,20 @@ object UserRepository extends UserRepository {
   }
 
   def update(user: User): Option[User] = {
+    println("bug")
+    println(user.password)
     DB.withConnection { implicit c =>
       SQL(
         """ 
-        update  users set first_name ={first_name},last_name={last_name},password={password},
-        services={services} where id ={id}
+        update  users set first_name ={first_name},last_name={last_name},email = {email},
+        email_confirmed={email_confirmed}, password={password}, services={services} where id ={id}
         """
       ).on(
         'id -> user.id.get,
         'first_name -> user.firstName,
         'last_name -> user.lastName,
+        'email -> user.email,
+        'email_confirmed -> user.emailConfirmed,
         'password -> user.password,
         'services -> user.services
       ).executeUpdate()

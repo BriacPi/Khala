@@ -29,7 +29,7 @@ class PasswordInfoDAO extends DelegableAuthInfoDAO[PasswordInfo] {
       case None => add(loginInfo, authInfo)
     }
 
-  def update(loginInfo: LoginInfo, authInfo: PasswordInfo) =
+  def update(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] =
     UserRepository.getByEmail(loginInfo) match {
       case Some(user) => {
         val newUser = user.copy(password = authInfo)

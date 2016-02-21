@@ -9,6 +9,7 @@ import javax.inject.Inject
 
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.ws.WSClient
+import repositories.UserRepository
 import utils.silhouette.{AuthenticationController, AuthenticationEnvironment}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -40,5 +41,15 @@ class UserProfileController @Inject()(ws: WSClient)(val env: AuthenticationEnvir
   //    }
   //  }
   //  }
+
+  def getUser() = SecuredAction {
+    implicit request => {
+      UserRepository.getByEmail(request.identity.email) match {
+        case None => Ok(Json.obj("message" -> "no user found"))
+        case Some(user) => Ok(User.userWriter.writes(user))
+      }
+    }
+
+  }
 }
 
