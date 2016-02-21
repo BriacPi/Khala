@@ -151,6 +151,13 @@ REFRESH MATERIALIZED VIEW tags_stats;
 
 # --- !Downs
 
+DROP TABLE articles_views;
+DROP TABLE articles_likes;
+DROP TABLE articles_comments;
+DROP TABLE articles_bookmarks
+DROP TABLE authors_followers;
+DROP TABLE authors_articles;
+DROP TABLE tags_stats
 DROP TABLE USERS;
 DROP TABLE ARTICLES;
 DROP TABLE COMMENTS;
@@ -159,10 +166,4 @@ DROP TABLE LIKES;
 DROP TABLE TAGS;
 DROP TABLE TAGGINGS;
 DROP TABLE FOLLOWS;
-DROP TABLE articles_views;
-DROP TABLE articles_likes;
-DROP TABLE articles_comments;
-DROP TABLE articles_bookmarks
-DROP TABLE authors_followers;
-DROP TABLE authors_articles;
-DROP TABLE tags_stats
+DROP TABLE BOOKMARKS;
