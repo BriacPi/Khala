@@ -22,7 +22,7 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import models.{ArticleStats, Article, User}
-import repositories.{UserRepository, ViewRepository, ArticleRepository}
+import repositories.{LikeRepository, UserRepository, ViewRepository, ArticleRepository}
 
 
 //
@@ -123,6 +123,15 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
         case Some(author) => Ok(Json.obj("user" -> User.userWriter.writes(author)))
       }
 
+    }
+  }
+
+  def likeUnlike(articleId:Long)= SecuredAction {
+    implicit request => {
+      request.identity.id match {
+        case Some(id)=> Ok(Json.obj("messages"->LikeRepository.likesOrUnlikes(id,articleId)))
+        case None => Ok(Json.obj("messages"->"like.action.failure"))
+      }
     }
   }
 

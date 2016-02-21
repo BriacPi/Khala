@@ -50,6 +50,7 @@ GET         /api/author-by-article/:articleId                             contro
 #GET         /api/top-articles-by-views/:firstId/:lastId        controllers.ContentController.getTopArticlesByViews(firstId: Int, lastId: Int)
 #
 GET         /view-article/:articleId               controllers.ContentController.viewArticle(articleId:Long)
+PUT         /like_unlike/:articleId                controllers.ContentController.likeUnlike(articleId: Long)
 
 
 ##UserProfile Management
@@ -67,6 +68,6 @@ POST        /api/upload                            controllers.SettingsControlle
 #GET         /api/has-followed/author/:authorId                 controllers.RelationshipController.hasFollowed(authorId)
 #GET         /api/follows-or-unfollows/author/:authorId         controllers.RelationshipController.followsOrUnfollows(authorId)
 
-
+GET /javascriptRoutes                              controllers.Application.javascriptRoutes
 #
 #GET         /demo                                              controllers.ContentController.getTopArticlesByViews()
