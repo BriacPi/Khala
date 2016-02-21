@@ -11,6 +11,8 @@ import play.api.db.DB
 import org.joda.time.DateTime
 import play.api.Play.current
 
+import repositories.ArticleRepository
+
 /**
   * Created by corpus on 20/02/2016.
   */
@@ -23,29 +25,36 @@ import play.api.Play.current
 
 
 trait ViewRepository {
-//  private[repositories] val recordMapperArticleViews = {
-//    long("articles_views.article_id") ~
-//      int("articles_views.nb_views") map {
-//      case id ~ nbViews => {
-//        nbViews
-//      }
-//    }
+  //  private[repositories] val recordMapperArticleViews = {
+  //    long("articles_views.article_id") ~
+  //      int("articles_views.nb_views") map {
+  //      case id ~ nbViews => {
+  //        nbViews
+  //      }
+  //    }
 }
 
 object ViewRepository extends ViewRepository {
 
-  def create(userId: Long, articleId: Long) = {
-    DB.withConnection { implicit c =>
-      SQL(
-        """
+  def create(userId: Long, articleId: Long): String = {
+
+    ArticleRepository.getById(articleId) match {
+      case Some(article) => {
+        DB.withConnection { implicit c =>
+          SQL(
+            """
         insert into views (user_id,article_id,view_date) values
         ({user_id},{article_id},{view_date})
-        """
-      ).on(
-        'user_id -> userId,
-        'article_id -> articleId,
-        'view_date -> new Timestamp(DateTime.now().getMillis())
-      ).executeInsert()
+            """
+          ).on(
+            'user_id -> userId,
+            'article_id -> articleId,
+            'view_date -> new Timestamp(DateTime.now().getMillis())
+          ).executeInsert()
+        }
+        "view.add.success"
+      }
+      case None => "article.notFound"
     }
   }
 

@@ -106,9 +106,17 @@ GROUP BY articles.id
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS authors_followers AS(
 SELECT users.id AS author_id,
-COUNT(follows.id) AS nb_follower
+COUNT(follows.id) AS nb_followers
 FROM users 
 LEFT JOIN follows ON users.id = follows.author_id
+GROUP BY users.id
+);
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS authors_articles AS(
+SELECT users.id AS author_id,
+COUNT(articles.id) AS nb_articles
+FROM users 
+LEFT JOIN articles ON users.id = articles.author_id
 GROUP BY users.id
 );
 
@@ -116,6 +124,7 @@ REFRESH MATERIALIZED VIEW articles_views;
 REFRESH MATERIALIZED VIEW articles_likes;
 REFRESH MATERIALIZED VIEW articles_comments;
 REFRESH MATERIALIZED VIEW authors_followers;
+REFRESH MATERIALIZED VIEW authors_articles;
 
 # --- !Downs
 

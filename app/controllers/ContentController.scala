@@ -110,11 +110,9 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
   def viewArticle(articleId: Long) = UserAwareAction { implicit request => {
     request.identity match {
-      case None => ViewRepository.create(0.toLong, articleId)
-      case Some(user) => ViewRepository.create(user.id.get, articleId)
+      case None => Ok(Json.obj("viewArticle" ->ViewRepository.create(0.toLong, articleId)))
+      case Some(user) =>  Ok(Json.obj("viewArticle" -> ViewRepository.create(user.id.get, articleId)))
     }
-    Ok(Json.obj("articles" -> "views successful"))
-
   }
   }
 

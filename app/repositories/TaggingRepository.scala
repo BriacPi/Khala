@@ -25,35 +25,47 @@ trait TaggingRepository {
 
 object TaggingRepository extends TaggingRepository {
   def create(tagName: String, articleId: Long) = {
-    TagRepository.create((tagName))
 
-    DB.withConnection { implicit c =>
-      SQL(
-        """
+    ArticleRepository.getById(articleId) match {
+      case Some(article) => {
+        TagRepository.create((tagName))
+        DB.withConnection { implicit c =>
+          SQL(
+            """
         insert into taggings (tag_name,article_id,tagging_date) values
         ({tag_name},{article_id},{tagging_date})
-        """
-      ).on(
-        'tag_name -> tagName.toLowerCase(),
-        'article_id -> articleId,
-        'tagging_date -> new Timestamp(DateTime.now().getMillis())
-      ).executeInsert()
+            """
+          ).on(
+            'tag_name -> tagName.toLowerCase(),
+            'article_id -> articleId,
+            'tagging_date -> new Timestamp(DateTime.now().getMillis())
+          ).executeInsert()
+        }
+        "tagging.add.success"
+      }
+      case None => "article.notFound"
     }
   }
 
   def remove(tagName: String, articleId: Long) = {
 
-    DB.withConnection { implicit c =>
-      SQL(
-        """
+    ArticleRepository.getById(articleId) match {
+      case Some(article) => {
+        DB.withConnection { implicit c =>
+          SQL(
+            """
         DELETE FROM taggings
         WHERE taggings.tag_name = {name} AND taggings.article_id = {articleId}
-        """).
-        on(
-          "name" ->tagName.toLowerCase(),
-          "articleId" -> articleId
-        ).executeUpdate()
-      "tag.remove.success"
+            """).
+            on(
+              "name" -> tagName.toLowerCase(),
+              "articleId" -> articleId
+            ).executeUpdate()
+        }
+        "tagging.remove.success"
+
+      }
+      case None => "article.notFound"
     }
   }
 
@@ -65,7 +77,7 @@ object TaggingRepository extends TaggingRepository {
       WHERE tags.name = {name} and tags.article_id = {article_id}
         """
       ).
-        on("name" ->tagName,
+        on("name" -> tagName,
           "article_id" -> articleId
         )
         .as(recordMapperName.singleOpt) match {
@@ -77,6 +89,7 @@ object TaggingRepository extends TaggingRepository {
   }
 
   def removeFromArticle(articleId: Long) = {
+
     DB.withConnection { implicit c =>
       SQL(
         """
@@ -86,7 +99,7 @@ object TaggingRepository extends TaggingRepository {
         on(
           "articleId" -> articleId
         ).executeUpdate()
-      "tags.remove.success"
+      "taggings.remove.success"
     }
 
   }

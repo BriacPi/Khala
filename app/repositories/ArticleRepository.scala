@@ -59,7 +59,7 @@ trait ArticleRepository {
 
   private[repositories] val recordMapperArticleComments = {
     long("articles_comments.article_id") ~
-      int("articles_comments.nb_views") map {
+      int("articles_comments.nb_comments") map {
       case id ~ nbViews => {
         nbViews
       }
@@ -135,10 +135,9 @@ object ArticleRepository extends ArticleRepository {
         "article.add.success"
       }
       case Some(existingArticle) => "article.add.alreadyExists"
-      }
-
     }
 
+  }
 
 
   def update(authorId: Long, article: Article): String = {
@@ -172,7 +171,7 @@ object ArticleRepository extends ArticleRepository {
   def save(author: User, article: Article): String = {
     article.id match {
       case None => create(author.id.get, article)
-      case Some(id) => update(author.id.get,article)
+      case Some(id) => update(author.id.get, article)
     }
   }
 
@@ -270,6 +269,7 @@ object ArticleRepository extends ArticleRepository {
             LEFT JOIN articles_views ON articles.id = articles_views.article_id
             WHERE articles.creation_date > {nowMinus1Day}
             ORDER BY articles_views.nb_views DESC, articles.id DESC
+            LIMIT 200 OFFSET 0
         """
       )
         .on("nowMinus1Day" -> datetime)
