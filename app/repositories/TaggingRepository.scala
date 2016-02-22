@@ -22,9 +22,10 @@ trait TaggingRepository {
 }
 
 object TaggingRepository extends TaggingRepository {
-  def create(tagName: String, articleId: Long) = {
 
-    ArticleRepository.getById(articleId) match {
+  //Creating taggings only if the article is not a draft.
+  def create(tagName: String, articleId: Long) = {
+    ArticleRepository.getNoDraftById(articleId) match {
       case Some(article) => {
         TagRepository.create((tagName))
         DB.withConnection { implicit c =>
@@ -47,7 +48,6 @@ object TaggingRepository extends TaggingRepository {
   }
 
   def remove(tagName: String, articleId: Long) = {
-
     ArticleRepository.getById(articleId) match {
       case Some(article) => {
         DB.withConnection { implicit c =>
@@ -88,6 +88,7 @@ object TaggingRepository extends TaggingRepository {
     }
   }
 
+  //No matter if it is a draft
   def tagsFromArticle(articleId: Long): List[String] = {
     DB.withConnection { implicit c =>
       SQL(
@@ -111,20 +112,22 @@ object TaggingRepository extends TaggingRepository {
 
 
   def removeFromArticle(articleId: Long) = {
-    tagsFromArticle(articleId).map {
-      tag => TagRepository.updateNbArticles(tag, -1)
-    }
-    DB.withConnection { implicit c =>
-      SQL(
-        """
+    if (ArticleRepository.isDraft(articleId)) "error.isDraft"
+    else {
+      tagsFromArticle(articleId).map {
+        tag => TagRepository.updateNbArticles(tag, -1)
+      }
+      DB.withConnection { implicit c =>
+        SQL(
+          """
         DELETE FROM taggings
         WHERE taggings.article_id = {articleId}
-        """).
-        on(
-          "articleId" -> articleId
-        ).executeUpdate()
-      "taggings.remove.success"
+          """).
+          on(
+            "articleId" -> articleId
+          ).executeUpdate()
+        "taggings.remove.success"
+      }
     }
-
   }
 }

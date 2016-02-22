@@ -25,7 +25,6 @@ trait BookmarkRepository {
 object BookmarkRepository extends BookmarkRepository {
 
   def bookmarks(userId: Long, articleId: Long) = {
-
     DB.withConnection { implicit c =>
       SQL(
         """
@@ -78,16 +77,11 @@ object BookmarkRepository extends BookmarkRepository {
     }
   }
 
-  def bookmarksOrUnbookmarks(followerId: Long, authorId: Long): String = {
-
-    if (hasBookmarked(followerId, authorId)) {
-      unbookmarks(followerId, authorId)
-
-    }
+  def bookmarksOrUnbookmarks(followerId: Long, articleId: Long): String = {
+    if (ArticleRepository.isDraft(articleId)) "error.isDraft"
     else {
-      bookmarks(followerId, authorId)
-
+      if (hasBookmarked(followerId, articleId)) unbookmarks(followerId, articleId)
+      else bookmarks(followerId, articleId)
     }
-
   }
 }

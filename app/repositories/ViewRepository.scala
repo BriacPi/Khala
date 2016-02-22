@@ -35,8 +35,7 @@ trait ViewRepository {
 object ViewRepository extends ViewRepository {
 
   def create(userId: Long, articleId: Long): String = {
-
-    ArticleRepository.getById(articleId) match {
+    ArticleRepository.getNoDraftById(articleId) match {
       case Some(article) => {
         DB.withConnection { implicit c =>
           SQL(

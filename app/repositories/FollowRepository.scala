@@ -82,10 +82,8 @@ object FollowRepository extends FollowRepository {
   }
 
   def followsOrUnfollows(followerId: Long, authorId: Long): String = {
-
     if (hasFollowed(followerId, authorId)) {
       unfollows(followerId, authorId)
-
     }
     else {
       follows(followerId, authorId)

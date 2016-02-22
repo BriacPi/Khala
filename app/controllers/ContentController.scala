@@ -24,6 +24,8 @@ import scala.concurrent.Future
 import models.{ArticleStats, Article, User}
 import repositories.{LikeRepository, UserRepository, ViewRepository, ArticleRepository}
 
+import scala.reflect.macros.compiler.Errors
+
 
 //
 ///**
@@ -36,6 +38,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   val newArticleForm: Form[Article] = Form(
     mapping(
       "id" -> ignored(None: Option[Long]),
+      "author_id" -> ignored(0.toLong),
       "creationDate" -> ignored(DateTime.now()),
       "lastUpdate" -> ignored(DateTime.now()),
       "title" -> nonEmptyText,
@@ -44,85 +47,114 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
       "nbModifications" -> ignored(0),
       "readingTime" -> ignored(1),
       "tag1" -> nonEmptyText.verifying(maxLength(100)),
-      "tag2" -> optional(text.verifying(maxLength(100)))
+      "tag2" -> optional(text.verifying(maxLength(100))),
+      "status" -> ignored("draft")
     )(Article.apply)(Article.unapply)
   )
 
-  //
-  //  def article(articleID: String) = UserAwareAction { implicit request =>
-  //    val fakeUserId = ""
-  //    ViewRepository.viewArticle(fakeUserId, articleID)
-  //    Ok(views.html.content.article(articleID))
-  //
-  //  }
-  //
-  def article(id:Long) = UserAwareAction { implicit request => {
-    ArticleRepository.getById(id) match{
-      case Some(article) =>  Ok(views.html.content.article(article))
-      case None => Redirect(routes.Application.index)
+
+  def updateArticle() = SecuredAction(parse.json) { implicit request => {
+    try {
+      val article = Article.articleReader.reads(request.body).get
+      ArticleRepository.update(article)
+      Ok(Json.obj("article" -> request.body))
     }
-
+    catch {
+      case e => BadRequest("Expecting correct Article Json data")
+    }
   }
   }
 
-  def writeArticle() = SecuredAction { implicit request =>
 
-    Ok(views.html.content.writeArticle(newArticleForm))
-  }
-
-  def saveArticle() = SecuredAction { implicit request => {
-
-    newArticleForm.bindFromRequest.fold(
-      error => {
-
-        // Request payload is invalid.envisageable
-        BadRequest(views.html.content.writeArticle(newArticleForm))
-      },
-      article => {
-        if (article.title.length() == 0) {
-          Ok(Json.obj("message" -> "error.emptyTitle"))
-        }
-        else if (article.title.length() > 300) Ok(Json.obj("message" -> "error.titleTooLong"))
-        else {
-          val s: String = ArticleRepository.save(request.identity, article)
-          Ok(Json.obj("message" -> s))
-        }
+  def getArticle(id: Long) = UserAwareAction {
+    implicit request => {
+      ArticleRepository.getById(id) match {
+        case Some(article) => Ok(views.html.content.article(article))
+        case None => Redirect(routes.Application.index)
       }
 
-    )
-  }
-  }
-
-  def getAllArticles() = UserAwareAction { implicit request => {
-    val listArticles = ArticleRepository.getAllArticles().map(Article.shorten)
-    Ok(Json.obj("articles" -> listArticles.map(Article.articleWriter.writes)))
-  }
-  }
-
-
-  def getArticleStatsByAuthor(): Action[AnyContent] = SecuredAction { implicit request => {
-    val listJsons: List[JsObject] = ArticleRepository.getArticleStatsByAuthor(request.identity.id.get).map {
-      articleStat => ArticleStats.articleStatsWriter.writes(articleStat)
-    }
-    Ok(Json.obj("articles" -> listJsons))
-  }
-  }
-
-  def getTopArticleStatsByViews() = SecuredAction { implicit request => {
-    val listJsons: List[JsObject] = ArticleRepository.getTopArticleStatsByViews().map {
-      articleStats => ArticleStats.articleStatsWriter.writes(articleStats)
-    }
-    Ok(Json.obj("articles" -> listJsons))
-
-  }
-  }
-
-  def viewArticle(articleId: Long) = UserAwareAction { implicit request => {
-    request.identity match {
-      case None => Ok(Json.obj("viewArticle" ->ViewRepository.create(0.toLong, articleId)))
-      case Some(user) =>  Ok(Json.obj("viewArticle" -> ViewRepository.create(user.id.get, articleId)))
     }
   }
+
+  def writeArticle() = SecuredAction {
+    implicit request =>
+
+      Ok(views.html.content.writeArticle(newArticleForm))
+  }
+//
+//  def saveArticle() = SecuredAction {
+//    implicit request => {
+//
+//      newArticleForm.bindFromRequest.fold(
+//        error => {
+//
+//          // Request payload is invalid.envisageable
+//          BadRequest(views.html.content.writeArticle(newArticleForm))
+//        },
+//        article => {
+//          if (article.title.length() == 0) {
+//            Ok(Json.obj("message" -> "error.emptyTitle"))
+//          }
+//          else if (article.title.length() > 300) Ok(Json.obj("message" -> "error.titleTooLong"))
+//          else {
+//            val s: String = ArticleRepository.save(article)
+//            Ok(Json.obj("message" -> s))
+//          }
+//        }
+//
+//      )
+//    }
+//  }
+
+  def saveArticle = SecuredAction(parse.json) { implicit request => {
+    try {
+      val article = Article.articleReader.reads(request.body).get
+      if (article.status=="draft") ArticleRepository.save(article)
+      else  ArticleRepository.update(article)
+      Ok(Json.obj("article" -> request.body))
+    }
+    catch {
+      case e => BadRequest("Expecting correct Article Json data")
+    }
+  }
+  }
+
+  def getAllArticles() = UserAwareAction {
+    implicit request => {
+      val listArticles = ArticleRepository.getAllArticles().map(Article.shorten)
+      println("bug")
+      println(request.identity.get.id.get.toString())
+      Ok(Json.obj("articles" -> listArticles.map(Article.articleWriter.writes)))
+    }
+  }
+
+
+  def getArticleStatsByAuthor(): Action[AnyContent] = SecuredAction {
+    implicit request => {
+      val listJsons: List[JsObject] = ArticleRepository.getArticleStatsByAuthor(request.identity.id.get).map {
+        articleStat => ArticleStats.articleStatsWriter.writes(articleStat)
+      }
+      Ok(Json.obj("articles" -> listJsons))
+    }
+  }
+
+  def getTopArticleStatsByViews() = SecuredAction {
+    implicit request => {
+      val listJsons: List[JsObject] = ArticleRepository.getTopArticleStatsByViews().map {
+        articleStats => ArticleStats.articleStatsWriter.writes(articleStats)
+      }
+      Ok(Json.obj("articles" -> listJsons))
+
+    }
+  }
+
+  def viewArticle(articleId: Long) = UserAwareAction {
+    implicit request => {
+      request.identity match {
+        case None => Ok(Json.obj("viewArticle" -> ViewRepository.create(0.toLong, articleId)))
+        case Some(user) => Ok(Json.obj("viewArticle" -> ViewRepository.create(user.id.get, articleId)))
+      }
+    }
   }
 
   def getAuthorByArticle(articleId: Long) = UserAwareAction {
@@ -134,12 +166,21 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
     }
   }
 
-  def likeUnlike(articleId:Long)= SecuredAction {
+  def likeUnlike(articleId: Long) = SecuredAction {
     implicit request => {
       request.identity.id match {
-        case Some(id)=> Ok(Json.obj("messages"->LikeRepository.likesOrUnlikes(id,articleId)))
-        case None => Ok(Json.obj("messages"->"like.action.failure"))
+        case Some(id) => Ok(Json.obj("messages" -> LikeRepository.likesOrUnlikes(id, articleId)))
+        case None => Ok(Json.obj("messages" -> "like.action.failure"))
       }
+    }
+  }
+
+  def getDraftsByAuthor(): Action[AnyContent] = SecuredAction {
+    implicit request => {
+      val listJson = ArticleRepository.getDraftsByAuthor(request.identity.id.get).map {
+        draft => Article.articleWriter.writes(draft)
+      }
+      Ok(Json.obj("drafts" -> listJson))
     }
   }
 
