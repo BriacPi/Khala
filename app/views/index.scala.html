@@ -51,10 +51,10 @@
 					@loggedUser match {
 						case Some(user:models.User) => {
 							@if(LikeRepository.hasLiked(user.id.get,article.id.get)){
-									<a articleid="@article.id.get" class="like-auth"  href="#"><i class="fa fa-heart"></i></a>
+									<a articleid="@article.id.get" class="like-auth"  ><i class="fa fa-heart"></i></a>
 
 							}else{
-									<a articleid="@article.id.get" class="like-auth"  href="#"><i class="fa fa-heart-o"></i></a>
+									<a articleid="@article.id.get" class="like-auth"  ><i class="fa fa-heart-o"></i></a>
 							}
 
 						}

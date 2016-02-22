@@ -100,7 +100,7 @@ object UserRepository extends UserRepository {
         'first_name -> user.firstName,
         'last_name -> user.lastName,
         'password -> user.password,
-        'url_photo_profile -> "img/profile_default_large.png",
+        'url_photo_profile -> "/img/profile_default_large.png",
         'services -> user.services,
         'registration_date -> new Timestamp(user.registrationDate.getMillis())
       ).executeInsert()
