@@ -24,7 +24,7 @@
 	</head>
 
 	<body>
-		<div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1" >
+		<div class="col-lg-7 col-lg-offset-3 col-md-10 col-md-offset-1" >
 			@for(article <- articles){
 			<div class="post-preview col-xs-10" >
 				<a href= "/article/id/@article.id">
@@ -47,7 +47,7 @@
 					<a ></a> on @article.creationDate.toString("dd MMM yyyy", lang.toLocale) - @article.readingTime mn read -
 					<a href="#">@article.tag1</a>
 				</p>
-				<p >
+				<p>
 					@loggedUser match {
 						case Some(user:models.User) => {
 							@if(LikeRepository.hasLiked(user.id.get,article.id.get)){

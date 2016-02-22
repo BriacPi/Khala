@@ -1,8 +1,9 @@
-@(article:Article)(implicit user: Option[User], messages: Messages)
+@(article:Article)(implicit user: Option[User], messages: Messages,lang: play.api.i18n.Lang)
 
 @import views.html.tags.auth._
 @import controllers.routes
 @import models.Article
+@import repositories.UserRepository
 
 @views.html.templates.default(title = "Article", user, tab = "article") {
   <head>
@@ -13,23 +14,47 @@
 
   </head>
 
-  <header class="intro-header" style="background-image: url('/img/default-header3.jpg');">
+  <header class="intro-header" style="background-image: url('/img/default-header2.jpg');">
     <div class="container">
       <div class="row">
         <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
           <div class="post-heading">
-            <h1>@article.title</h1>
-            <h2 class="subheading">@article.summary</h2>
-            <span class="meta">Posted by <a href="#">Start Bootstrap</a> on August 24, 2014</span>
           </div>
         </div>
       </div>
     </div>
   </header>
 
+
+
+
   <article>
+
     <div class="container">
       <div class="row">
+        <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1" >
+          <div class="post-preview" >
+            <a href= "/article/id/@article.id">
+              <h2 class="post-title">
+              @article.title
+              </h2>
+              <h3 class="post-subtitle">
+              @article.summary
+              </h3>
+            </a>
+            <p class="post-meta">Posted by @UserRepository.getAuthorByArticle(article.id.get) match {
+              case Some(user) => {
+                <a href="#">@user.firstName @user.lastName</a>
+              }
+              case None => {
+                <a href="#">Unknown </a>
+              }
+            }
+              <a ></a> on @article.creationDate.toString("dd MMM yyyy", lang.toLocale) - @article.readingTime mn read -
+              <a href="#">@article.tag1</a>
+            </p>
+          </div>
+        </div>
         <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
           @article.content
         </div>
