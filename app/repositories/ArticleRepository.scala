@@ -79,6 +79,7 @@ object ArticleRepository extends ArticleRepository {
         .as(recordMapperArticle.singleOpt)
     }
   }
+
   def getNoDraftById(articleId: Long): Option[Article] = {
     DB.withConnection { implicit current =>
       SQL(
@@ -136,9 +137,19 @@ object ArticleRepository extends ArticleRepository {
             'status -> article.status
           ).executeInsert()
         }
-        "draft.add.success"
+        if (article.status == "draft") "draft.add.success"
+        else {
+          initializeArticleStats(article.id.get)
+          UserRepository.updateAuthorStats(article.authorId, AuthorNbs(article.authorId, 0, 1))
+          TaggingRepository.create(article.tag1, article.id.get)
+          article.tag2 match {
+            case None =>
+            case Some(tag2) => TaggingRepository.create(tag2, article.id.get)
+          }
+          "article.add.success"
+        }
       }
-      case Some(existingArticle) => "draft.add.alreadyExists"
+      case Some(existingArticle) => "article.add.alreadyExists"
     }
 
   }
@@ -166,6 +177,7 @@ object ArticleRepository extends ArticleRepository {
   def update(article: Article): String = {
     val newArticle = article.copy(lastUpdate = DateTime.now(), nbModifications = article.nbModifications + 1,
       readingTime = math.max(article.content.length / 1150, 1))
+    val oldArticle= getById(article.id.get).get
     DB.withConnection { implicit c =>
       SQL(
         """
@@ -192,7 +204,10 @@ object ArticleRepository extends ArticleRepository {
       newArticle.tag2 match {
         case None =>
         case Some(tag2) => TaggingRepository.create(tag2, newArticle.id.get)
-
+      }
+      if (oldArticle.status == "draft") {
+        initializeArticleStats(article.id.get)
+        UserRepository.updateAuthorStats(article.authorId, AuthorNbs(article.authorId, 0, 1))
       }
       "article.update.success"
     }
@@ -262,22 +277,24 @@ object ArticleRepository extends ArticleRepository {
         .toList
     }
   }
-def isDraft(articleId: Long): Boolean = {
-  DB.withConnection { implicit current =>
-    SQL(
-      """
+
+  def isDraft(articleId: Long): Boolean = {
+    DB.withConnection { implicit current =>
+      SQL(
+        """
           SELECT articles.status FROM articles
           WHERE articles.id = {articleId} AND  articles.status ='draft'
-      """
-    )
-      .on("articleId" -> articleId)
-      .as(recordMapperArticle.singleOpt)
-  } match {
+        """
+      )
+        .on("articleId" -> articleId)
+        .as(recordMapperArticle.singleOpt)
+    } match {
       case None => false
       case Some(article) => true
 
+    }
   }
-}
+
   //return articles
   def getArticleStatsByAuthor(authorId: Long): List[ArticleStats] = {
     val listArticle: List[Article] = DB.withConnection { implicit current =>

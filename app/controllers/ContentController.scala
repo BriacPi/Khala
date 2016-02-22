@@ -52,18 +52,18 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
     )(Article.apply)(Article.unapply)
   )
 
-
-  def updateArticle() = SecuredAction(parse.json) { implicit request => {
-    try {
-      val article = Article.articleReader.reads(request.body).get
-      ArticleRepository.update(article)
-      Ok(Json.obj("article" -> request.body))
-    }
-    catch {
-      case e => BadRequest("Expecting correct Article Json data")
-    }
-  }
-  }
+//
+//  def updateArticle() = SecuredAction(parse.json) { implicit request => {
+//    try {
+//      val article = Article.articleReader.reads(request.body).get
+//      ArticleRepository.update(article)
+//      Ok(Json.obj("article" -> request.body))
+//    }
+//    catch {
+//      case e => BadRequest("Expecting correct Article Json data")
+//    }
+//  }
+//  }
 
 
   def getArticle(id: Long) = UserAwareAction {
@@ -81,36 +81,36 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
       Ok(views.html.content.writeArticle(newArticleForm))
   }
-//
-//  def saveArticle() = SecuredAction {
-//    implicit request => {
-//
-//      newArticleForm.bindFromRequest.fold(
-//        error => {
-//
-//          // Request payload is invalid.envisageable
-//          BadRequest(views.html.content.writeArticle(newArticleForm))
-//        },
-//        article => {
-//          if (article.title.length() == 0) {
-//            Ok(Json.obj("message" -> "error.emptyTitle"))
-//          }
-//          else if (article.title.length() > 300) Ok(Json.obj("message" -> "error.titleTooLong"))
-//          else {
-//            val s: String = ArticleRepository.save(article)
-//            Ok(Json.obj("message" -> s))
-//          }
-//        }
-//
-//      )
-//    }
-//  }
+
+  //
+  //  def saveArticle() = SecuredAction {
+  //    implicit request => {
+  //
+  //      newArticleForm.bindFromRequest.fold(
+  //        error => {
+  //
+  //          // Request payload is invalid.envisageable
+  //          BadRequest(views.html.content.writeArticle(newArticleForm))
+  //        },
+  //        article => {
+  //          if (article.title.length() == 0) {
+  //            Ok(Json.obj("message" -> "error.emptyTitle"))
+  //          }
+  //          else if (article.title.length() > 300) Ok(Json.obj("message" -> "error.titleTooLong"))
+  //          else {
+  //            val s: String = ArticleRepository.save(article)
+  //            Ok(Json.obj("message" -> s))
+  //          }
+  //        }
+  //
+  //      )
+  //    }
+  //  }
 
   def saveArticle = SecuredAction(parse.json) { implicit request => {
     try {
       val article = Article.articleReader.reads(request.body).get
-      if (article.status=="draft") ArticleRepository.save(article)
-      else  ArticleRepository.update(article)
+      ArticleRepository.save(article)
       Ok(Json.obj("article" -> request.body))
     }
     catch {

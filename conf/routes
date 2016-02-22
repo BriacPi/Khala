@@ -55,7 +55,7 @@ GET         /like-unlike/:articleId                  controllers.ContentControll
 
 GET         /api/draft                               controllers.ContentController.getDraftsByAuthor()
 PUT         /api/save-article                        controllers.ContentController.saveArticle()
-PUT         /api/update-article                      controllers.ContentController.updateArticle()
+#PUT         /api/update-article                      controllers.ContentController.updateArticle()
 
 ###UserProfile Management
 #GET         /api/user                                controllers.MyProfileController.getUser()
