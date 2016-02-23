@@ -8,6 +8,13 @@
 
 
 @helper.form(action = routes.ContentController.saveArticle(), args = 'class -> "newArticleForm") {
+    <head>
+        <link rel="stylesheet" href="css/medium-editor/medium-editor.min.css">
+        <link rel="stylesheet" href="css/medium-editor/themes/beagle.min.css">
+        <script src="//cdn.jsdelivr.net/medium-editor/latest/js/medium-editor.min.js"></script>
+    </head>
+
+
     <div class="centerFlex vertical-center" style="text-align: center" >
         <div class="page-header">
 
@@ -43,7 +50,9 @@
             <div class="submit">
                 <input type="submit" name="submit" value=@Messages("submit")>
             </div>
-        </div>
         }
+        </div>
+    </div>
 
-</div>
+    <div class="editable"></div>
+    <script>var editor = new MediumEditor('.editable');</script>

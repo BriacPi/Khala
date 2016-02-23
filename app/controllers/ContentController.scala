@@ -83,29 +83,35 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   }
 
 
-//    def saveArticle() = SecuredAction {
-//      implicit request => {
-//
-//        newArticleForm.bindFromRequest.fold(
-//          error => {
-//
-//            // Request payload is invalid.envisageable
-//            BadRequest(views.html.content.writeArticle(newArticleForm))
-//          },
-//          article => {
-//            if (article.title.length() == 0) {
-//              Ok(Json.obj("message" -> "error.emptyTitle"))
-//            }
-//            else if (article.title.length() > 300) Ok(Json.obj("message" -> "error.titleTooLong"))
-//            else {
-//              val s: String = ArticleRepository.save(article)
-//              Ok(Json.obj("message" -> s))
-//            }
-//          }
-//
-//        )
-//      }
-//    }
+  def write() = SecuredAction { implicit request =>
+    Ok(views.html.content.write())
+  }
+
+
+  //
+  //  def saveArticle() = SecuredAction {
+  //    implicit request => {
+  //
+  //      newArticleForm.bindFromRequest.fold(
+  //        error => {
+  //
+  //          // Request payload is invalid.envisageable
+  //          BadRequest(views.html.content.writeArticle(newArticleForm))
+  //        },
+  //        article => {
+  //          if (article.title.length() == 0) {
+  //            Ok(Json.obj("message" -> "error.emptyTitle"))
+  //          }
+  //          else if (article.title.length() > 300) Ok(Json.obj("message" -> "error.titleTooLong"))
+  //          else {
+  //            val s: String = ArticleRepository.save(article)
+  //            Ok(Json.obj("message" -> s))
+  //          }
+  //        }
+  //
+  //      )
+  //    }
+  //  }
 
   def saveArticle = SecuredAction(parse.json) { implicit request => {
     try {
