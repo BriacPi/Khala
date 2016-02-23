@@ -52,10 +52,13 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
     )(Article.apply)(Article.unapply)
   )
 
-def newDraft()=SecuredAction(parse.json) { implicit request => {
+  def save() = SecuredAction(parse.json) { implicit request => {
     try {
       val articleUserEditable = ArticleUserEditable.articleUserEditableReader.reads(request.body).get
-      ArticleRepository.update(article)
+      val article = new Article(articleUserEditable, request.identity.id.get, DateTime.now(),
+        DateTime.now(), 0, math.max(articleUserEditable.content.length / 1150, 1), "draft")
+
+      ArticleRepository.save(article)
       Ok(Json.obj("article" -> request.body))
     }
     catch {
@@ -64,11 +67,13 @@ def newDraft()=SecuredAction(parse.json) { implicit request => {
   }
   }
 
-
-  def updateArticle() = SecuredAction(parse.json) { implicit request => {
+  def publish(status: String) = SecuredAction(parse.json) { implicit request => {
     try {
-      val article = Article.articleReader.reads(request.body).get
-      ArticleRepository.update(article)
+      val articleUserEditable = ArticleUserEditable.articleUserEditableReader.reads(request.body).get
+      val article = new Article(articleUserEditable, request.identity.id.get, DateTime.now(),
+        DateTime.now(), 0, math.max(articleUserEditable.content.length / 1150, 1), status)
+      ArticleRepository.save(article)
+      ArticleRepository.publish(article)
       Ok(Json.obj("article" -> request.body))
     }
     catch {
@@ -76,6 +81,28 @@ def newDraft()=SecuredAction(parse.json) { implicit request => {
     }
   }
   }
+
+  def getEditable(articleId: Long) = SecuredAction { implicit request => {
+
+    val optEditable: Option[ArticleUserEditable] = ArticleRepository.getEditable(request.identity.id.get, articleId)
+    optEditable match {
+      case None => BadRequest("The specified article or draft is not editable by current user.")
+      case Some(editable) => Ok(Json.obj("article" -> ArticleUserEditable.articleUserEditableWriter.writes(editable)))
+    }
+  }
+  }
+
+  //  def updateArticle() = SecuredAction(parse.json) { implicit request => {
+  //    try {
+  //      val article = Article.articleReader.reads(request.body).get
+  //      ArticleRepository.update(article)
+  //      Ok(Json.obj("article" -> request.body))
+  //    }
+  //    catch {
+  //      case e => BadRequest("Expecting correct Article Json data")
+  //    }
+  //  }
+  //  }
 
 
   def getArticle(id: Long) = UserAwareAction {
@@ -88,54 +115,12 @@ def newDraft()=SecuredAction(parse.json) { implicit request => {
     }
   }
 
-  def writeArticle() = SecuredAction {
-    implicit request =>
-
-      Ok(views.html.content.writeArticle(newArticleForm))
-  }
 
 
   def write() = SecuredAction { implicit request =>
     Ok(views.html.content.write())
   }
 
-
-  //
-  //  def saveArticle() = SecuredAction {
-  //    implicit request => {
-  //
-  //      newArticleForm.bindFromRequest.fold(
-  //        error => {
-  //
-  //          // Request payload is invalid.envisageable
-  //          BadRequest(views.html.content.writeArticle(newArticleForm))
-  //        },
-  //        article => {
-  //          if (article.title.length() == 0) {
-  //            Ok(Json.obj("message" -> "error.emptyTitle"))
-  //          }
-  //          else if (article.title.length() > 300) Ok(Json.obj("message" -> "error.titleTooLong"))
-  //          else {
-  //            val s: String = ArticleRepository.save(article)
-  //            Ok(Json.obj("message" -> s))
-  //          }
-  //        }
-  //
-  //      )
-  //    }
-  //  }
-
-  def saveArticle = SecuredAction(parse.json) { implicit request => {
-    try {
-      val article = Article.articleReader.reads(request.body).get
-      ArticleRepository.save(article)
-      Ok(Json.obj("article" -> request.body))
-    }
-    catch {
-      case e => BadRequest("Expecting correct Article Json data")
-    }
-  }
-  }
 
   def getAllArticles() = UserAwareAction {
     implicit request => {

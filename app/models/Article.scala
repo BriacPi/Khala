@@ -23,7 +23,7 @@ case class Article(
                     status: String = "draft"
                   ){
   def this(articleUserEditable:ArticleUserEditable, authorId: Long, creationDate: DateTime, lastUpdate: DateTime,nbModifications: Int,
-           readingTime: Int) = this(articleUserEditable.id, authorId,creationDate,lastUpdate,articleUserEditable.title,
+           readingTime: Int, status: String) = this(articleUserEditable.id, authorId,creationDate,lastUpdate,articleUserEditable.title,
     articleUserEditable.summary,articleUserEditable.content,nbModifications,readingTime,articleUserEditable.tag1,articleUserEditable.tag2,status)
 
 }
@@ -89,6 +89,9 @@ case class ArticleUserEditable(
                                 tag1: String,
                                 tag2: Option[String]
                               )
+ {
+   def this(article:Article) = this(article.id,article.title,article.summary,article.content,article.tag1,article.tag2)
+ }
 object ArticleUserEditable {
   implicit val articleUserEditableReader: Reads[ArticleUserEditable] = (
     //readNullable manages option

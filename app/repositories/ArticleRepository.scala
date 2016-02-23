@@ -54,6 +54,20 @@ trait ArticleRepository {
     }
   }
 
+  private[repositories] val recordMapperEditable= {
+
+    long("articles.id") ~
+      str("articles.title") ~
+      str("article.summary") ~
+      str("articles.content") ~
+      str("articles.tag1") ~
+      str("articles.tag2") map {
+      case id ~ title ~ summary~ content~ tag1 ~ tag2=> {
+        ArticleUserEditable(Some(id), title,Some(summary),content,tag1,Some(tag2))
+      }
+    }
+  }
+
   private[repositories] val recordMapperIsDraft = {
     str("articles.status") map {
       case status => {
@@ -134,46 +148,55 @@ object ArticleRepository extends ArticleRepository {
             'reading_time -> math.max(article.content.length / 1150, 1),
             'tag1 -> article.tag1,
             'tag2 -> article.tag2.getOrElse[String](""),
-            'status -> article.status
+            'status -> "draft"
           ).executeInsert()
         }
-        if (article.status == "draft") "draft.add.success"
-        else {
-          TaggingRepository.create(article.tag1, article.id.get)
-          article.tag2 match {
-            case None =>
-            case Some(tag2) => TaggingRepository.create(tag2, article.id.get)
-          }
-          "article.add.success"
-        }
+        "draft.add.success"
       }
-      case Some(existingArticle) => "article.add.alreadyExists"
+      case Some(existingDraft) => "draft.add.error.alreadyExists"
     }
 
   }
 
   //status is public or private
-  def draftToArticle(draftId: Long, status: String) = {
-    val optDraft: Option[Article] = getById(draftId)
-    optDraft match {
+  //publish does not update but publish can switch the status to and from public/private.
+  def publish(article: Article) = {
+    val optArticle: Option[Article] = getById(article.id.get)
+    optArticle match {
       case None =>
-      case Some(draft) => {
-        TaggingRepository.create(draft.tag1, draft.id.get)
-        draft.tag2 match {
-          case None =>
-          case Some(tag2) => TaggingRepository.create(tag2, draft.id.get)
+      case Some(oldArticle) => {
+        //The logic is save has been applied just before, so if any tagging has to be done
+        //it would have been done beforehand except when it is a draft.
+        if (oldArticle.status == "draft") {
+          TaggingRepository.removeFromArticle(article.id.get)
+          TaggingRepository.create(article.tag1, article.id.get)
+          article.tag2 match {
+            case None =>
+            case Some(tag2) => TaggingRepository.create(tag2, article.id.get)
+          }
         }
-        val newArticle = draft.copy(status = status, creationDate = DateTime.now())
-        update(newArticle)
+        //Changing status
+        DB.withConnection { implicit c =>
+          SQL(
+            """
+        update  articles set status = {status}
+        WHERE id ={id}
+            """
+          ).on(
+            'id -> article.id.get,
+            'status -> article.status
+          ).executeUpdate()
+        }
       }
     }
-
   }
 
+  //does not change the nature of the article/draft
   def update(article: Article): String = {
-    val newArticle = article.copy(lastUpdate = DateTime.now(), nbModifications = article.nbModifications + 1,
-      readingTime = math.max(article.content.length / 1150, 1))
-    val oldArticle= getById(article.id.get).get
+    val oldArticle = getById(article.id.get).get
+    val newArticle = article.copy(lastUpdate = DateTime.now(), nbModifications = oldArticle.nbModifications + 1,
+      readingTime = math.max(article.content.length / 1150, 1), status = oldArticle.status)
+
     DB.withConnection { implicit c =>
       SQL(
         """
@@ -183,7 +206,7 @@ object ArticleRepository extends ArticleRepository {
         """
       ).on(
         'id -> newArticle.id.get,
-        'creation_date -> new Timestamp(newArticle.creationDate.getMillis()),
+        'creation_date -> new Timestamp(oldArticle.creationDate.getMillis()),
         'last_update -> new Timestamp(newArticle.lastUpdate.getMillis()),
         'title -> newArticle.title,
         'summary -> newArticle.summary.getOrElse(""),
@@ -194,7 +217,7 @@ object ArticleRepository extends ArticleRepository {
         'tag2 -> newArticle.tag2.getOrElse[String]("")
       ).executeUpdate()
     }
-    if (newArticle.status != "draft") {
+    if (oldArticle.status != "draft") {
       TaggingRepository.removeFromArticle(newArticle.id.get)
       TaggingRepository.create(newArticle.tag1, newArticle.id.get)
       newArticle.tag2 match {
@@ -206,6 +229,7 @@ object ArticleRepository extends ArticleRepository {
     else "draft.update.success"
   }
 
+
   def save(article: Article): String = {
     article.id match {
       case None => create(article)
@@ -214,19 +238,38 @@ object ArticleRepository extends ArticleRepository {
   }
 
 
-  def getArticleNbs(articleId: Long): Option[ArticleNbs] = {
-    DB.withConnection { implicit current =>
-      SQL(
-        """
-          SELECT *
-          FROM articles_stats
-          WHERE articles_stats.article_id={id}
-        """
-      )
-        .on(
-          "id" -> articleId
+
+  def getEditable(authorId: Long,articleId: Long) = {
+    DB.withConnection {
+      implicit current =>
+        SQL(
+          """
+          SELECT articles.id, articles.title, articles.summary, articles.content, articles.tag1, articles.tag2
+          FROM articles
+          WHERE articles.id = {articleId} AND articles.author_id = {authorId}
+          """
         )
-        .as(recordMapperArticleNbs.singleOpt)
+          .on(
+            "authorId" -> authorId,
+            "articleId" -> articleId)
+          .as(recordMapperEditable.singleOpt)
+    }
+  }
+
+  def getArticleNbs(articleId: Long): Option[ArticleNbs] = {
+    DB.withConnection {
+      implicit current =>
+        SQL(
+          """
+    SELECT *
+    FROM articles_stats
+    WHERE articles_stats.article_id={id}
+          """
+        )
+          .on(
+            "id" -> articleId
+          )
+          .as(recordMapperArticleNbs.singleOpt)
     }
   }
 
@@ -240,46 +283,49 @@ object ArticleRepository extends ArticleRepository {
   def getAllArticles(): List[Article] = {
     val datetime: Timestamp = new Timestamp(DateTime.now().minusDays(5).getMillis())
 
-    DB.withConnection { implicit current =>
-      SQL(
-        """
-          SELECT *
-          FROM articles
-          WHERE articles.creation_date > {nowMinus5Day} AND articles.status != 'draft'
-          LIMIT 200
-        """
-      )
-        .on("nowMinus5Day" -> datetime)
-        .as(recordMapperArticle *)
-        .toList
+    DB.withConnection {
+      implicit current =>
+        SQL(
+          """
+    SELECT *
+    FROM articles
+    WHERE articles.creation_date > {nowMinus5Day} AND articles.status != 'draft'
+    LIMIT 200
+          """
+        )
+          .on("nowMinus5Day" -> datetime)
+          .as(recordMapperArticle *)
+          .toList
     }
 
   }
 
   def getDraftsByAuthor(authorId: Long): List[Article] = {
-    DB.withConnection { implicit current =>
-      SQL(
-        """
-          SELECT * FROM articles
-          WHERE articles.author_id = {authorId} AND articles.status ='draft'
-        """
-      )
-        .on("authorId" -> authorId)
-        .as(recordMapperArticle *)
-        .toList
+    DB.withConnection {
+      implicit current =>
+        SQL(
+          """
+    SELECT * FROM articles
+    WHERE articles.author_id = {authorId} AND articles.status ='draft'
+          """
+        )
+          .on("authorId" -> authorId)
+          .as(recordMapperArticle *)
+          .toList
     }
   }
 
   def isDraft(articleId: Long): Boolean = {
-    DB.withConnection { implicit current =>
-      SQL(
-        """
-          SELECT articles.status FROM articles
-          WHERE articles.id = {articleId} AND  articles.status ='draft'
-        """
-      )
-        .on("articleId" -> articleId)
-        .as(recordMapperArticle.singleOpt)
+    DB.withConnection {
+      implicit current =>
+        SQL(
+          """
+    SELECT articles.status FROM articles
+    WHERE articles.id = {articleId} AND  articles.status ='draft'
+          """
+        )
+          .on("articleId" -> articleId)
+          .as(recordMapperArticle.singleOpt)
     } match {
       case None => false
       case Some(article) => true
@@ -289,58 +335,63 @@ object ArticleRepository extends ArticleRepository {
 
   //return articles
   def getArticleStatsByAuthor(authorId: Long): List[ArticleStats] = {
-    val listArticle: List[Article] = DB.withConnection { implicit current =>
-      SQL(
-        """
-            SELECT articles.* FROM articles
-            LEFT JOIN articles_views ON articles.id = articles_views.article_id
-            WHERE articles.author_id = {authorId} AND articles.status!='draft'
-            ORDER BY COALESCE(articles_views.nb_views,0) DESC, articles.id DESC
-        """
-      )
-        .on("authorId" -> authorId)
-        .as(recordMapperArticle *)
-        .toList
+    val listArticle: List[Article] = DB.withConnection {
+      implicit current =>
+        SQL(
+          """
+      SELECT articles.* FROM articles
+      LEFT JOIN articles_views ON articles.id = articles_views.article_id
+      WHERE articles.author_id = {authorId} AND articles.status!='draft'
+      ORDER BY COALESCE(articles_views.nb_views,0) DESC, articles.id DESC
+          """
+        )
+          .on("authorId" -> authorId)
+          .as(recordMapperArticle *)
+          .toList
     }
 
-    listArticle.map { article =>
-      ArticleStats.fromArticle(Article.shorten(article), getArticleNbs(article.id.get).get)
+    listArticle.map {
+      article =>
+        ArticleStats.fromArticle(Article.shorten(article), getArticleNbs(article.id.get).get)
     }
 
   }
 
   def getTopArticleStatsByViews() = {
     val datetime: Timestamp = new Timestamp(DateTime.now().minusDays(5).getMillis())
-    val listArticle: List[Article] = DB.withConnection { implicit current =>
-      SQL(
-        """
-            SELECT articles.* FROM articles
-            LEFT JOIN articles_views ON articles.id = articles_views.article_id
-            WHERE articles.creation_date > {nowMinus5Day} AND articles.status!='draft'
-            ORDER BY articles_views.nb_views DESC, articles.id DESC
-            LIMIT 200 OFFSET 0
-        """
-      )
-        .on("nowMinus5Day" -> datetime)
-        .as(recordMapperArticle *)
-        .toList
+    val listArticle: List[Article] = DB.withConnection {
+      implicit current =>
+        SQL(
+          """
+      SELECT articles.* FROM articles
+      LEFT JOIN articles_views ON articles.id = articles_views.article_id
+      WHERE articles.creation_date > {nowMinus5Day} AND articles.status!='draft'
+      ORDER BY articles_views.nb_views DESC, articles.id DESC
+      LIMIT 200 OFFSET 0
+          """
+        )
+          .on("nowMinus5Day" -> datetime)
+          .as(recordMapperArticle *)
+          .toList
     }
-    listArticle.map { article =>
-      ArticleStats.fromArticle(Article.shorten(article), getArticleNbs(article.id.get).get)
+    listArticle.map {
+      article =>
+        ArticleStats.fromArticle(Article.shorten(article), getArticleNbs(article.id.get).get)
     }
   }
 
   def getArticleStats(articleId: Long): Option[ArticleStats] = {
-    val optArticle: Option[Article] = DB.withConnection { implicit current =>
-      SQL(
-        """
-          SELECT *
-          FROM articles
-          WHERE articles.id = {id} AND articles.status!='draft'
-        """
-      )
-        .on("id" -> articleId)
-        .as(recordMapperArticle.singleOpt)
+    val optArticle: Option[Article] = DB.withConnection {
+      implicit current =>
+        SQL(
+          """
+    SELECT *
+    FROM articles
+    WHERE articles.id = {id} AND articles.status!='draft'
+          """
+        )
+          .on("id" -> articleId)
+          .as(recordMapperArticle.singleOpt)
     }
     optArticle match {
       case None => None
@@ -348,49 +399,49 @@ object ArticleRepository extends ArticleRepository {
     }
   }
 
-//  def initializeArticleStats(articleId: Long) = {
-//    DB.withConnection { implicit c =>
-//      SQL(
-//        """
-//        INSERT into articles_stats (article_id) values
-//        ({id})
-//        """
-//      ).on(
-//        "id" -> articleId
-//      ).executeInsert()
-//    }
-//  }
-//
-//  def deleteArticleStats(articleId: Long) = {
-//    DB.withConnection { implicit c =>
-//      SQL(
-//        """
-//        DELETE FROM articles_stats
-//        WHERE articles_stats.article_id= {id}
-//        """).
-//        on(
-//          "id" -> articleId
-//        ).executeUpdate()
-//    }
-//  }
-//
-//  def updateArticleStats(articleId: Long, modifier: ArticleNbs): Unit = {
-//
-//    DB.withConnection { implicit c =>
-//      SQL(
-//        """
-//        update articles_stats
-//        SET nb_views = nb_views+{modifier_views}, nb_likes =nb_likes+{modifier_likes},
-//        nb_comments =nb_comments+{modifier_comments}, nb_bookmarks=nb_bookmarks+{modifier_bookmarks}
-//        WHERE article_id = {articleId}
-//        """
-//      ).on(
-//        "modifier_views" -> modifier.nbViews,
-//        "modifier_likes" -> modifier.nbLikes,
-//        "modifier_comments" -> modifier.nbComments,
-//        "modifier_bookmarks" -> modifier.nbBookmarks,
-//        "articleId" -> articleId
-//      ).executeUpdate()
-//    }
-//  }
+  //  def initializeArticleStats(articleId: Long) = {
+  //    DB.withConnection { implicit c =>
+  //      SQL(
+  //        """
+  //        INSERT into articles_stats (article_id) values
+  //        ({id})
+  //        """
+  //      ).on(
+  //        "id" -> articleId
+  //      ).executeInsert()
+  //    }
+  //  }
+  //
+  //  def deleteArticleStats(articleId: Long) = {
+  //    DB.withConnection { implicit c =>
+  //      SQL(
+  //        """
+  //        DELETE FROM articles_stats
+  //        WHERE articles_stats.article_id= {id}
+  //        """).
+  //        on(
+  //          "id" -> articleId
+  //        ).executeUpdate()
+  //    }
+  //  }
+  //
+  //  def updateArticleStats(articleId: Long, modifier: ArticleNbs): Unit = {
+  //
+  //    DB.withConnection { implicit c =>
+  //      SQL(
+  //        """
+  //        update articles_stats
+  //        SET nb_views = nb_views+{modifier_views}, nb_likes =nb_likes+{modifier_likes},
+  //        nb_comments =nb_comments+{modifier_comments}, nb_bookmarks=nb_bookmarks+{modifier_bookmarks}
+  //        WHERE article_id = {articleId}
+  //        """
+  //      ).on(
+  //        "modifier_views" -> modifier.nbViews,
+  //        "modifier_likes" -> modifier.nbLikes,
+  //        "modifier_comments" -> modifier.nbComments,
+  //        "modifier_bookmarks" -> modifier.nbBookmarks,
+  //        "articleId" -> articleId
+  //      ).executeUpdate()
+  //    }
+  //  }
 }
