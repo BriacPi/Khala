@@ -61,7 +61,7 @@ GET         /view-article/:articleId                 controllers.ContentControll
 GET         /like-unlike/:articleId                  controllers.ContentController.likeUnlike(articleId: Long)
 
 GET         /api/draft                               controllers.ContentController.getDraftsByAuthor()
-PUT         /api/save                                controllers.ContentController.save()
+POST         /api/save                                controllers.ContentController.save()
 
 ###UserProfile Management
 #GET         /api/user                                controllers.MyProfileController.getUser()

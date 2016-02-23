@@ -54,6 +54,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
   def save() = SecuredAction(parse.json) { implicit request => {
     try {
+      println(ArticleUserEditable.articleUserEditableReader.reads(request.body),request.body)
       val articleUserEditable = ArticleUserEditable.articleUserEditableReader.reads(request.body).get
       val article = new Article(articleUserEditable, request.identity.id.get, DateTime.now(),
         DateTime.now(), 0, math.max(articleUserEditable.content.length / 1150, 1), "draft")
