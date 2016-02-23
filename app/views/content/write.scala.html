@@ -50,7 +50,7 @@
 
 
   <script>
-          var editor = new MediumEditor('.post-title', {
+          var titleEditor = new MediumEditor('.post-title', {
             placeholder: false,
             toolbar: false,
             extensions: {
@@ -64,7 +64,6 @@
               })
             }
           });
-
           var contentEditor = new MediumEditor('.content', {
             placeholder: {
               text: 'Write your article here',
@@ -74,7 +73,7 @@
 
           $(function () {
             $('.content').mediumInsert({
-              editor: editor
+              editor: contentEditor
             });
           });
 
