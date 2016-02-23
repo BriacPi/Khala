@@ -37,7 +37,6 @@ object BookmarkRepository extends BookmarkRepository {
         'bookmark_date -> new Timestamp(DateTime.now().getMillis())
       ).executeInsert()
     }
-    ArticleRepository.updateArticleStats(articleId, ArticleNbs(articleId, 0, 0, 0, 1))
     "bookmark.success"
   }
 
@@ -54,7 +53,6 @@ object BookmarkRepository extends BookmarkRepository {
           "articleId" -> articleId
         ).executeUpdate()
     }
-    ArticleRepository.updateArticleStats(articleId, ArticleNbs(articleId, 0, 0, 0, -1))
     "unbookmark.success"
   }
 

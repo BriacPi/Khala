@@ -41,7 +41,6 @@ object FollowRepository extends FollowRepository {
         'follow_date -> new Timestamp(DateTime.now().getMillis())
       ).executeInsert()
     }
-    UserRepository.updateAuthorStats(authorId,AuthorNbs(authorId,1,0))
     "follow.success"
   }
 
@@ -58,7 +57,6 @@ object FollowRepository extends FollowRepository {
           "author_id" -> authorId
         ).executeUpdate()
     }
-    UserRepository.updateAuthorStats(authorId,AuthorNbs(authorId,-1,0))
     "unfollow.success"
   }
 

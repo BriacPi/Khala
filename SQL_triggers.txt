@@ -12,6 +12,7 @@ DROP FUNCTION IF EXISTS comment_delete();
 DROP FUNCTION IF EXISTS bookmark_insert();
 DROP FUNCTION IF EXISTS bookmark_delete();
   
+## Not ok.
 CREATE TABLE IF NOT EXISTS articles_stats AS
 (
 select articles.id as article_id, COALESCE(nb_views,0) AS nb_views, COALESCE(nb_likes,0) AS nb_likes, 
@@ -41,14 +42,21 @@ WHERE articles.status != 'draft'
 );
 
 
+CREATE TABLE IF NOT EXISTS articles_stats (
+article_id INT NOT NULL UNIQUE,
+nb_views INT NOT NULL DEFAUT = 0,
+nb_likes INT NOT NULL DEFAUT = 0,
+nb_comments INT NOT NULL DEFAUT = 0,
+nb_bookmarks INT NOT NULL DEFAUT = 0
 
+)
 
 create or replace function article_insert() returns trigger
   security definer
   language plpgsql
 as $$
   begin
-    insert into articles_stats(article_id) values(new.name);
+    insert into articles_stats(article_id) values(new.id);
     return new;
   end;
 $$;
@@ -74,8 +82,8 @@ create or replace function view_insert() returns trigger
   language plpgsql
 as $$
   begin
-    update articles_stats set articles_stats.nb_views = nb_views+1
-    where articles_stats.article_id = new.article_id;
+    update articles_stats set nb_views = nb_views+1
+    where article_id = new.article_id;
     return new;
   end;
 $$;
@@ -88,8 +96,8 @@ create or replace function view_delete() returns trigger
   language plpgsql
 as $$
   begin
-    update articles_stats set articles_stats.nb_views = nb_views-1
-    where articles_stats.article_id = old.article_id;
+    update articles_stats set nb_views = nb_views-1
+    where article_id = old.article_id;
     return new;
   end;
 $$;
@@ -102,8 +110,8 @@ create or replace function like_insert() returns trigger
   language plpgsql
 as $$
   begin
-    update articles_stats set articles_stats.nb_likes = nb_likes+1
-    where articles_stats.article_id = new.article_id;
+    update articles_stats set nb_likes = nb_likes+1
+    where article_id = new.article_id;
     return new;
   end;
 $$;
@@ -116,8 +124,8 @@ create or replace function like_delete() returns trigger
   language plpgsql
 as $$
   begin
-    update articles_stats set articles_stats.nb_likes = nb_likes-1
-    where articles_stats.article_id = old.article_id;
+    update articles_stats set nb_likes = nb_likes-1
+    where article_id = old.article_id;
     return new;
   end;
 $$;
@@ -131,8 +139,8 @@ create or replace function comment_insert() returns trigger
   language plpgsql
 as $$
   begin
-    update articles_stats set articles_stats.nb_comments = nb_comments+1
-    where articles_stats.article_id = new.article_id;
+    update articles_stats set nb_comments = nb_comments+1
+    where article_id = new.article_id;
     return new;
   end;
 $$;
@@ -145,8 +153,8 @@ create or replace function comment_delete() returns trigger
   language plpgsql
 as $$
   begin
-    update articles_stats set articles_stats.nb_comments = nb_comments-1
-    where articles_stats.article_id = old.article_id;
+    update articles_stats set nb_comments = nb_comments-1
+    where article_id = old.article_id;
     return new;
   end;
 $$;
@@ -159,8 +167,8 @@ create or replace function bookmark_insert() returns trigger
   language plpgsql
 as $$
   begin
-    update articles_stats set articles_stats.nb_bookmarks = nb_bookmarks+1
-    where articles_stats.article_id = new.article_id;
+    update articles_stats set nb_bookmarks = nb_bookmarks+1
+    where article_id = new.article_id;
     return new;
   end;
 $$;
@@ -173,13 +181,13 @@ create or replace function bookmark_delete() returns trigger
   language plpgsql
 as $$
   begin
-    update articles_stats set articles_stats.nb_bookmarks = nb_bookmarks-1
-    where articles_stats.article_id = old.article_id;
+    update articles_stats set nb_bookmarks = nb_bookmarks-1
+    where article_id = old.article_id;
     return new;
   end;
 $$;
 create trigger bookmark_delete after delete on bookmarks
     for each row execute procedure bookmark_delete();
 
-
-insert into articles_views(article_id,user_id,view_time) values(1,1,now());
+insert into articles(author_id,creation_date,last_update,title,summary,content,nb_modifications,reading_time,tag1,tag2,status) values(1,now(),now(),'test','summary','content',0,1,'test','really','draft');
+insert into views(user_id,article_id,view_date) values(1,4,now());

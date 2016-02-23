@@ -109,8 +109,6 @@ object UserRepository extends UserRepository {
   }
 
   def update(user: User): Option[User] = {
-    println("bug")
-    println(user.password)
     DB.withConnection { implicit c =>
       SQL(
         """
@@ -169,50 +167,50 @@ object UserRepository extends UserRepository {
 
   }
 
-
-  def initializeAuthorStats(authorId: Long) = {
-    DB.withConnection { implicit c =>
-      SQL(
-        """
-        INSERT into authors_stats (author_id) values
-        ({id})
-        """
-      ).on(
-        'id -> authorId
-      ).executeInsert()
-    }
-  }
-
-  def deleteAuthorStats(authorId: Long) = {
-    DB.withConnection { implicit c =>
-      SQL(
-        """
-        DELETE FROM authors_stats
-        WHERE authors_stats.author_id= {id}
-        """).
-        on(
-          "id" -> authorId
-        ).executeUpdate()
-    }
-  }
-
-  def updateAuthorStats(authorId: Long, modifier: AuthorNbs)= {
-
-    DB.withConnection { implicit c =>
-      SQL(
-        """
-        UPDATE authors_stats
-        SET nb_followers=nb_followers+{modifier_followers},
-        nb_articles =nb_articles+{modifier_articles}
-        WHERE author_id = {authorId}
-        """
-      ).on(
-        'authorId -> authorId,
-        'modifier_followers -> modifier.nbFollowers,
-        'modifier_articles -> modifier.nbArticles
-      ).executeUpdate()
-    }
-  }
-
+//
+//  def initializeAuthorStats(authorId: Long) = {
+//    DB.withConnection { implicit c =>
+//      SQL(
+//        """
+//        INSERT into authors_stats (author_id) values
+//        ({id})
+//        """
+//      ).on(
+//        'id -> authorId
+//      ).executeInsert()
+//    }
+//  }
+//
+//  def deleteAuthorStats(authorId: Long) = {
+//    DB.withConnection { implicit c =>
+//      SQL(
+//        """
+//        DELETE FROM authors_stats
+//        WHERE authors_stats.author_id= {id}
+//        """).
+//        on(
+//          "id" -> authorId
+//        ).executeUpdate()
+//    }
+//  }
+//
+//  def updateAuthorStats(authorId: Long, modifier: AuthorNbs)= {
+//
+//    DB.withConnection { implicit c =>
+//      SQL(
+//        """
+//        UPDATE authors_stats
+//        SET nb_followers=nb_followers+{modifier_followers},
+//        nb_articles =nb_articles+{modifier_articles}
+//        WHERE author_id = {authorId}
+//        """
+//      ).on(
+//        'authorId -> authorId,
+//        'modifier_followers -> modifier.nbFollowers,
+//        'modifier_articles -> modifier.nbArticles
+//      ).executeUpdate()
+//    }
+//  }
+//
 
 }

@@ -49,7 +49,6 @@ object ViewRepository extends ViewRepository {
             'view_date -> new Timestamp(DateTime.now().getMillis())
           ).executeInsert()
         }
-        ArticleRepository.updateArticleStats(articleId,ArticleNbs(articleId,1,0,0,0))
         "view.add.success"
       }
       case None => "article.notFound"

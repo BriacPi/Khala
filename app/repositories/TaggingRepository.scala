@@ -40,7 +40,6 @@ object TaggingRepository extends TaggingRepository {
             'tagging_date -> new Timestamp(DateTime.now().getMillis())
           ).executeInsert()
         }
-        TagRepository.updateNbArticles(tagName, 1)
         "tagging.add.success"
       }
       case None => "article.notFound"
@@ -61,7 +60,6 @@ object TaggingRepository extends TaggingRepository {
               "articleId" -> articleId
             ).executeUpdate()
         }
-        TagRepository.updateNbArticles(tagName, -1)
         "tagging.remove.success"
 
       }
@@ -114,9 +112,6 @@ object TaggingRepository extends TaggingRepository {
   def removeFromArticle(articleId: Long) = {
     if (ArticleRepository.isDraft(articleId)) "error.isDraft"
     else {
-      tagsFromArticle(articleId).map {
-        tag => TagRepository.updateNbArticles(tag, -1)
-      }
       DB.withConnection { implicit c =>
         SQL(
           """

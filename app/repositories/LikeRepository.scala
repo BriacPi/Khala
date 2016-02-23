@@ -41,7 +41,6 @@ object LikeRepository extends LikeRepository {
             'like_date -> new Timestamp(DateTime.now().getMillis())
           ).executeInsert()
         }
-        ArticleRepository.updateArticleStats(articleId, ArticleNbs(articleId, 0, 1, 0, 0))
         "like.add.success"
       }
       case None => "article.notFound"
@@ -66,7 +65,6 @@ object LikeRepository extends LikeRepository {
             executeUpdate()
 
         }
-        ArticleRepository.updateArticleStats(articleId, ArticleNbs(articleId, 0, -1, 0, 0))
         "like.remove.success"
       }
       case None => "article.notFound"

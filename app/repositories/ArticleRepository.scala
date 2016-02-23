@@ -139,8 +139,6 @@ object ArticleRepository extends ArticleRepository {
         }
         if (article.status == "draft") "draft.add.success"
         else {
-          initializeArticleStats(article.id.get)
-          UserRepository.updateAuthorStats(article.authorId, AuthorNbs(article.authorId, 0, 1))
           TaggingRepository.create(article.tag1, article.id.get)
           article.tag2 match {
             case None =>
@@ -160,8 +158,6 @@ object ArticleRepository extends ArticleRepository {
     optDraft match {
       case None =>
       case Some(draft) => {
-        initializeArticleStats(draft.id.get)
-        UserRepository.updateAuthorStats(draft.authorId, AuthorNbs(draft.authorId, 0, 1))
         TaggingRepository.create(draft.tag1, draft.id.get)
         draft.tag2 match {
           case None =>
@@ -204,10 +200,6 @@ object ArticleRepository extends ArticleRepository {
       newArticle.tag2 match {
         case None =>
         case Some(tag2) => TaggingRepository.create(tag2, newArticle.id.get)
-      }
-      if (oldArticle.status == "draft") {
-        initializeArticleStats(article.id.get)
-        UserRepository.updateAuthorStats(article.authorId, AuthorNbs(article.authorId, 0, 1))
       }
       "article.update.success"
     }
@@ -356,49 +348,49 @@ object ArticleRepository extends ArticleRepository {
     }
   }
 
-  def initializeArticleStats(articleId: Long) = {
-    DB.withConnection { implicit c =>
-      SQL(
-        """
-        INSERT into articles_stats (article_id) values
-        ({id})
-        """
-      ).on(
-        "id" -> articleId
-      ).executeInsert()
-    }
-  }
-
-  def deleteArticleStats(articleId: Long) = {
-    DB.withConnection { implicit c =>
-      SQL(
-        """
-        DELETE FROM articles_stats
-        WHERE articles_stats.article_id= {id}
-        """).
-        on(
-          "id" -> articleId
-        ).executeUpdate()
-    }
-  }
-
-  def updateArticleStats(articleId: Long, modifier: ArticleNbs): Unit = {
-
-    DB.withConnection { implicit c =>
-      SQL(
-        """
-        update articles_stats
-        SET nb_views = nb_views+{modifier_views}, nb_likes =nb_likes+{modifier_likes},
-        nb_comments =nb_comments+{modifier_comments}, nb_bookmarks=nb_bookmarks+{modifier_bookmarks}
-        WHERE article_id = {articleId}
-        """
-      ).on(
-        "modifier_views" -> modifier.nbViews,
-        "modifier_likes" -> modifier.nbLikes,
-        "modifier_comments" -> modifier.nbComments,
-        "modifier_bookmarks" -> modifier.nbBookmarks,
-        "articleId" -> articleId
-      ).executeUpdate()
-    }
-  }
+//  def initializeArticleStats(articleId: Long) = {
+//    DB.withConnection { implicit c =>
+//      SQL(
+//        """
+//        INSERT into articles_stats (article_id) values
+//        ({id})
+//        """
+//      ).on(
+//        "id" -> articleId
+//      ).executeInsert()
+//    }
+//  }
+//
+//  def deleteArticleStats(articleId: Long) = {
+//    DB.withConnection { implicit c =>
+//      SQL(
+//        """
+//        DELETE FROM articles_stats
+//        WHERE articles_stats.article_id= {id}
+//        """).
+//        on(
+//          "id" -> articleId
+//        ).executeUpdate()
+//    }
+//  }
+//
+//  def updateArticleStats(articleId: Long, modifier: ArticleNbs): Unit = {
+//
+//    DB.withConnection { implicit c =>
+//      SQL(
+//        """
+//        update articles_stats
+//        SET nb_views = nb_views+{modifier_views}, nb_likes =nb_likes+{modifier_likes},
+//        nb_comments =nb_comments+{modifier_comments}, nb_bookmarks=nb_bookmarks+{modifier_bookmarks}
+//        WHERE article_id = {articleId}
+//        """
+//      ).on(
+//        "modifier_views" -> modifier.nbViews,
+//        "modifier_likes" -> modifier.nbLikes,
+//        "modifier_comments" -> modifier.nbComments,
+//        "modifier_bookmarks" -> modifier.nbBookmarks,
+//        "articleId" -> articleId
+//      ).executeUpdate()
+//    }
+//  }
 }
