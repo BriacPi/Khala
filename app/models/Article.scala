@@ -24,6 +24,7 @@ case class Article(
                   ){
   def this(articleUserEditable:ArticleUserEditable, authorId: Long, creationDate: DateTime, lastUpdate: DateTime,nbModifications: Int,
            readingTime: Int, status: String) = this(articleUserEditable.id, authorId,creationDate,lastUpdate,articleUserEditable.title,
+
     articleUserEditable.summary,articleUserEditable.content,nbModifications,readingTime,articleUserEditable.tag1,articleUserEditable.tag2,status)
 
 }

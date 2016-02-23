@@ -67,6 +67,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   }
   }
 
+
   def publish(status: String) = SecuredAction(parse.json) { implicit request => {
     try {
       val articleUserEditable = ArticleUserEditable.articleUserEditableReader.reads(request.body).get
