@@ -21,7 +21,12 @@ case class Article(
                     tag1: String,
                     tag2: Option[String],
                     status: String = "draft"
-                  )
+                  ){
+  def this(articleUserEditable:ArticleUserEditable, authorId: Long, creationDate: DateTime, lastUpdate: DateTime,nbModifications: Int,
+           readingTime: Int) = this(articleUserEditable.id, authorId,creationDate,lastUpdate,articleUserEditable.title,
+    articleUserEditable.summary,articleUserEditable.content,nbModifications,readingTime,articleUserEditable.tag1,articleUserEditable.tag2,status)
+
+}
 
 object Article {
 
@@ -32,7 +37,7 @@ object Article {
       (JsPath \ "creationDate").read[DateTime] and
       (JsPath \ "lastUpdate").read[DateTime] and
       (JsPath \ "title").read[String] and
-      (JsPath \ "title").readNullable[String] and
+      (JsPath \ "summary").readNullable[String] and
       (JsPath \ "content").read[String] and
       (JsPath \ "nbModifications").read[Int] and
       (JsPath \ "readingTime").read[Int] and
@@ -75,6 +80,45 @@ object Article {
 
 
 }
+
+case class ArticleUserEditable(
+                                id: Option[Long],
+                                title: String,
+                                summary: Option[String],
+                                content: String,
+                                tag1: String,
+                                tag2: Option[String]
+                              )
+object ArticleUserEditable {
+  implicit val articleUserEditableReader: Reads[ArticleUserEditable] = (
+    //readNullable manages option
+    (JsPath \ "_id").readNullable[Long] and
+      (JsPath \ "title").read[String] and
+      (JsPath \ "summary").readNullable[String] and
+      (JsPath \ "content").read[String] and
+      (JsPath \ "tag1").read[String] and
+      (JsPath \ "tag2").readNullable[String]
+    ) (ArticleUserEditable.apply _)
+
+  implicit val articleUserEditableWriter = new Writes[ArticleUserEditable] {
+    def writes(articleUserEditable: ArticleUserEditable): JsObject = {
+      def json = Json.obj(
+        "title" -> articleUserEditable.title,
+        "summary" -> articleUserEditable.summary.getOrElse[String](""),
+        "content" -> articleUserEditable.content,
+        "tag1" -> articleUserEditable.tag1,
+        "tag2" -> articleUserEditable.tag2.getOrElse[String]("")
+      )
+      articleUserEditable.id match {
+        case None => json
+        case Some(id) => (Json.obj("_id" -> id)).++(json)
+
+      }
+    }
+  }
+}
+
+
 case class ArticleNbs(
                          id: Long,
                          nbViews: Int,

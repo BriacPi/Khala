@@ -21,7 +21,7 @@ import scala.concurrent.duration._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import models.{ArticleStats, Article, User}
+import models.{ArticleUserEditable, ArticleStats, Article, User}
 import repositories.{LikeRepository, UserRepository, ViewRepository, ArticleRepository}
 
 import scala.reflect.macros.compiler.Errors
@@ -51,6 +51,18 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
       "status" -> ignored("draft")
     )(Article.apply)(Article.unapply)
   )
+
+def newDraft()=SecuredAction(parse.json) { implicit request => {
+    try {
+      val articleUserEditable = ArticleUserEditable.articleUserEditableReader.reads(request.body).get
+      ArticleRepository.update(article)
+      Ok(Json.obj("article" -> request.body))
+    }
+    catch {
+      case e => BadRequest("Expecting correct Article Json data")
+    }
+  }
+  }
 
 
   def updateArticle() = SecuredAction(parse.json) { implicit request => {
