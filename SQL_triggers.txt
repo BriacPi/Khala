@@ -1,0 +1,185 @@
+
+slect * from pg_trigger;
+
+DROP FUNCTION IF EXISTS article_insert();
+DROP FUNCTION IF EXISTS article_delete();
+DROP FUNCTION IF EXISTS view_insert();
+DROP FUNCTION IF EXISTS view_delete();
+DROP FUNCTION IF EXISTS like_insert();
+DROP FUNCTION IF EXISTS like_delete();
+DROP FUNCTION IF EXISTS comment_insert();
+DROP FUNCTION IF EXISTS comment_delete();
+DROP FUNCTION IF EXISTS bookmark_insert();
+DROP FUNCTION IF EXISTS bookmark_delete();
+  
+CREATE TABLE IF NOT EXISTS articles_stats AS
+(
+select articles.id as article_id, COALESCE(nb_views,0) AS nb_views, COALESCE(nb_likes,0) AS nb_likes, 
+COALESCE(nb_comments,0) AS nb_comments, COALESCE(nb_bookmarks,0) AS nb_bookmarks
+FROM articles
+LEFT JOIN 
+(SELECT views.article_id AS id, COUNT(views.id) AS nb_views
+FROM views
+GROUP BY views.article_id) va 
+ON articles.id = va.id
+LEFT JOIN 
+(SELECT likes.article_id AS id, COUNT(likes.id) AS nb_likes
+FROM likes 
+GROUP BY likes.article_id) la 
+ON articles.id = la.id
+LEFT JOIN
+(SELECT comments.article_id AS id, COUNT(comments.id) AS nb_comments
+FROM comments 
+GROUP BY comments.article_id) ca 
+ON articles.id = ca.id
+LEFT JOIN
+(SELECT bookmarks.article_id AS id, COUNT(bookmarks.id) AS nb_bookmarks
+FROM bookmarks
+GROUP BY bookmarks.article_id) ba
+ON articles.id = ba.id
+WHERE articles.status != 'draft'
+);
+
+
+
+
+create or replace function article_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    insert into articles_stats(article_id) values(new.name);
+    return new;
+  end;
+$$;
+create trigger article_insert after insert on articles
+    for each row execute procedure article_insert();
+
+
+create or replace function article_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    delete from articles_stats where articles_stats.article_id = old.article_id;
+    return new;
+  end;
+$$;
+create trigger article_delete after delete on articles
+    for each row execute procedure article_delete();
+
+
+create or replace function view_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update articles_stats set articles_stats.nb_views = nb_views+1
+    where articles_stats.article_id = new.article_id;
+    return new;
+  end;
+$$;
+create trigger view_insert after insert on views
+    for each row execute procedure view_insert();
+
+
+create or replace function view_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update articles_stats set articles_stats.nb_views = nb_views-1
+    where articles_stats.article_id = old.article_id;
+    return new;
+  end;
+$$;
+create trigger view_delete after delete on views
+    for each row execute procedure view_delete();
+
+
+create or replace function like_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update articles_stats set articles_stats.nb_likes = nb_likes+1
+    where articles_stats.article_id = new.article_id;
+    return new;
+  end;
+$$;
+create trigger like_insert after insert on likes
+    for each row execute procedure like_insert();
+
+
+create or replace function like_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update articles_stats set articles_stats.nb_likes = nb_likes-1
+    where articles_stats.article_id = old.article_id;
+    return new;
+  end;
+$$;
+create trigger like_delete after delete on likes
+    for each row execute procedure like_delete();
+
+
+
+create or replace function comment_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update articles_stats set articles_stats.nb_comments = nb_comments+1
+    where articles_stats.article_id = new.article_id;
+    return new;
+  end;
+$$;
+create trigger comment_insert after insert on comments
+    for each row execute procedure comment_insert();
+
+
+create or replace function comment_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update articles_stats set articles_stats.nb_comments = nb_comments-1
+    where articles_stats.article_id = old.article_id;
+    return new;
+  end;
+$$;
+create trigger comment_delete after delete on comments
+    for each row execute procedure comment_delete();
+
+
+create or replace function bookmark_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update articles_stats set articles_stats.nb_bookmarks = nb_bookmarks+1
+    where articles_stats.article_id = new.article_id;
+    return new;
+  end;
+$$;
+create trigger bookmark_insert after insert on bookmarks
+    for each row execute procedure bookmark_insert();
+
+
+create or replace function bookmark_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update articles_stats set articles_stats.nb_bookmarks = nb_bookmarks-1
+    where articles_stats.article_id = old.article_id;
+    return new;
+  end;
+$$;
+create trigger bookmark_delete after delete on bookmarks
+    for each row execute procedure bookmark_delete();
+
+
+insert into articles_views(article_id,user_id,view_time) values(1,1,now());
