@@ -1,4 +1,8 @@
 $(document).ready(function(){
+
+    $('[data-toggle="popover"]').popover();
+
+
     $("button").click(function(event){
         var content=contentEditor.serialize()["element-0"].value;
         var title= titleEditor.serialize()["element-0"].value.replace(/<(?:.|\n)*?>/gm, '');

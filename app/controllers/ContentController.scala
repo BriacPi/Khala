@@ -52,17 +52,6 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
     )(Article.apply)(Article.unapply)
   )
 
-def newDraft()=SecuredAction(parse.json) { implicit request => {
-    try {
-      val articleUserEditable = ArticleUserEditable.articleUserEditableReader.reads(request.body).get
-      ArticleRepository.update(article)
-      Ok(Json.obj("article" -> request.body))
-    }
-    catch {
-      case e => BadRequest("Expecting correct Article Json data")
-    }
-  }
-  }
 
 
   def updateArticle() = SecuredAction(parse.json) { implicit request => {
