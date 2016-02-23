@@ -45,13 +45,13 @@ GET         /common/img/*file                      controllers.MyAssets.commonIm
 #Content Management
 GET         /write-article                         controllers.ContentController.writeArticle()
 GET         /write                                 controllers.ContentController.write()
-GET         /article/id/:id                           controllers.ContentController.article(id:Long)
+
 POST        /api/save-article                      controllers.ContentController.saveArticle()
 GET         /api/all-article                       controllers.ContentController.getAllArticles()
-GET         /write-article                           controllers.ContentController.writeArticle()
+
 GET         /article/id/:id                          controllers.ContentController.getArticle(id:Long)
 #POST        /api/save-article                        controllers.ContentController.saveArticle()
-GET         /api/all-article                         controllers.ContentController.getAllArticles()
+
 #GET         /api/article-views/:articleId         controllers.ContentController.getViews(articelId:Long)
 GET         /api/article-stats-by-author             controllers.ContentController.getArticleStatsByAuthor()
 GET         /api/top-article-stats-by-views          controllers.ContentController.getTopArticleStatsByViews()

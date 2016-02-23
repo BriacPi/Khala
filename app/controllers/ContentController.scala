@@ -86,7 +86,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
     Ok(views.html.content.write())
   }
 
-  def saveArticle() = SecuredAction { implicit request => {
+
   //
   //  def saveArticle() = SecuredAction {
   //    implicit request => {
