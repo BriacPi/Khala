@@ -13,6 +13,7 @@ class MyAssets @javax.inject.Inject() (val errorHandler: ErrorHandler) extends A
   def commonCss(path: String, file: Asset) = versioned(path, file)
   def js(path: String, file: Asset) = versioned(path, file)
   def commonJs(path: String, file: Asset) = versioned(path, file)
+  def bc(path: String, file: Asset) = versioned(path, file)
   def img(path: String, file: Asset) = versioned(path, file)
   def commonImg(path: String, file: Asset) = versioned(path, file)
 }
