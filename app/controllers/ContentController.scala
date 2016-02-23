@@ -91,18 +91,6 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   }
   }
 
-  //  def updateArticle() = SecuredAction(parse.json) { implicit request => {
-  //    try {
-  //      val article = Article.articleReader.reads(request.body).get
-  //      ArticleRepository.update(article)
-  //      Ok(Json.obj("article" -> request.body))
-  //    }
-  //    catch {
-  //      case e => BadRequest("Expecting correct Article Json data")
-  //    }
-  //  }
-  //  }
-
 
   def getArticle(id: Long) = UserAwareAction {
     implicit request => {
@@ -117,8 +105,16 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
 
   def write() = SecuredAction { implicit request =>
-    Ok(views.html.content.write())
-  }
+    val draftCreationDate = DateTime.now()
+    val virginDraft = Article(None,request.identity.id.get,draftCreationDate,
+      draftCreationDate ,"",None,"",0,0,"",None,"draft")
+    ArticleRepository.save(virginDraft)
+   val optId: Option[Long] = ArticleRepository.getIdByAuthorAndDate(request.identity.id.get,draftCreationDate)
+    optId match {
+      case None =>  BadRequest("Hum, something is not write.")
+      case Some(id) => Ok(views.html.content.write())
+    }
+}
 
 
   def getAllArticles() = UserAwareAction {

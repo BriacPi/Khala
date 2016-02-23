@@ -75,6 +75,14 @@ trait ArticleRepository {
       }
     }
   }
+
+  private[repositories] val recordMapperId = {
+    long("articles.id") map {
+      case id => {
+        id
+      }
+    }
+  }
 }
 
 
@@ -108,26 +116,27 @@ object ArticleRepository extends ArticleRepository {
     }
   }
 
-  def getByAuthorAndTitle(authorId: Long, title: String): Option[Article] = {
+  def getIdByAuthorAndDate(authorId: Long,creationDate: DateTime) = {
     DB.withConnection { implicit current =>
       SQL(
         """
-          SELECT *
+          SELECT articles.id
           FROM articles
-          WHERE articles.author_id = {authorId} AND articles.title = {title}
+          WHERE articles.author_id = {authorId} AND articles.creation_date = {creationDate}
         """
       )
         .on(
           "authorId" -> authorId,
-          "title" -> title
+          "creationDate" -> new Timestamp(creationDate.getMillis())
         )
-        .as(recordMapperArticle.singleOpt)
+        .as(recordMapperId.singleOpt)
     }
+
 
   }
 
   def create(article: Article): String = {
-    getByAuthorAndTitle(article.authorId, article.title) match {
+      article.id match {
       case None => {
         DB.withConnection { implicit c =>
           SQL(
