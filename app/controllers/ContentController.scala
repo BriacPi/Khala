@@ -66,16 +66,21 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
 
   def publish(status: String) = SecuredAction(parse.json) { implicit request => {
-    try {
-      val articleUserEditable = ArticleUserEditable.articleUserEditableReader.reads(request.body).get
-      val article = new Article(articleUserEditable, request.identity.id.get, DateTime.now(),
-        DateTime.now(), 0, math.max(articleUserEditable.content.length / 1150, 1), status)
-      ArticleRepository.save(article)
-      ArticleRepository.publish(article)
-      Ok(Json.obj("article" -> request.body))
+    if (!(status == "public")||(status == "private")) {
+      println(status+"1")
+      BadRequest("Really, you don't want your story to be on Mars right?")
     }
-    catch {
-      case e => BadRequest("Expecting correct Article Json data")
+    else {
+      ArticleUserEditable.articleUserEditableReader.reads(request.body) match {
+        case e: JsError => BadRequest("Expecting correct Article Json data")
+        case s: JsSuccess[ArticleUserEditable] =>
+          val article = new Article(s.get, request.identity.id.get, DateTime.now(),
+            DateTime.now(), 0, math.max(s.get.content.length / 1150, 1), status)
+          ArticleRepository.save(article)
+          ArticleRepository.publish(article)
+          Ok(Json.obj("article" -> request.body))
+
+      }
     }
   }
   }
@@ -109,7 +114,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
     ArticleRepository.save(virginDraft)
     val optId: Option[Long] = ArticleRepository.getIdByAuthorAndDate(request.identity.id.get, draftCreationDate)
     optId match {
-      case None =>  BadRequest("Hum, something is not write.")
+      case None => BadRequest("Hum, something is not write.")
       case Some(id) => Ok(views.html.content.write(id))
     }
   }

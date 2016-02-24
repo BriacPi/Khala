@@ -334,7 +334,7 @@ object ArticleRepository extends ArticleRepository {
           """
         )
           .on("articleId" -> articleId)
-          .as(recordMapperArticle.singleOpt)
+          .as(recordMapperIsDraft.singleOpt)
     } match {
       case None => false
       case Some(article) => true
