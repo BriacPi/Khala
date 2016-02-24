@@ -54,7 +54,7 @@ trait ArticleRepository {
     }
   }
 
-  private[repositories] val recordMapperEditable= {
+  private[repositories] val recordMapperEditable = {
 
     long("articles.id") ~
       str("articles.title") ~
@@ -62,8 +62,8 @@ trait ArticleRepository {
       str("articles.content") ~
       str("articles.tag1") ~
       str("articles.tag2") map {
-      case id ~ title ~ summary~ content~ tag1 ~ tag2=> {
-        ArticleUserEditable(Some(id), title,Some(summary),content,tag1,Some(tag2))
+      case id ~ title ~ summary ~ content ~ tag1 ~ tag2 => {
+        ArticleUserEditable(Some(id), title, Some(summary), content, tag1, Some(tag2))
       }
     }
   }
@@ -88,6 +88,8 @@ trait ArticleRepository {
 
 object ArticleRepository extends ArticleRepository {
 
+
+  //return a no draft
   def getById(articleId: Long): Option[Article] = {
     DB.withConnection { implicit current =>
       SQL(
@@ -116,7 +118,7 @@ object ArticleRepository extends ArticleRepository {
     }
   }
 
-  def getIdByAuthorAndDate(authorId: Long,creationDate: DateTime) = {
+  def getIdByAuthorAndDate(authorId: Long, creationDate: DateTime) = {
     DB.withConnection { implicit current =>
       SQL(
         """
@@ -136,7 +138,7 @@ object ArticleRepository extends ArticleRepository {
   }
 
   def create(article: Article): String = {
-      article.id match {
+    article.id match {
       case None => {
         DB.withConnection { implicit c =>
           SQL(
@@ -188,7 +190,7 @@ object ArticleRepository extends ArticleRepository {
         DB.withConnection { implicit c =>
           SQL(
             """
-        update  articles set status = {status}
+        update articles set status = {status}
         WHERE id ={id}
             """
           ).on(
@@ -247,8 +249,7 @@ object ArticleRepository extends ArticleRepository {
   }
 
 
-
-  def getEditable(authorId: Long,articleId: Long) = {
+  def getEditable(authorId: Long, articleId: Long) = {
     DB.withConnection {
       implicit current =>
         SQL(
@@ -272,7 +273,7 @@ object ArticleRepository extends ArticleRepository {
           """
     SELECT *
     FROM articles_stats
-    WHERE articles_stats.article_id={id}
+    WHERE articles_stats.article_id={id} AND status !='draft'
           """
         )
           .on(
@@ -298,7 +299,7 @@ object ArticleRepository extends ArticleRepository {
           """
     SELECT *
     FROM articles
-    WHERE articles.creation_date > {nowMinus5Day} AND articles.status != 'draft'
+    WHERE articles.creation_date > {nowMinus5Day} AND articles.status == 'public'
     LIMIT 200
           """
         )
@@ -407,50 +408,4 @@ object ArticleRepository extends ArticleRepository {
       case Some(article) => Some(ArticleStats.fromArticle(Article.shorten(article), getArticleNbs(article.id.get).get))
     }
   }
-
-  //  def initializeArticleStats(articleId: Long) = {
-  //    DB.withConnection { implicit c =>
-  //      SQL(
-  //        """
-  //        INSERT into articles_stats (article_id) values
-  //        ({id})
-  //        """
-  //      ).on(
-  //        "id" -> articleId
-  //      ).executeInsert()
-  //    }
-  //  }
-  //
-  //  def deleteArticleStats(articleId: Long) = {
-  //    DB.withConnection { implicit c =>
-  //      SQL(
-  //        """
-  //        DELETE FROM articles_stats
-  //        WHERE articles_stats.article_id= {id}
-  //        """).
-  //        on(
-  //          "id" -> articleId
-  //        ).executeUpdate()
-  //    }
-  //  }
-  //
-  //  def updateArticleStats(articleId: Long, modifier: ArticleNbs): Unit = {
-  //
-  //    DB.withConnection { implicit c =>
-  //      SQL(
-  //        """
-  //        update articles_stats
-  //        SET nb_views = nb_views+{modifier_views}, nb_likes =nb_likes+{modifier_likes},
-  //        nb_comments =nb_comments+{modifier_comments}, nb_bookmarks=nb_bookmarks+{modifier_bookmarks}
-  //        WHERE article_id = {articleId}
-  //        """
-  //      ).on(
-  //        "modifier_views" -> modifier.nbViews,
-  //        "modifier_likes" -> modifier.nbLikes,
-  //        "modifier_comments" -> modifier.nbComments,
-  //        "modifier_bookmarks" -> modifier.nbBookmarks,
-  //        "articleId" -> articleId
-  //      ).executeUpdate()
-  //    }
-  //  }
 }

@@ -20,6 +20,7 @@ case class Article(
                     readingTime: Int,
                     tag1: String,
                     tag2: Option[String],
+                  //draft,public,private,delete
                     status: String = "draft"
                   ){
   def this(articleUserEditable:ArticleUserEditable, authorId: Long, creationDate: DateTime, lastUpdate: DateTime,nbModifications: Int,

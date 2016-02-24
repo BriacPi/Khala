@@ -77,46 +77,4 @@ object TagRepository extends TagRepository {
       "tag.remove.success"
     }
   }
-//
-//  def initializeTagStats(lowerCaseTagName: String) = {
-//    DB.withConnection { implicit c =>
-//      SQL(
-//        """
-//        INSERT into tags_stats (tag_name) values
-//        ({name})
-//        """
-//      ).on(
-//        "name" -> lowerCaseTagName
-//      ).executeInsert()
-//    }
-//  }
-//
-//  def deleteTagStats(lowerCaseTagName: String) = {
-//    DB.withConnection { implicit c =>
-//      SQL(
-//        """
-//        DELETE FROM tags_stats
-//        WHERE tags_stats.tag_name = {name}
-//        """).
-//        on(
-//          "name" -> lowerCaseTagName
-//        ).executeUpdate()
-//
-//    }
-//  }
-//
-//  def updateNbArticles(name: String, modifier: Int) = {
-//    val lowerCaseTagName = name.toLowerCase()
-//    DB.withConnection { implicit c =>
-//      SQL(
-//        """
-//        update  tags_stats set nb_articles = nb_articles+{modifier}
-//        WHERE tag_name ={lowerCaseTagName}
-//        """
-//      ).on(
-//        "lowerCaseTagName" -> lowerCaseTagName,
-//        "modifier" -> modifier
-//      ).executeUpdate()
-//    }
-//  }
 }

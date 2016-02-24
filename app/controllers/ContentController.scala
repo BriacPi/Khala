@@ -66,8 +66,8 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
 
   def publish(status: String) = SecuredAction(parse.json) { implicit request => {
-    if (!(status == "public")||(status == "private")) {
-      println(status+"1")
+    if (!(status == "public") || (status == "private")) {
+      println(status + "1")
       BadRequest("Really, you don't want your story to be on Mars right?")
     }
     else {
@@ -99,7 +99,12 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   def getArticle(id: Long) = UserAwareAction {
     implicit request => {
       ArticleRepository.getById(id) match {
-        case Some(article) => Ok(views.html.content.article(article))
+        case Some(article) => {
+          if (article.status == "public") Ok(views.html.content.article(article))
+          else BadRequest("Cannot visualize drafts")
+
+        }
+
         case None => Redirect(routes.Application.index)
       }
 
@@ -109,6 +114,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
   def write() = SecuredAction { implicit request =>
     val draftCreationDate = DateTime.now()
+
     val virginDraft = Article(None, request.identity.id.get, draftCreationDate,
       draftCreationDate, "", None, "", 0, 0, "", None, "draft")
     ArticleRepository.save(virginDraft)
@@ -123,8 +129,6 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   def getAllArticles() = UserAwareAction {
     implicit request => {
       val listArticles = ArticleRepository.getAllArticles().map(Article.shorten)
-      println("bug")
-      println(request.identity.get.id.get.toString())
       Ok(Json.obj("articles" -> listArticles.map(Article.articleWriter.writes)))
     }
   }

@@ -89,7 +89,7 @@ BOOKMARK_DATE timestamp NOT NULL
 );
 
 
-CREATE TABLE IF NOT EXISTS articles_stats AS(
+CREATE TABLE IF NOT EXISTS articles_stats(
 article_id INT NOT NULL UNIQUE,
 nb_views INT NOT NULL DEFAULT 0,
 nb_likes INT NOT NULL DEFAULT 0,
@@ -108,8 +108,9 @@ nb_articles INT NOT NULL DEFAULT 0
 CREATE TABLE IF NOT EXISTS tags_stats(
 id SERIAL PRIMARY KEY NOT NULL,
 tag_name varchar(100) NOT NULL UNIQUE,
-nb_articles Int NOT NULL DEFAULT 0
-);
+nb_articles Int NOT NULL DEFAULT 0,
+nb_interested_users Int NOT NULL DEFAULT 0
+); 
 
 
 # --- !Downs
