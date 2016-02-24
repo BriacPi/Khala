@@ -89,7 +89,7 @@ BOOKMARK_DATE timestamp NOT NULL
 );
 
 
-CREATE TABLE IF NOT EXISTS articles_stats AS(
+CREATE TABLE IF NOT EXISTS articles_stats(
 article_id INT NOT NULL UNIQUE,
 nb_views INT NOT NULL DEFAULT 0,
 nb_likes INT NOT NULL DEFAULT 0,

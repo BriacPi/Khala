@@ -70,7 +70,9 @@ object Article {
     }
   }
 
-  def shorten(article: Article): Article = article.copy(content = article.content.take(140) + "...")
+  def shorten(article: Article): Article = {
+    val articleWithoutHtml=scala.xml.XML.loadString(article.content).text
+    article.copy(content = articleWithoutHtml.take(140) + "...")}
 
 
   def shorten(listArticle: List[Article]): List[Article] = {
