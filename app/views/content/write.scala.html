@@ -1,4 +1,4 @@
-@()(implicit request: RequestHeader, user: User, messages: Messages)
+@(articleId:Long)(implicit request: RequestHeader, user: User, messages: Messages)
 
 @views.html.templates.logged(title = "Write", tab = "Write") {
   <head>
@@ -35,11 +35,13 @@
     <script data-main="@routes.MyAssets.js("main")" src="@routes.MyAssets.bc("/medium-editor-multi-placeholders-plugin/dist/medium-editor-multi-placeholders-plugin.min.js")" type="text/javascript"></script>
 
     <script data-main="@routes.MyAssets.js("main")" src="@routes.MyAssets.js("write.js")" type="text/javascript"></script>
-
+  <script>
+    var id=@articleId
+  </script>
 
   </head>
 <body>
-  <div class="container">
+  <div class="container" id="article" data-section="@articleId" >
     <div class="row">
       <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1" >
         <div class="post-preview " >

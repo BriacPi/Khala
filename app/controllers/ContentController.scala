@@ -112,7 +112,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
    val optId: Option[Long] = ArticleRepository.getIdByAuthorAndDate(request.identity.id.get,draftCreationDate)
     optId match {
       case None =>  BadRequest("Hum, something is not write.")
-      case Some(id) => Ok(views.html.content.write())
+      case Some(id) => Ok(views.html.content.write(id))
     }
 }
 
