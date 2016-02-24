@@ -300,7 +300,7 @@ object ArticleRepository extends ArticleRepository {
   }
 
   def getAllArticles(): List[Article] = {
-    val datetime: Timestamp = new Timestamp(DateTime.now().minusDays(5).getMillis())
+    val datetime: Timestamp = new Timestamp(DateTime.now().minusDays(7).getMillis())
 
     DB.withConnection {
       implicit current =>
@@ -308,11 +308,11 @@ object ArticleRepository extends ArticleRepository {
           """
     SELECT *
     FROM articles
-    WHERE articles.creation_date > {nowMinus5Day} AND articles.status = 'public'
+    WHERE articles.creation_date > {nowMinus7Day} AND articles.status = 'public'
     LIMIT 200
           """
         )
-          .on("nowMinus5Day" -> datetime)
+          .on("nowMinus7Day" -> datetime)
           .as(recordMapperArticle *)
           .toList
     }
@@ -377,19 +377,19 @@ object ArticleRepository extends ArticleRepository {
   }
 
   def getTopArticleStatsByViews() = {
-    val datetime: Timestamp = new Timestamp(DateTime.now().minusDays(5).getMillis())
+    val datetime: Timestamp = new Timestamp(DateTime.now().minusDays(7).getMillis())
     val listArticle: List[Article] = DB.withConnection {
       implicit current =>
         SQL(
           """
       SELECT articles.* FROM articles
       LEFT JOIN articles_views ON articles.id = articles_views.article_id
-      WHERE articles.creation_date > {nowMinus5Day} AND articles.status!='draft'
+      WHERE articles.creation_date > {nowMinus7Day} AND articles.status!='draft'
       ORDER BY articles_views.nb_views DESC, articles.id DESC
       LIMIT 200 OFFSET 0
           """
         )
-          .on("nowMinus5Day" -> datetime)
+          .on("nowMinus7Day" -> datetime)
           .as(recordMapperArticle *)
           .toList
     }

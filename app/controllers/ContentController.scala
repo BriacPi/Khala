@@ -86,7 +86,6 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   }
 
   def getEditable(articleId: Long) = SecuredAction { implicit request => {
-
     val optEditable: Option[ArticleUserEditable] = ArticleRepository.getEditable(request.identity.id.get, articleId)
     optEditable match {
       case None => BadRequest("The specified article or draft is not editable by current user.")
@@ -128,20 +127,26 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
   def getAllArticles() = UserAwareAction {
     implicit request => {
-      val listArticles = ArticleRepository.getAllArticles().map(Article.shorten)
+      val listArticles: List[Article] = cache.getOrElse[List[Article]]("listAllArticles") {
+                ArticleRepository.getAllArticles().map(Article.shorten)}
+      cache.set("listAllArticle",cache.get("listAllArticles"),expiration = 10.minutes)
       Ok(Json.obj("articles" -> listArticles.map(Article.articleWriter.writes)))
     }
   }
 
-
   def getArticleStatsByAuthor(): Action[AnyContent] = SecuredAction {
     implicit request => {
-      val listJsons: List[JsObject] = ArticleRepository.getArticleStatsByAuthor(request.identity.id.get).map {
-        articleStat => ArticleStats.articleStatsWriter.writes(articleStat)
+      val listJsons =  cache.getOrElse[List[JsObject]]("listJsonsByAuthor") {
+        ArticleRepository.getArticleStatsByAuthor(request.identity.id.get).map {
+          articleStat => ArticleStats.articleStatsWriter.writes(articleStat)
+        }
       }
-      Ok(Json.obj("articles" -> listJsons))
+
+      cache.set("ListJsonsByAuthor",cache.get("ListJsonsByAuthor"),expiration = 10.minutes)
+        Ok(Json.obj("articles" -> listJsons))
+      }
+
     }
-  }
 
   def getTopArticleStatsByViews() = SecuredAction {
     implicit request => {
@@ -183,7 +188,8 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   def getDraftsByAuthor(): Action[AnyContent] = SecuredAction {
     implicit request => {
       val listJson = ArticleRepository.getDraftsByAuthor(request.identity.id.get).map {
-        draft => Article.articleWriter.writes(draft)
+        draft => if (draft.title =="")Article.articleWriter.writes(draft.copy(title="untitled story"))
+        else Article.articleWriter.writes(draft)
       }
       Ok(Json.obj("drafts" -> listJson))
     }
