@@ -7,16 +7,16 @@ $(document).ready(function(){
         var content=contentEditor.serialize()["element-0"].value;
         var title= titleEditor.serialize()["element-0"].value.replace(/<(?:.|\n)*?>/gm, '');
         console.log(content);
-        saveEditableContent(1,"tag1","tag2");
+        saveEditableContent("tag1","tag2");
     });
 });
 
-function saveEditableContent(id,tag1,tag2) {
+function saveEditableContent(tag1,tag2) {
     var content=contentEditor.serialize()["element-0"].value;
     var title= titleEditor.serialize()["element-0"].value.replace(/<(?:.|\n)*?>/gm, '');
     var summary="";
     var arr = {
-        _id: id,
+        _id:id,
         title: title,
         summary: summary,
         content: content,
