@@ -308,7 +308,7 @@ create trigger interest_delete after delete on interests
 
 # --- !Downs
 
-
+DELETE FROM pg_trigger;
 DROP FUNCTION IF EXISTS article_insert();
 DROP FUNCTION IF EXISTS article_delete();
 DROP FUNCTION IF EXISTS view_insert();
@@ -319,4 +319,3 @@ DROP FUNCTION IF EXISTS comment_insert();
 DROP FUNCTION IF EXISTS comment_delete();
 DROP FUNCTION IF EXISTS bookmark_insert();
 DROP FUNCTION IF EXISTS bookmark_delete();
-DELETE FROM pg_trigger;

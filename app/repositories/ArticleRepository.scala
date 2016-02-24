@@ -156,7 +156,7 @@ object ArticleRepository extends ArticleRepository {
             'summary -> article.summary.getOrElse(""),
             'content -> article.content,
             'nb_modifications -> article.nbModifications,
-            'reading_time -> math.max(article.content.length / 1150, 1),
+            'reading_time -> Article.getReadingTime(article.content),
             'tag1 -> article.tag1,
             'tag2 -> article.tag2.getOrElse[String](""),
             'status -> "draft"
@@ -206,7 +206,7 @@ object ArticleRepository extends ArticleRepository {
   def update(article: Article): String = {
     val oldArticle = getById(article.id.get).get
     val newArticle = article.copy(lastUpdate = DateTime.now(), nbModifications = oldArticle.nbModifications + 1,
-      readingTime = math.max(article.content.length / 1150, 1), status = oldArticle.status)
+      readingTime = Article.getReadingTime(article.content), status = oldArticle.status)
 
     DB.withConnection { implicit c =>
       SQL(
@@ -266,6 +266,7 @@ object ArticleRepository extends ArticleRepository {
     }
   }
 
+  //it's automatically not a draft.
   def getArticleNbs(articleId: Long): Option[ArticleNbs] = {
     DB.withConnection {
       implicit current =>
@@ -273,7 +274,7 @@ object ArticleRepository extends ArticleRepository {
           """
     SELECT *
     FROM articles_stats
-    WHERE articles_stats.article_id={id} AND status !='draft'
+    WHERE articles_stats.article_id={id}
           """
         )
           .on(
@@ -299,7 +300,7 @@ object ArticleRepository extends ArticleRepository {
           """
     SELECT *
     FROM articles
-    WHERE articles.creation_date > {nowMinus5Day} AND articles.status == 'public'
+    WHERE articles.creation_date > {nowMinus5Day} AND articles.status = 'public'
     LIMIT 200
           """
         )

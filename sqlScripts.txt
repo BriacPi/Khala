@@ -1,50 +1,46 @@
 
 # This one is for the followers. I use Temporary views because it is cached.
-CREATE TEMPORARY VIEW {name_temp_view}
+CREATE TEMPORARY VIEW nb_followers_{userId}
 AS (SELECT users.id AS author_id, Date(follows.follow_date) AS follow_date, COUNT(follows.id) as nb_followers
 FROM users
 LEFT JOIN follows ON users.id = follows.author_id
-WHERE users.id = {authorId}
+WHERE users.id = {userId}
 GROUP BY users.id, Date(follows.follow_date)
 );
-Select t1.author_id AS author_id, t1.follow_date AS follow_date,
-t1.nb_followers AS nb_followers, SUM(t2.nb_followers) as commulative_nb_followers,
-MAX(t2.nb_followers) as max_nb_followers
-FROM {name_temp_view} as t1
+Select t1.author_id AS author_id, t1.follow_date AS follow_date, SUM(t2.nb_followers) as commulative_nb_followers
+FROM nb_followers_userId as t1
 INNER JOIN nb_followers_userId as t2 on t1.follow_date>=t2.follow_date AND t1.author_id = t2.author_id
-GROUP BY t1.author_id,t1.follow_date,t1.nb_followers
+GROUP BY t1.author_id,t1.follow_date
 ORDER BY t1.follow_date;
 
 
 #This one is for the views
-CREATE TEMPORARY VIEW {name_temp_view}
+CREATE TEMPORARY VIEW nb_views_{userId}
 AS (SELECT users.id AS author_id, Date(views.view_date) as view_date, COUNT(views.id) as nb_views
 FROM users
 LEFT JOIN articles ON users.id = articles.author_id
 LEFT JOIN views ON articles.id = views.article_id
-WHERE users.id = {authorId}
+WHERE users.id = {userId}
 GROUP BY users.id, Date(views.view_date)
 );
-Select t1.author_id AS author_id, t1.view_date AS view_date,
-t1.nb_views AS nb_views,  SUM(t2.nb_views) AS commulative_nb_views, MAX(t2.nb_views) AS max_nb_views
-FROM {name_temp_view} AS t1
+Select t1.author_id AS author_id, t1.view_date AS view_date, SUM(t2.nb_views) as commulative_nb_views
+FROM nb_views_userId AS t1
 INNER JOIN nb_views_userId AS t2 on t1.view_date>=t2.view_date
 GROUP BY t1.author_id,t1.view_date
 ORDER BY t1.view_date;
 
 
 #This one is for the likes
-CREATE TEMPORARY VIEW {name_temp_view}
-(SELECT users.id AS author_id, Date(likes.like_date) as like_date, COUNT(likes.id) as nb_likes
+CREATE TEMPORARY VIEW nb_likes_userId
+AS (SELECT users.id AS author_id, Date(likes.like_date) as like_date, COUNT(likes.id) as nb_likes
 FROM users
 LEFT JOIN articles ON users.id = articles.author_id
-LEFT JOIN views ON articles.id = likes.article_id
-WHERE users.id = {authorId}
+LEFT JOIN likes ON articles.id = likes.article_id
+WHERE users.id = 1
 GROUP BY users.id, Date(likes.like_date)
-) 
-Select t1.author_id AS author_id, t1.like_date  AS like_date, 
-t1.nb_likes AS nb_likes, SUM(t2.nb_likes) AS commulative_nb_likes,  MAX(t2.nb_likes) AS max_nb_likes
-FROM {name_temp_view} AS t1
+);
+Select t1.author_id AS author_id, t1.like_date  AS like_date, SUM(t2.nb_likes) as commulative_nb_likes
+FROM nb_likes_userId AS t1
 INNER JOIN nb_likes_userId AS t2 on t1.like_date>=t2.like_date
 GROUP BY t1.author_id,t1.like_date
 ORDER BY t1.like_date;

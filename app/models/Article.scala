@@ -5,6 +5,8 @@ import org.joda.time.DateTime
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import org.jsoup.Jsoup
+
+
 /**
   * Created by corpus on 19/02/2016.
   */
@@ -81,7 +83,10 @@ object Article {
       shorten
     }
   }
-
+def getReadingTime(s: String): Int = {
+  val textOnly = Jsoup.parse(s).text()
+  math.max(textOnly.length/1150,1)
+}
 
 }
 
