@@ -53,17 +53,16 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   )
 
   def save() = SecuredAction(parse.json) { implicit request => {
-      ArticleUserEditable.articleUserEditableReader.reads(request.body) match {
-        case e: JsError => BadRequest ("Expecting correct Article Json data")
-        case s: JsSuccess[ArticleUserEditable] =>
-          val article = new Article (s.get, request.identity.id.get, DateTime.now (),
-          DateTime.now (), 0, math.max (s.get.content.length / 1150, 1), "draft")
-          ArticleRepository.save (article)
-          Ok (Json.obj ("article" -> request.body) )
-      }
+    ArticleUserEditable.articleUserEditableReader.reads(request.body) match {
+      case e: JsError => BadRequest("Expecting correct Article Json data")
+      case s: JsSuccess[ArticleUserEditable] =>
+        val article = new Article(s.get, request.identity.id.get, DateTime.now(),
+          DateTime.now(), 0, math.max(s.get.content.length / 1150, 1), "draft")
+        ArticleRepository.save(article)
+        Ok(Json.obj("article" -> request.body))
     }
   }
-
+  }
 
 
   def publish(status: String) = SecuredAction(parse.json) { implicit request => {
@@ -103,18 +102,17 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   }
 
 
-
   def write() = SecuredAction { implicit request =>
     val draftCreationDate = DateTime.now()
-    val virginDraft = Article(None,request.identity.id.get,draftCreationDate,
-      draftCreationDate ,"",None,"",0,0,"",None,"draft")
+    val virginDraft = Article(None, request.identity.id.get, draftCreationDate,
+      draftCreationDate, "", None, "", 0, 0, "", None, "draft")
     ArticleRepository.save(virginDraft)
-   val optId: Option[Long] = ArticleRepository.getIdByAuthorAndDate(request.identity.id.get,draftCreationDate)
+    val optId: Option[Long] = ArticleRepository.getIdByAuthorAndDate(request.identity.id.get, draftCreationDate)
     optId match {
-      case None =>  BadRequest("Hum, something is not write.")
+      case None => BadRequest("Hum, something is not write.")
       case Some(id) => Ok(views.html.content.write())
     }
-}
+  }
 
 
   def getAllArticles() = UserAwareAction {

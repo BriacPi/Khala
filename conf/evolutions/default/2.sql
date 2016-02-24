@@ -1,28 +1,6 @@
 
 
 # --- !Ups
-CREATE TABLE IF NOT EXISTS articles_stats (
-article_id INT NOT NULL UNIQUE,
-nb_views INT NOT NULL DEFAULT 0,
-nb_likes INT NOT NULL DEFAULT 0,
-nb_comments INT NOT NULL DEFAULT 0,
-nb_bookmarks INT NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS authors_stats(
-author_id INT NOT NULL UNIQUE,
-nb_followers INT NOT NULL DEFAULT 0,
-nb_articles INT NOT NULL DEFAULT 0
-);
-
-
-CREATE TABLE IF NOT EXISTS tags_stats(
-id SERIAL PRIMARY KEY NOT NULL,
-tag_name varchar(100) NOT NULL UNIQUE,
-nb_articles Int NOT NULL DEFAULT 0
-);
-
-
 
 create or replace function article_insert() returns trigger
   security definer
@@ -301,6 +279,31 @@ create trigger tagging_delete after delete on taggings
 
 
 
+create or replace function interest_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update tags_stats set nb_interested_users = nb_interested_users+1
+    where tag_name = new.tag_name;
+    return new;
+  end;
+$$;
+create trigger interest_insert after insert on interests
+    for each row execute procedure interest_insert();
+
+
+create or replace function interest_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    delete from tags_stats where tag_name = old.tag_name;
+    return new;
+  end;
+$$;
+create trigger interest_delete after delete oninterests
+    for each row execute procedure interest_delete();
 
 
 # --- !Downs
