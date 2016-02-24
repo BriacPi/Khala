@@ -210,7 +210,7 @@ object ArticleRepository extends ArticleRepository {
       SQL(
         """
         update  articles set creation_date = {creation_date}, last_update ={last_update},title={title},summary={summary}
-        ,content={content},nb_modifications={nbModifications},readingTime={readingTime}, ta1 = {tag1}, tag2 = {tag2}
+        ,content={content},nb_modifications={nbModifications},reading_time={readingTime}, tag1 = {tag1}, tag2 = {tag2}
         WHERE id ={id}
         """
       ).on(

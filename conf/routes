@@ -62,6 +62,7 @@ GET         /like-unlike/:articleId                  controllers.ContentControll
 
 GET         /api/draft                               controllers.ContentController.getDraftsByAuthor()
 POST         /api/save                                controllers.ContentController.save()
+POST           /api/publish/:status                 controllers.ContentController.publish(status :String)
 
 ###UserProfile Management
 #GET         /api/user                                controllers.MyProfileController.getUser()
