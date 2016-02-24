@@ -44,7 +44,7 @@ function publish(tag1,tag2) {
         dataType: 'json',
         async: false,
         success: function (msg) {
-            alert(msg);
+            window.location.href = '/article/id/'+id.toString();
         }
     });
 
