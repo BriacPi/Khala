@@ -10,6 +10,17 @@ $(document).ready(function(){
             publish(tag1,tag2);
         });
 
+        $("#secondbutton").hide();
+
+        $("#tag1").keyup(function () {
+            if ($(this).val()) {
+                $("#secondbutton").show();
+            }
+            else {
+                $("#secondbutton").hide();
+            }
+        });
+
     });
 });
 
