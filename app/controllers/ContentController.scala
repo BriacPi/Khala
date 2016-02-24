@@ -58,7 +58,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
       case s: JsSuccess[ArticleUserEditable] =>
         val article = new Article(s.get, request.identity.id.get, DateTime.now(),
           DateTime.now(), 0, math.max(s.get.content.length / 1150, 1), "draft")
-        ArticleRepository.save(article)
+        ArticleRepository.save(request.identity.id.get,article)
         Ok(Json.obj("article" -> request.body))
     }
   }
@@ -76,8 +76,8 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
         case s: JsSuccess[ArticleUserEditable] =>
           val article = new Article(s.get, request.identity.id.get, DateTime.now(),
             DateTime.now(), 0, math.max(s.get.content.length / 1150, 1), status)
-          ArticleRepository.save(article)
-          ArticleRepository.publish(article)
+          ArticleRepository.save(request.identity.id.get,article)
+          ArticleRepository.publish(request.identity.id.get,article)
           Ok(Json.obj("article" -> request.body))
 
       }
@@ -117,7 +117,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
     val virginDraft = Article(None, request.identity.id.get, draftCreationDate,
       draftCreationDate, "", None, "", 0, 0, "", None, "draft")
-    ArticleRepository.save(virginDraft)
+    ArticleRepository.save(request.identity.id.get,virginDraft)
     val optId: Option[Long] = ArticleRepository.getIdByAuthorAndDate(request.identity.id.get, draftCreationDate)
     optId match {
       case None => BadRequest("Hum, something is not write.")

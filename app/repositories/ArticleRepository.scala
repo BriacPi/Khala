@@ -171,80 +171,88 @@ object ArticleRepository extends ArticleRepository {
 
   //status is public or private
   //publish does not update but publish can switch the status to and from public/private.
-  def publish(article: Article) = {
-    val optArticle: Option[Article] = getById(article.id.get)
-    optArticle match {
-      case None =>
-      case Some(oldArticle) => {
-        //The logic is save has been applied just before, so if any tagging has to be done
-        //it would have been done beforehand except when it is a draft.
-        if (oldArticle.status == "draft") {
-          TaggingRepository.removeFromArticle(article.id.get)
-          TaggingRepository.create(article.tag1, article.id.get)
-          article.tag2 match {
-            case None =>
-            case Some(tag2) => TaggingRepository.create(tag2, article.id.get)
+  def publish(authorId: Long, article: Article) = {
+    if (authorId != article.authorId) "Damn you wann publish other people's draft?"
+    else {
+      val optArticle: Option[Article] = getById(article.id.get)
+      optArticle match {
+        case None =>
+        case Some(oldArticle) => {
+          //The logic is save has been applied just before, so if any tagging has to be done
+          //it would have been done beforehand except when it is a draft.
+          if (oldArticle.status == "draft") {
+            TaggingRepository.removeFromArticle(article.id.get)
+            TaggingRepository.create(article.tag1, article.id.get)
+            article.tag2 match {
+              case None =>
+              case Some(tag2) => TaggingRepository.create(tag2, article.id.get)
+            }
           }
-        }
-        //Changing status
-        DB.withConnection { implicit c =>
-          SQL(
-            """
+          //Changing status
+          DB.withConnection { implicit c =>
+            SQL(
+              """
         update articles set status = {status}
         WHERE id ={id}
-            """
-          ).on(
-            'id -> article.id.get,
-            'status -> article.status
-          ).executeUpdate()
+              """
+            ).on(
+              'id -> article.id.get,
+              'status -> article.status
+            ).executeUpdate()
+          }
         }
       }
+      "publish.success"
     }
   }
 
   //does not change the nature of the article/draft
-  def update(article: Article): String = {
-    val oldArticle = getById(article.id.get).get
-    val newArticle = article.copy(lastUpdate = DateTime.now(), nbModifications = oldArticle.nbModifications + 1,
-      readingTime = Article.getReadingTime(article.content), status = oldArticle.status)
+  def update(authorId: Long, article: Article): String = {
+    if (authorId != article.authorId) "Updating another gal's work, not cool."
+    else {
+      val oldArticle = getById(article.id.get).get
+      val newArticle = article.copy(lastUpdate = DateTime.now(), nbModifications = oldArticle.nbModifications + 1,
+        readingTime = Article.getReadingTime(article.content), status = oldArticle.status)
 
-    DB.withConnection { implicit c =>
-      SQL(
-        """
+      DB.withConnection { implicit c =>
+        SQL(
+          """
         update  articles set creation_date = {creation_date}, last_update ={last_update},title={title},summary={summary}
         ,content={content},nb_modifications={nbModifications},reading_time={readingTime}, tag1 = {tag1}, tag2 = {tag2}
         WHERE id ={id}
-        """
-      ).on(
-        'id -> newArticle.id.get,
-        'creation_date -> new Timestamp(oldArticle.creationDate.getMillis()),
-        'last_update -> new Timestamp(newArticle.lastUpdate.getMillis()),
-        'title -> newArticle.title,
-        'summary -> newArticle.summary.getOrElse(""),
-        'content -> newArticle.content,
-        'nbModifications -> newArticle.nbModifications,
-        'readingTime -> newArticle.readingTime,
-        'tag1 -> newArticle.tag1,
-        'tag2 -> newArticle.tag2.getOrElse[String]("")
-      ).executeUpdate()
-    }
-    if (oldArticle.status != "draft") {
-      TaggingRepository.removeFromArticle(newArticle.id.get)
-      TaggingRepository.create(newArticle.tag1, newArticle.id.get)
-      newArticle.tag2 match {
-        case None =>
-        case Some(tag2) => TaggingRepository.create(tag2, newArticle.id.get)
+          """
+        ).on(
+          'id -> newArticle.id.get,
+          'creation_date -> new Timestamp(oldArticle.creationDate.getMillis()),
+          'last_update -> new Timestamp(newArticle.lastUpdate.getMillis()),
+          'title -> newArticle.title,
+          'summary -> newArticle.summary.getOrElse(""),
+          'content -> newArticle.content,
+          'nbModifications -> newArticle.nbModifications,
+          'readingTime -> newArticle.readingTime,
+          'tag1 -> newArticle.tag1,
+          'tag2 -> newArticle.tag2.getOrElse[String]("")
+        ).executeUpdate()
       }
-      "article.update.success"
+      if (oldArticle.status != "draft") {
+        TaggingRepository.removeFromArticle(newArticle.id.get)
+        TaggingRepository.create(newArticle.tag1, newArticle.id.get)
+        newArticle.tag2 match {
+          case None =>
+          case Some(tag2) => TaggingRepository.create(tag2, newArticle.id.get)
+        }
+        "article.update.success"
+      }
+      else "draft.update.success"
     }
-    else "draft.update.success"
+
   }
 
 
-  def save(article: Article): String = {
+  def save(authorId: Long,article: Article): String = {
     article.id match {
       case None => create(article)
-      case Some(id) => update(article)
+      case Some(id) => update(authorId,article)
     }
   }
 
