@@ -51,6 +51,8 @@ libraryDependencies ++= Seq(
 libraryDependencies += jdbc
 libraryDependencies += evolutions
 libraryDependencies += "org.postgresql" % "postgresql" % "9.4.1207.jre7"
+libraryDependencies += "org.jsoup" % "jsoup" % "1.8.3"
+
 
 
 

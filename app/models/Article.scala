@@ -4,7 +4,7 @@ package models
 import org.joda.time.DateTime
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
-
+import org.jsoup.Jsoup
 /**
   * Created by corpus on 19/02/2016.
   */
@@ -71,8 +71,8 @@ object Article {
   }
 
   def shorten(article: Article): Article = {
-    val articleWithoutHtml=scala.xml.XML.loadString(article.content).text
-    article.copy(content = articleWithoutHtml.take(140) + "...")}
+    val textOnly = Jsoup.parse(article.content).text()
+    article.copy(content = textOnly.take(140) + "...")}
 
 
   def shorten(listArticle: List[Article]): List[Article] = {
