@@ -302,7 +302,7 @@ as $$
     return new;
   end;
 $$;
-create trigger interest_delete after delete oninterests
+create trigger interest_delete after delete on interests
     for each row execute procedure interest_delete();
 
 
