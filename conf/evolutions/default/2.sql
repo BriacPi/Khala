@@ -94,8 +94,13 @@ create or replace function comment_insert() returns trigger
   language plpgsql
 as $$
   begin
+  case new.parent_type
+  WHEN 'article' THEN
     update articles_stats set nb_comments = nb_comments+1
-    where article_id = new.article_id;
+    where article_id = new.article_id ;
+    ELSE
+    insert into comments_stats(comment_id) values(new.id);
+  END CASE;
     return new;
   end;
 $$;
@@ -152,7 +157,7 @@ create trigger bookmark_delete after delete on bookmarks
 
 
 
-create or replace function article_update() returns trigger 
+create or replace function article_update() returns trigger
 security definer
   language plpgsql
 as $$
@@ -278,7 +283,6 @@ create trigger tagging_delete after delete on taggings
     for each row execute procedure tagging_delete();
 
 
-
 create or replace function interest_insert() returns trigger
   security definer
   language plpgsql
@@ -306,16 +310,35 @@ create trigger interest_delete after delete on interests
     for each row execute procedure interest_delete();
 
 
+
+
+create or replace function comment_like_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update comments_stats set nb_likes = nb_likes+1
+    where comment_id = new.comment_id;
+    return new;
+  end;
+$$;
+create trigger comment_like_insert after insert on comment_likes
+    for each row execute procedure comment_like_insert();
+
+
+create or replace function comment_like_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    delete from comments_stats where comment_id = old.comment_id;
+    return new;
+  end;
+$$;
+create trigger comment_like_delete after delete on comment_likes
+    for each row execute procedure comment_like_delete();
+
+
+
 # --- !Downs
 
-DELETE FROM pg_trigger;
-DROP FUNCTION IF EXISTS article_insert();
-DROP FUNCTION IF EXISTS article_delete();
-DROP FUNCTION IF EXISTS view_insert();
-DROP FUNCTION IF EXISTS view_delete();
-DROP FUNCTION IF EXISTS like_insert();
-DROP FUNCTION IF EXISTS like_delete();
-DROP FUNCTION IF EXISTS comment_insert();
-DROP FUNCTION IF EXISTS comment_delete();
-DROP FUNCTION IF EXISTS bookmark_insert();
-DROP FUNCTION IF EXISTS bookmark_delete();

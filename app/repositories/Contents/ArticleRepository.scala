@@ -1,21 +1,21 @@
-package repositories
+package repositories.Contents
 
 /**
   * Created by corpus on 19/02/2016.
   */
 
 
-import scala.util.{Failure, Success}
-import models._
-import org.joda.time.DateTime
-
+import java.sql.Timestamp
 
 import anorm.SqlParser._
 import anorm._
-import play.api.db.DB
-import scala.language.postfixOps
+import models._
+import org.joda.time.DateTime
 import play.api.Play.current
-import java.sql.Timestamp
+import play.api.db.DB
+import repositories.Relationships.TaggingRepository
+
+import scala.language.postfixOps
 
 /**
   * Created by corpus on 05/02/2016.
@@ -249,13 +249,30 @@ object ArticleRepository extends ArticleRepository {
   }
 
 
-  def save(authorId: Long,article: Article): String = {
+  def save(authorId: Long, article: Article): String = {
     article.id match {
       case None => create(article)
-      case Some(id) => update(authorId,article)
+      case Some(id) => update(authorId, article)
     }
   }
 
+  def deleteArticle(authorId: Long, article: Article): String = {
+    if (article.authorId != authorId) "Oh, please have mercy with other people's work."
+    else {
+      DB.withConnection { implicit c =>
+        SQL(
+          """
+              DELETE FROM articles
+              WHERE articles.id = {articleId}
+          """
+        ).on(
+          "articleId" -> article.id.get
+        ).executeUpdate()
+      }
+    }
+    "We're so sad you deleted this jewel, but it's only to come back stronger, we know it!"
+
+  }
 
   def getEditable(authorId: Long, articleId: Long) = {
     DB.withConnection {
@@ -417,4 +434,24 @@ object ArticleRepository extends ArticleRepository {
       case Some(article) => Some(ArticleStats.fromArticle(Article.shorten(article), getArticleNbs(article.id.get).get))
     }
   }
+
+  def getRecentUntitledDraft(authorId: Long): Option[Article] = {
+    val oneHourEarlier = new Timestamp(DateTime.now().minusHours(1).getMillis())
+    DB.withConnection { implicit current =>
+      SQL(
+        """
+    SELECT *
+    FROM articles
+    WHERE author_id = {authorId} AND status='draft' AND title = '' AND content = '' AND
+    creation_date>{oneHourEarlier}
+        """
+      )
+        .on(
+          "authorId" -> authorId,
+          "oneHourEarlier" -> oneHourEarlier
+        )
+        .as(recordMapperArticle.singleOpt)
+    }
+  }
+
 }

@@ -1,0 +1,80 @@
+NOSQL: car le content de l'article est non structuré.
+
+Questions:
+
+-Faut-il davantage sauvegarder et update ou bien peu sauvegarder et fetch?
+
+
+-Les images faut-il gérer avec du Gridfs ou bien du fichier-url? (ou bien des binary files? Auquel cas comment gérer la transformation de l'image vers BF et inversement.)
+
+
+-Comment gérer du contenu via url: DateTime.getMillis()+title ou bien via des méthodes POST?:
+
+titre + identifiant unique
+utiliser le ID de mongodb ce n'est pas un pb. Ce n'est pas une bonne idée de cacher la partie technique des urls, pour des questions de retrouver des documents.
+Est ce que c'est un pb que les gens sachent combien d'articles on a pas accès entre deux identifiants. Ce n'est pas un pb normalement.
+Un url utilisé ne doit pas changer: W3C.
+passer tout en https.
+Les utilisateurs génèrent du contenu donc impossibles d'éviter. Les urls clairs sont les sites type "gestion". Les metadonnées autour d'id ne sont pas compromettants, on peut utiliser les id techniques de mongodb.
+
+-Faut-il stocker des listes dans une des collections pour les relations symétriques ou bien créer une nouvelle collection de duets (like, comment, subscribe,write,read etc...)
+
+
+-Type de "content" = String? 
+
+
+-Peut-on avoir des collections de document de document?
+
+
+-Gérer du contenu dynamique: quand on scroll nouveaux articles apparaissent.
+
+
+Other questions:
+
+-totalNbLikes and nbArticles are not managed correctly.
+-test if json works influence
+-can we write an article of the same name? (for now the answer is no)
+-try to return strings in functions so as to handle exceptions in apis?
+-how to manage photo?
+-how to return cursor and then just return by blocks of 10 article
+-How to manage people who spam write() page.
+
+
+
+To do list: (Sur la page d'accueil)
+-Troll: faut pas laisser les gens écrire des mots trop longs ou bien faire en sorte qu'ils soient découpés avec un tiret.
+-Travailler sur les bandeaux
+-Commentaire
+-Paiement
+-Profil utilisateur
+-Delete et Edit articles
+-Save Automatique des articles
+-Share sur d'autres plateformes.
+-S'inscrire avec Google/Facebook.
+-How to manage dynamic pictures and videos
+-Publish needs to be on top of it.
+
+
+
+-Photo: mode debug. (size?)
+
+
+
+-Est ce que l'article est déjà liké ou pas: mode debug, OK.
+-Nom: mode debug, OK.
+-Incr views when viewing. Ok (materialized views)
+-Adding duration to cache. ok (just be careful to specify a duration per object.)
+-how to do json of a list (influence and cf all articles in contentcontroller): Json.obj manages it by it self, list -> seq is implicit.
+-Tagging: nb articles et views totaux et personnes qui suivent: Done
+-Proposer des mails de renvoi pour relancer. ok (On ne delete users when not reponding to the email and the token expires.)
+-images trop grosses: Ok
+
+
+(Sur tagging):
+
+Temp:
+-Mail jean claude huyssen
+
+
+Web Story Factory
+Wagon

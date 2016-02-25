@@ -1,14 +1,14 @@
 @(article:Article)(implicit user: Option[User], messages: Messages,lang: play.api.i18n.Lang)
 
-@import views.html.tags.auth._
+  @import repositories.Relationships.LikeRepository
+  @import repositories.Contents.ArticleRepository
+  @import views.html.tags.auth._
 @import controllers.routes
 @import models.Article
 @import repositories.UserRepository
-@import repositories.LikeRepository
-@import repositories.ArticleRepository
 
 
-@views.html.templates.default(title = "Article", user, tab = "article") {
+  @views.html.templates.default(title = "Article", user, tab = "article") {
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" media="screen" href="@routes.MyAssets.lib("clean-blog/css/clean-blog.min.css")">

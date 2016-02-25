@@ -2,7 +2,7 @@ package controllers
 
 import models._
 import play.api.routing.JavaScriptReverseRouter
-import repositories.ArticleRepository
+import repositories.Contents.ArticleRepository
 import utils.silhouette._
 import play.api._
 import play.api.mvc._

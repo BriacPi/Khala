@@ -13,6 +13,8 @@ import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.{JsValue, _}
 import play.api.libs.ws.WSClient
 import play.api.mvc._
+import repositories.Contents.ArticleRepository
+import repositories.Relationships.{ViewRepository, LikeRepository}
 import utils.silhouette.{AuthenticationEnvironment, AuthenticationController}
 import play.api.cache._
 import play.api.mvc._
@@ -22,7 +24,7 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import models.{ArticleUserEditable, ArticleStats, Article, User}
-import repositories.{LikeRepository, UserRepository, ViewRepository, ArticleRepository}
+import repositories.UserRepository
 
 import scala.reflect.macros.compiler.Errors
 
@@ -58,7 +60,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
       case s: JsSuccess[ArticleUserEditable] =>
         val article = new Article(s.get, request.identity.id.get, DateTime.now(),
           DateTime.now(), 0, math.max(s.get.content.length / 1150, 1), "draft")
-        ArticleRepository.save(request.identity.id.get,article)
+        ArticleRepository.save(request.identity.id.get, article)
         Ok(Json.obj("article" -> request.body))
     }
   }
@@ -76,14 +78,21 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
         case s: JsSuccess[ArticleUserEditable] =>
           val article = new Article(s.get, request.identity.id.get, DateTime.now(),
             DateTime.now(), 0, math.max(s.get.content.length / 1150, 1), status)
-          ArticleRepository.save(request.identity.id.get,article)
-          ArticleRepository.publish(request.identity.id.get,article)
+          ArticleRepository.save(request.identity.id.get, article)
+          ArticleRepository.publish(request.identity.id.get, article)
           Ok(Json.obj("article" -> request.body))
 
       }
     }
   }
   }
+
+  def deleteArtricle(article: Article) = SecuredAction {
+    implicit request => {
+      Ok(Json.obj("delete.message" -> ArticleRepository.deleteArticle(request.identity.id.get, article)))
+    }
+  }
+
 
   def getEditable(articleId: Long) = SecuredAction { implicit request => {
     val optEditable: Option[ArticleUserEditable] = ArticleRepository.getEditable(request.identity.id.get, articleId)
@@ -112,41 +121,48 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
 
   def write() = SecuredAction { implicit request =>
-    val draftCreationDate = DateTime.now()
-
-    val virginDraft = Article(None, request.identity.id.get, draftCreationDate,
-      draftCreationDate, "", None, "", 0, 0, "", None, "draft")
-    ArticleRepository.save(request.identity.id.get,virginDraft)
-    val optId: Option[Long] = ArticleRepository.getIdByAuthorAndDate(request.identity.id.get, draftCreationDate)
-    optId match {
-      case None => BadRequest("Hum, something is not write.")
-      case Some(id) => Ok(views.html.content.write(id))
+    ArticleRepository.getRecentUntitledDraft(request.identity.id.get) match {
+      case None => {
+        println("debug")
+        val draftCreationDate = DateTime.now()
+        val virginDraft = Article(None, request.identity.id.get, draftCreationDate,
+          draftCreationDate, "", None, "", 0, 0, "", None, "draft")
+        ArticleRepository.save(request.identity.id.get, virginDraft)
+        val optId: Option[Long] = ArticleRepository.getIdByAuthorAndDate(request.identity.id.get, draftCreationDate)
+        optId match {
+          case None => BadRequest("Hum, something is not write.")
+          case Some(id) => Ok(views.html.content.write(id))
+        }
+      }
+      case Some(draft) => Ok(views.html.content.write(draft.id.get))
     }
+
   }
 
 
   def getAllArticles() = UserAwareAction {
     implicit request => {
       val listArticles: List[Article] = cache.getOrElse[List[Article]]("listAllArticles") {
-                ArticleRepository.getAllArticles().map(Article.shorten)}
-      cache.set("listAllArticle",cache.get("listAllArticles"),expiration = 10.minutes)
+        ArticleRepository.getAllArticles().map(Article.shorten)
+      }
+      cache.set("listAllArticle", cache.get("listAllArticles"), expiration = 10.minutes)
       Ok(Json.obj("articles" -> listArticles.map(Article.articleWriter.writes)))
     }
   }
 
   def getArticleStatsByAuthor(): Action[AnyContent] = SecuredAction {
     implicit request => {
-      val listJsons =  cache.getOrElse[List[JsObject]]("listJsonsByAuthor") {
+      val listJsons = cache.getOrElse[List[JsObject]]("listJsonsByAuthor") {
         ArticleRepository.getArticleStatsByAuthor(request.identity.id.get).map {
           articleStat => ArticleStats.articleStatsWriter.writes(articleStat)
         }
       }
 
-      cache.set("ListJsonsByAuthor",cache.get("ListJsonsByAuthor"),expiration = 10.minutes)
-        Ok(Json.obj("articles" -> listJsons))
-      }
-
+      cache.set("ListJsonsByAuthor", cache.get("ListJsonsByAuthor"), expiration = 10.minutes)
+      Ok(Json.obj("articles" -> listJsons))
     }
+
+  }
 
   def getTopArticleStatsByViews() = SecuredAction {
     implicit request => {
@@ -188,7 +204,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   def getDraftsByAuthor(): Action[AnyContent] = SecuredAction {
     implicit request => {
       val listJson = ArticleRepository.getDraftsByAuthor(request.identity.id.get).map {
-        draft => if (draft.title =="")Article.articleWriter.writes(draft.copy(title="untitled story"))
+        draft => if (draft.title == "") Article.articleWriter.writes(draft.copy(title = "untitled story"))
         else Article.articleWriter.writes(draft)
       }
       Ok(Json.obj("drafts" -> listJson))

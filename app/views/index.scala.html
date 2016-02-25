@@ -1,96 +1,92 @@
-@(articles:List[Article])(implicit loggedUser: Option[User], messages: Messages, lang: play.api.i18n.Lang)
+@(articles: List[Article])(implicit loggedUser: Option[User], messages: Messages, lang: play.api.i18n.Lang)
 
-
-@import views.html.tags.auth._
-@import controllers.routes
-@import repositories.LikeRepository
-@import repositories.UserRepository
-@import repositories.ArticleRepository
-
-
-
-@views.html.templates.default(title = "Home", loggedUser, tab = "index") {
-
-	<head>
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="stylesheet" media="screen" href="@routes.MyAssets.lib("clean-blog/css/clean-blog.min.css")">
-		<link rel="stylesheet" media="screen" href="@routes.MyAssets.css("index.css")">
-		<script type="text/javascript" src="@routes.Application.javascriptRoutes"></script>
-		<script data-main="@routes.MyAssets.js("main")" src="@routes.MyAssets.lib("clean-blog/js/clean-blog.min.js")" type="text/javascript"></script>
-		<script data-main="@routes.MyAssets.js("main")" src="@routes.MyAssets.js("index.js")" type="text/javascript"></script>
+    @import repositories.Relationships.LikeRepository
+    @import repositories.Contents.ArticleRepository
+    @import views.html.tags.auth._
+    @import controllers.routes
+    @import repositories.UserRepository
 
 
 
-	</head>
+    @views.html.templates.default(title = "Home", loggedUser, tab = "index") {
 
-	<body>
-		<div class="col-lg-7 col-lg-offset-3 col-md-10 col-md-offset-1" >
-			@for(article <- articles){
-			<div class="post-preview col-xs-10" >
-				<a href= "/article/id/@article.id">
-					<h2 class="post-title">
-						@article.title
-					</h2>
-					<h3 class="post-subtitle">
-						@article.content
-					</h3>
-				</a>
-				<p class="post-meta">Posted by @UserRepository.getAuthorByArticle(article.id.get) match {
-					case Some(user) => {
-						<a href="#">@user.firstName @user.lastName</a>
-					}
-					case None => {
-						<a href="#">Unknown </a>
-					}
-				}
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link rel="stylesheet" media="screen" href="@routes.MyAssets.lib("clean-blog/css/clean-blog.min.css")">
+            <link rel="stylesheet" media="screen" href="@routes.MyAssets.css("index.css")">
+            <script type="text/javascript" src="@routes.Application.javascriptRoutes"></script>
+            <script data-main="@routes.MyAssets.js("main")" src="@routes.MyAssets.lib("clean-blog/js/clean-blog.min.js")" type="text/javascript"></script>
+            <script data-main="@routes.MyAssets.js("main")" src="@routes.MyAssets.js("index.js")" type="text/javascript"></script>
 
-					<a ></a> on @article.creationDate.toString("dd MMM yyyy", lang.toLocale) - @article.readingTime mn read -
-					<a href="#">@article.tag1</a>
+
+        </head>
+
+        <body>
+            <div class="col-lg-7 col-lg-offset-3 col-md-10 col-md-offset-1" >
+            @for(article <- articles) {
+                <div class="post-preview col-xs-10" >
+                    <a href= "/article/id/@article.id">
+                        <h2 class="post-title">
+                        @article.title
+                        </h2>
+                        <h3 class="post-subtitle">
+                        @article.content
+                        </h3>
+                    </a>
+                    <p class="post-meta">Posted by @UserRepository.getAuthorByArticle(article.id.get) match {
+                        case Some(user) => {
+                            <a href="#">@user.firstName @user.lastName</a>
+                        }
+                        case None => {
+                            <a href="#">Unknown </a>
+                        }
+                    }
+
+                        <a ></a>
+                        on @article.creationDate.toString("dd MMM yyyy", lang.toLocale) - @article.readingTime mn read -
+                        <a href="#">@article.tag1</a>
 				</p>
-				<p>
-					@loggedUser match {
-						case Some(user:models.User) => {
-							@if(LikeRepository.hasLiked(user.id.get,article.id.get)){
-									<a articleid="@article.id.get" class="like-auth"  ><i class="fa fa-heart"></i></a>
+                    <p>
+                        @loggedUser match {
+                            case Some(user: models.User) => {
+                                @if(LikeRepository.hasLiked(user.id.get, article.id.get)) {
+                                    <a articleid="@article.id.get" class="like-auth" ><i class="fa fa-heart"></i></a>
 
-							}else{
-									<a articleid="@article.id.get" class="like-auth"  ><i class="fa fa-heart-o"></i></a>
-							}
+                                } else {
+                                    <a articleid="@article.id.get" class="like-auth" ><i class="fa fa-heart-o"></i></a>
+                                }
 
-						}
-						case None => {
-							<a href="/signin"><i class="like-unauth fa fa-heart"></i></a>
-						}
-					}
-					@ArticleRepository.getArticleNbs(article.id.get) match {
-						case Some(nbs) => {
-							<span id="nblikes">@nbs.nbLikes</span>
-							<span class="pull-right"><a href="#"><i class="fa fa-comments" style="margin-top: 4px;"></i></a> @nbs.nbComments</span>
+                            }
+                            case None => {
+                                <a href="/signin"><i class="like-unauth fa fa-heart"></i></a>
+                            }
+                        }
+                        @ArticleRepository.getArticleNbs(article.id.get) match {
+                            case Some(nbs) => {
+                                <span id="nblikes">@nbs.nbLikes</span>
+                                <span class="pull-right"><a href="#"><i class="fa fa-comments" style="margin-top: 4px ;"></i></a> @nbs.nbComments</span>
 
-						}
-					}
-				</p>
-			</div>
-			<div class="col-xs-2 no-gutter" style="margin-top:30px;">
-				@UserRepository.getAuthorByArticle(article.id.get) match {
-					case Some(user) => {
-						<img href="#" class="author-photo" src="@UserRepository.getPhoto(user.id.get)" class="user-icon" alt="user-image">
-					}
-					case None => {
-						<img href="#" src="/img/profile_default_large.png"   alt="user-image">
-					}
-				}
-			</div>
-
-
-			}
-		</div>
-		<hr>
-	</body>
+                            }
+                        }
+                    </p>
+                </div>
+                <div class="col-xs-2 no-gutter" style="margin-top:30px ;">
+                @UserRepository.getAuthorByArticle(article.id.get) match {
+                    case Some(user) => {
+                        <img href="#" class="author-photo" src="@UserRepository.getPhoto(user.id.get)" class="user-icon" alt="user-image">
+                    }
+                    case None => {
+                        <img href="#" src="/img/profile_default_large.png" alt="user-image">
+                        }
+                }
+                </div>
 
 
+            }
+            </div>
+            <hr>
+        </body>
 
 
-
-}
+    }
 	

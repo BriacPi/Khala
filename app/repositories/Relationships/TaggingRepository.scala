@@ -1,12 +1,13 @@
-package repositories
+package repositories.Relationships
 
 import java.sql.Timestamp
 
 import anorm.SqlParser._
 import anorm._
 import org.joda.time.DateTime
-import play.api.db.DB
 import play.api.Play.current
+import play.api.db.DB
+import repositories.Contents.{ArticleRepository, TagRepository}
 
 /**
   * Created by corpus on 20/02/2016.
