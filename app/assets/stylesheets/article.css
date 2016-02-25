@@ -1,0 +1,10 @@
+img {
+    max-width: 100%;
+    height: auto;
+    width: auto\9; /* ie8 */
+}
+.author-photo {
+    width:50px; /* you can use % */
+    height: auto;
+    border-radius:25px;
+}

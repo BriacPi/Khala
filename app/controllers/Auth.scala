@@ -106,6 +106,19 @@ class Auth @Inject() (val env: AuthenticationEnvironment, val messagesApi: Messa
             }
           case None => Future.failed(new IdentityNotFoundException("Couldn't find user"))
         }
+      case Some(token) if token.isSignUp  =>{
+        env.identityService.retrieve(token.email).flatMap {
+          case Some(user) =>
+          val token = MailTokenUser(user.email, isSignUp = true)
+          for {
+            _ <- env.tokenService.create(token)
+          } yield {
+            Mailer.welcome(user, link = routes.Auth.signUp(token.id).absoluteURL())
+            Ok(viewsAuth.almostSignedUp(user))
+          }
+          case None => Future.failed(new IdentityNotFoundException("Couldn't find user"))
+        }
+      }
       case Some(token) =>
         env.tokenService.consume(tokenId)
         notFoundDefault
