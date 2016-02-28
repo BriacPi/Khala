@@ -256,7 +256,7 @@ object ArticleRepository extends ArticleRepository {
     }
   }
 
-  def deleteArticle(authorId: Long, article: Article): String = {
+  def delete(authorId: Long, article: Article): String = {
     if (article.authorId != authorId) "Oh, please have mercy with other people's work."
     else {
       DB.withConnection { implicit c =>
@@ -286,7 +286,8 @@ object ArticleRepository extends ArticleRepository {
         )
           .on(
             "authorId" -> authorId,
-            "articleId" -> articleId)
+            "articleId" -> articleId
+          )
           .as(recordMapperEditable.singleOpt)
     }
   }

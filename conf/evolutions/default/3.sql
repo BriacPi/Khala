@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS publications(
 ID SERIAL PRIMARY KEY NOT NULL,
 NAME varchar(100) NOT NULL UNIQUE,
+description varchar(455) NOT NULL,
 creator_id INT NOT NULL,
 creation_date TIMESTAMP NOT NULL
 );

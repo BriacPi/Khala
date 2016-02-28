@@ -89,7 +89,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
 
   def deleteArtricle(article: Article) = SecuredAction {
     implicit request => {
-      Ok(Json.obj("delete.message" -> ArticleRepository.deleteArticle(request.identity.id.get, article)))
+      Ok(Json.obj("delete.message" -> ArticleRepository.delete(request.identity.id.get, article)))
     }
   }
 

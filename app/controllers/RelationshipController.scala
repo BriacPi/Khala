@@ -10,7 +10,7 @@ import play.api.libs.ws.WSClient
 import play.api.mvc.{AnyContent, Action}
 import utils.silhouette.{AuthenticationController, AuthenticationEnvironment}
 import scala.concurrent.ExecutionContext.Implicits.global
-import repositories.Relationships.FollowRepository
+import repositories.Relationships.{BookmarkRepository, FollowRepository}
 
 
 /**
@@ -44,6 +44,19 @@ class RelationshipController @Inject()(ws: WSClient)(val env: AuthenticationEnvi
   def followsOrUnfollows(authorId: Long): Action[AnyContent] = SecuredAction {
     implicit request => {
       val s: String = FollowRepository.followsOrUnfollows(request.identity.id.get, authorId)
+      Ok(Json.obj("messages:" -> s))
+    }
+  }
+
+  def hasBookmarked(articleId: Long) = SecuredAction { implicit request => {
+    val bool: Boolean = BookmarkRepository.hasBookmarked(request.identity.id.get, articleId)
+    Ok(Json.obj("hasBookmarked" -> bool))
+  }
+  }
+
+  def bookmarksOrUnbookmarks(articleId: Long): Action[AnyContent] = SecuredAction {
+    implicit request => {
+      val s: String = BookmarkRepository.bookmarksOrUnbookmarks(request.identity.id.get, articleId)
       Ok(Json.obj("messages:" -> s))
     }
   }
