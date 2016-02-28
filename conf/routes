@@ -47,14 +47,12 @@ GET         /write                                   controllers.ContentControll
 #POST        /api/save-article                        controllers.ContentController.saveArticle()
 GET         /api/all-article                         controllers.ContentController.getAllArticles()
 GET         /article/id/:id                          controllers.ContentController.getArticle(id:Long)
-#POST        /api/save-article                        controllers.ContentController.saveArticle()
 #GET         /api/article-views/:articleId         controllers.ContentController.getViews(articelId:Long)
 GET         /api/article-stats-by-author             controllers.ContentController.getArticleStatsByAuthor()
 GET         /api/top-article-stats-by-views          controllers.ContentController.getTopArticleStatsByViews()
 GET         /api/author-by-article/:articleId        controllers.ContentController.getAuthorByArticle(articleId: Long)
 #GET         /api/top-articles-by-views/:firstId/:lastId        controllers.ContentController.getTopArticlesByViews(firstId: Int, lastId: Int)
 GET         /view-article/:articleId                 controllers.ContentController.viewArticle(articleId:Long)
-GET         /like-unlike/:articleId                  controllers.ContentController.likeUnlike(articleId: Long)
 
 GET         /api/draft                               controllers.ContentController.getDraftsByAuthor()
 POST         /api/save                                controllers.ContentController.save()
@@ -68,12 +66,9 @@ POST         /api/publish/:status                 controllers.ContentController.
 POST        /api/upload                              controllers.SettingsController.upload()
 
 #Relationship Management
-
-#GET         /api/has-liked/article/:articleId                  controllers.RelationshipController.hasLiked(articleId)
-#GET         /api/likes-or-unlikes/article/:articleId           controllers.RelationshipController.likesOrUnlikes(articleId)
+GET         /like-unlike/:articleId                  controllers.RelationshipController.likeUnlike(articleId: Long)
+GET         /api/has-liked/article/:articleId                  controllers.RelationshipController.hasLiked(articleId:Long)
 #GET         /api/has-followed/author/:authorId                 controllers.RelationshipController.hasFollowed(authorId)
 #GET         /api/follows-or-unfollows/author/:authorId         controllers.RelationshipController.followsOrUnfollows(authorId)
 
 GET         /javascriptRoutes                        controllers.Application.javascriptRoutes
-#
-#GET         /demo                                              controllers.ContentController.getTopArticlesByViews()

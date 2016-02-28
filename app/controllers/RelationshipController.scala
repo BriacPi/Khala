@@ -10,7 +10,7 @@ import play.api.libs.ws.WSClient
 import play.api.mvc.{AnyContent, Action}
 import utils.silhouette.{AuthenticationController, AuthenticationEnvironment}
 import scala.concurrent.ExecutionContext.Implicits.global
-import repositories.Relationships.{BookmarkRepository, FollowRepository}
+import repositories.Relationships.{LikeRepository, BookmarkRepository, FollowRepository}
 
 
 /**
@@ -18,30 +18,20 @@ import repositories.Relationships.{BookmarkRepository, FollowRepository}
   */
 class RelationshipController @Inject()(ws: WSClient)(val env: AuthenticationEnvironment, val messagesApi: MessagesApi)
   extends AuthenticationController with I18nSupport {
-  //
-  //  def hasLiked(articleId: String): Action[AnyContent] = SecuredAction.async { implicit request => {
-  //    val futureBool = LikeRepository.hasLiked(request.identity.id.get, articleId)
-  //    futureBool.map { bool =>
-  //      if (bool) Ok(Json.obj("hasLiked" -> "true"))
-  //      else Ok(Json.obj("hasLiked" -> "false"))
-  //    }
-  //  }
-  //  }
-  //
-  //  def likesOrUnlikes(articleId: String): Action[AnyContent] = SecuredAction.async { implicit request => {
-  //    LikeRepository.createOrRemove(request.identity.id.get, articleId).map {
-  //      s => Ok(Json.obj("messages:" -> s))
-  //    }
-  //  }
-  //  }
-  //
+
+  def hasLiked(articleId:Long): Action[AnyContent] = SecuredAction { implicit request => {
+    val bool: Boolean = LikeRepository.hasLiked(request.identity.id.get, articleId)
+    Ok(Json.obj("hasLiked" -> bool))
+  }
+  }
+
   def hasFollowed(authorId: Long) = SecuredAction { implicit request => {
     val bool: Boolean = FollowRepository.hasFollowed(request.identity.id.get, authorId)
     Ok(Json.obj("hasFollowed" -> bool))
   }
   }
 
-  def followsOrUnfollows(authorId: Long): Action[AnyContent] = SecuredAction {
+  def followUnfollow(authorId: Long): Action[AnyContent] = SecuredAction {
     implicit request => {
       val s: String = FollowRepository.followsOrUnfollows(request.identity.id.get, authorId)
       Ok(Json.obj("messages:" -> s))
@@ -54,11 +44,19 @@ class RelationshipController @Inject()(ws: WSClient)(val env: AuthenticationEnvi
   }
   }
 
-  def bookmarksOrUnbookmarks(articleId: Long): Action[AnyContent] = SecuredAction {
+  def bookmarkUnbookmark(articleId: Long): Action[AnyContent] = SecuredAction {
     implicit request => {
       val s: String = BookmarkRepository.bookmarksOrUnbookmarks(request.identity.id.get, articleId)
       Ok(Json.obj("messages:" -> s))
     }
   }
 
+  def likeUnlike(articleId: Long) = SecuredAction {
+    implicit request => {
+      request.identity.id match {
+        case Some(id) => Ok(Json.obj("messages" -> LikeRepository.likesOrUnlikes(id, articleId)))
+        case None => Ok(Json.obj("messages" -> "like.action.failure"))
+      }
+    }
+  }
 }

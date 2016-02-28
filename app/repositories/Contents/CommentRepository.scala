@@ -41,6 +41,20 @@ trait CommentRepository {
 
 object CommentRepository extends CommentRepository {
 
+  def getById(commentId: Long): Option[Long] = {
+    DB.withConnection { implicit current =>
+      SQL(
+        """
+          SELECT id
+          FROM comments
+          WHERE comments.id = {id}
+        """
+      )
+        .on("id" -> commentId)
+        .as(recordMapperId.singleOpt)
+    }
+  }
+
   def getByUserAndDate(userId: Long, creationDate: DateTime): Option[Long] = {
     DB.withConnection { implicit c =>
       SQL(
@@ -56,12 +70,26 @@ object CommentRepository extends CommentRepository {
 
     }
   }
+def rightParentType(comment: Comment): Boolean = {
+  if (comment.parentType=="article") {
+    ArticleRepository.getById(comment.parentId) match {
+      case None => false
+      case Some(parent) => true
+    }
+  }
+  else {
+    CommentRepository.getById(comment.parentId) match {
+      case None => false
+      case Some(parent) => true
+    }
+  }
+}
 
   def create(comment: Comment)= {
     if (!comment.id.isEmpty) "Authorization: denied."
     else {
-
-      DB.withConnection { implicit c =>
+      if (rightParentType(comment)){
+        DB.withConnection { implicit c =>
         SQL(
           """
               INSERT into comments(user_id,parent_id,parent_type,creation_date,last_update,content)
@@ -75,7 +103,9 @@ object CommentRepository extends CommentRepository {
           "lastUpdate" -> new Timestamp(comment.lastUpdate.getMillis()),
           "content" -> comment.content
         ).executeInsert()
-      }
+      }}
+      else "Apparently your parent is a bastard, just sayin'."
+
     }
     //blame it on the boogie.
   }

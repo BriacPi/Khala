@@ -45,7 +45,7 @@ class Application @Inject() (val env: AuthenticationEnvironment, val messagesApi
   def javascriptRoutes = Action { implicit request =>
     Ok(
       JavaScriptReverseRouter("jsRoutes")(
-        routes.javascript.ContentController.likeUnlike
+        routes.javascript.RelationshipController.likeUnlike
       )
     ).as("text/javascript")
   }

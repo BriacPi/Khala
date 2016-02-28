@@ -13,8 +13,8 @@ import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.{JsValue, _}
 import play.api.libs.ws.WSClient
 import play.api.mvc._
-import repositories.Contents.ArticleRepository
-import repositories.Relationships.{ViewRepository, LikeRepository}
+import repositories.Contents.{CommentRepository, ArticleRepository}
+import repositories.Relationships.{ViewRepository}
 import utils.silhouette.{AuthenticationEnvironment, AuthenticationController}
 import play.api.cache._
 import play.api.mvc._
@@ -23,10 +23,9 @@ import scala.concurrent.duration._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import models.{ArticleUserEditable, ArticleStats, Article, User}
+import models._
 import repositories.UserRepository
 
-import scala.reflect.macros.compiler.Errors
 
 
 //
@@ -54,6 +53,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
     )(Article.apply)(Article.unapply)
   )
 
+//Articles!!!
   def save() = SecuredAction(parse.json) { implicit request => {
     ArticleUserEditable.articleUserEditableReader.reads(request.body) match {
       case e: JsError => BadRequest("Expecting correct Article Json data")
@@ -192,14 +192,6 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
     }
   }
 
-  def likeUnlike(articleId: Long) = SecuredAction {
-    implicit request => {
-      request.identity.id match {
-        case Some(id) => Ok(Json.obj("messages" -> LikeRepository.likesOrUnlikes(id, articleId)))
-        case None => Ok(Json.obj("messages" -> "like.action.failure"))
-      }
-    }
-  }
 
   def getDraftsByAuthor(): Action[AnyContent] = SecuredAction {
     implicit request => {
@@ -236,4 +228,20 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   //    }
   //
   //  }
+
+
+  //comment
+
+  def comment() = SecuredAction(parse.json) { implicit request => {
+   CommentEditable.commentEditableReader.reads(request.body) match {
+     case e: JsError => BadRequest("Expecting correct CommentEditable Json data")
+     case s: JsSuccess[CommentEditable] =>
+       val now = DateTime.now()
+       val comment= new Comment(s.get,now,now)
+       CommentRepository.create(comment)
+       Ok(Json.obj("comment" -> request.body))
+       }
+   }
+  }
+
 }
