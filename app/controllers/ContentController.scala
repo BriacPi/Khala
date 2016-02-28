@@ -27,7 +27,6 @@ import models._
 import repositories.UserRepository
 
 
-
 //
 ///**
 //  * Created by corpus on 11/02/2016.
@@ -53,7 +52,7 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
     )(Article.apply)(Article.unapply)
   )
 
-//Articles!!!
+  //Articles!!!
   def save() = SecuredAction(parse.json) { implicit request => {
     ArticleUserEditable.articleUserEditableReader.reads(request.body) match {
       case e: JsError => BadRequest("Expecting correct Article Json data")
@@ -233,15 +232,40 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   //comment
 
   def comment() = SecuredAction(parse.json) { implicit request => {
-   CommentEditable.commentEditableReader.reads(request.body) match {
-     case e: JsError => BadRequest("Expecting correct CommentEditable Json data")
-     case s: JsSuccess[CommentEditable] =>
-       val now = DateTime.now()
-       val comment= new Comment(s.get,now,now)
-       CommentRepository.create(comment)
-       Ok(Json.obj("comment" -> request.body))
-       }
-   }
+    CommentEditable.commentEditableReader.reads(request.body) match {
+      case e: JsError => BadRequest("Expecting correct CommentEditable Json data")
+      case s: JsSuccess[CommentEditable] =>
+        val now = DateTime.now()
+        val comment = new Comment(s.get, now, now)
+        CommentRepository.create(comment)
+        Ok(Json.obj("comment" -> request.body))
+    }
+  }
   }
 
+  def deleteComment() = SecuredAction(parse.json) { implicit request => {
+    CommentEditable.commentEditableReader.reads(request.body) match {
+      case e: JsError => BadRequest("Expecting correct CommentEditable Json data")
+      case s: JsSuccess[CommentEditable] =>
+        val now = DateTime.now()
+        //it doesn't matter what we give him.
+        val comment = new Comment(s.get, now, now)
+        val result: String = CommentRepository.delete(request.identity.id.get, comment)
+        Ok(Json.obj("comment" -> result))
+    }
+  }
+  }
+
+  def updateComment() = SecuredAction(parse.json) { implicit request => {
+    CommentEditable.commentEditableReader.reads(request.body) match {
+      case e: JsError => BadRequest("Expecting correct CommentEditable Json data")
+      case s: JsSuccess[CommentEditable] =>
+        val now = DateTime.now()
+        //it doesn't matter what we give him.
+        val comment = new Comment(s.get, now, now)
+        val result: String = CommentRepository.update(request.identity.id.get, comment)
+        Ok(Json.obj("comment" -> result))
+    }
+  }
+  }
 }

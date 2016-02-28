@@ -26,7 +26,7 @@ object User {
 
   implicit val userReader: Reads[User] = (
     //readNullable manages option
-    (JsPath \ "_id").readNullable[Long] and
+    (JsPath \ "id").readNullable[Long] and
       (JsPath \ "email").read[String] and
       (JsPath \ "emailConfirmed").read[Boolean] and
       (JsPath \ "firstName").read[String] and
@@ -57,7 +57,27 @@ object User {
 }
 
 case class AuthorNbs(
-                    id: Long,
-                    nbFollowers: Int,
-                    nbArticles: Int
-                  )
+                      id: Long,
+                      nbFollowers: Int,
+                      nbArticles: Int
+                    )
+
+object AuthorNbs {
+
+  implicit val authorNbsReader: Reads[AuthorNbs] = (
+    //readNullable manages option
+    (JsPath \ "id").read[Long] and
+      (JsPath \ "nbFollowers").read[Int] and
+      (JsPath \ "nbArticles").read[Int]
+    ) (AuthorNbs.apply _)
+
+  implicit val authorNbsWriter = new Writes[AuthorNbs] {
+    def writes(authorNbs: AuthorNbs): JsObject = {
+      Json.obj(
+        "id" -> authorNbs.id,
+        "nbFollowers" -> authorNbs.nbFollowers,
+        "nbArticles" -> authorNbs.nbArticles
+      )
+    }
+  }
+}

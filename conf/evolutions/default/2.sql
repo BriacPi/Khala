@@ -1,7 +1,7 @@
 
 
 # --- !Ups
-
+--  This one is for triggers on 1.SQL
 create or replace function article_insert() returns trigger
   security definer
   language plpgsql

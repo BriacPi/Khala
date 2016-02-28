@@ -1,6 +1,6 @@
 
 # --- !Ups
-
+-- This one is for publications
 CREATE TABLE IF NOT EXISTS publications(
 ID SERIAL PRIMARY KEY NOT NULL,
 NAME varchar(100) NOT NULL UNIQUE,

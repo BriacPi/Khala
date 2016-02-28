@@ -117,10 +117,10 @@ def rightParentType(comment: Comment): Boolean = {
       DB.withConnection { implicit c =>
         SQL(
           """
-              UPDATE comments SET creation_date = {creationDate}, lastUpdate = {lastUpdate}, content = {content}
+              UPDATE comments SET lastUpdate = {lastUpdate}, content = {content}
           """
         ).on(
-          "creationDate" ->  new Timestamp(comment.creationDate.getMillis()),
+          //we don't touch creationDate
           "lastUpdate" -> new Timestamp(DateTime.now().getMillis()),
           "content" -> comment.content
         ).executeUpdate()

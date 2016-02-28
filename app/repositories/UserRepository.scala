@@ -167,4 +167,17 @@ object UserRepository extends UserRepository {
 
   }
 
+  def getAuthorNbs(authorId: Long): Option[AuthorNbs] ={
+    DB.withConnection { implicit c =>
+      SQL(
+        """
+        SELECT authors_stats.*
+        FROM authors_stats
+        WHERE authors_stats.author_id = {authorId}
+        """
+      ).on(
+        "authorId" -> authorId
+      ).as(recordMapperAuthorsNbs.singleOpt)
+    }
+  }
 }
