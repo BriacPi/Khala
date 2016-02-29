@@ -182,10 +182,10 @@ object ArticleRepository extends ArticleRepository {
           //it would have been done beforehand except when it is a draft.
           if (oldArticle.status == "draft") {
             TaggingRepository.removeFromArticle(article.id.get)
-            TaggingRepository.create(article.tag1, article.id.get)
+            TaggingRepository.create(article.tag1, authorId,article.id.get)
             article.tag2 match {
               case None =>
-              case Some(tag2) => TaggingRepository.create(tag2, article.id.get)
+              case Some(tag2) => TaggingRepository.create(tag2,authorId, article.id.get)
             }
           }
           //Changing status
@@ -236,10 +236,10 @@ object ArticleRepository extends ArticleRepository {
       }
       if (oldArticle.status != "draft") {
         TaggingRepository.removeFromArticle(newArticle.id.get)
-        TaggingRepository.create(newArticle.tag1, newArticle.id.get)
+        TaggingRepository.create(newArticle.tag1, authorId,newArticle.id.get)
         newArticle.tag2 match {
           case None =>
-          case Some(tag2) => TaggingRepository.create(tag2, newArticle.id.get)
+          case Some(tag2) => TaggingRepository.create(tag2,authorId, newArticle.id.get)
         }
         "article.update.success"
       }

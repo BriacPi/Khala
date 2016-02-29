@@ -31,18 +31,19 @@ trait ViewRepository {
 
 object ViewRepository extends ViewRepository {
 
-  def create(userId: Long, articleId: Long): String = {
+  def create(userId: Long,authorId: Long, articleId: Long): String = {
     ArticleRepository.getNoDraftById(articleId) match {
       case Some(article) => {
         DB.withConnection { implicit c =>
           SQL(
             """
-        insert into views (user_id,article_id,view_date) values
-        ({user_id},{article_id},{view_date})
+        insert into views (user_id,author_id,article_id,view_date) values
+        ({userId},{authorId}{articleId},{viewDate})
             """
           ).on(
-            'user_id -> userId,
-            'article_id -> articleId,
+            'userId -> userId,
+            'authorId -> authorId,
+            'articleId -> articleId,
             'view_date -> new Timestamp(DateTime.now().getMillis())
           ).executeInsert()
         }

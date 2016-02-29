@@ -25,18 +25,19 @@ trait TaggingRepository {
 object TaggingRepository extends TaggingRepository {
 
   //Creating taggings only if the article is not a draft.
-  def create(tagName: String, articleId: Long) = {
+  def create(tagName: String,authorId: Long, articleId: Long) = {
     ArticleRepository.getNoDraftById(articleId) match {
       case Some(article) => {
         TagRepository.create((tagName))
         DB.withConnection { implicit c =>
           SQL(
             """
-        insert into taggings (tag_name,article_id,tagging_date) values
-        ({tag_name},{article_id},{tagging_date})
+        insert into taggings (tag_name,author_id,article_id,tagging_date) values
+        ({tag_name},{authorId},{article_id},{tagging_date})
             """
           ).on(
             'tag_name -> tagName.toLowerCase(),
+            'authorId -> authorId,
             'article_id -> articleId,
             'tagging_date -> new Timestamp(DateTime.now().getMillis())
           ).executeInsert()

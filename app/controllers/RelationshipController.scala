@@ -8,9 +8,10 @@ import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.mvc.{AnyContent, Action}
+import repositories.UserRepository
 import utils.silhouette.{AuthenticationController, AuthenticationEnvironment}
 import scala.concurrent.ExecutionContext.Implicits.global
-import repositories.Relationships.{LikeRepository, BookmarkRepository, FollowRepository}
+import repositories.Relationships.{ViewRepository, LikeRepository, BookmarkRepository, FollowRepository}
 
 
 /**
@@ -19,7 +20,21 @@ import repositories.Relationships.{LikeRepository, BookmarkRepository, FollowRep
 class RelationshipController @Inject()(ws: WSClient)(val env: AuthenticationEnvironment, val messagesApi: MessagesApi)
   extends AuthenticationController with I18nSupport {
 
-  def hasLiked(articleId:Long): Action[AnyContent] = SecuredAction { implicit request => {
+
+  def viewArticle(articleId: Long) = UserAwareAction {
+    implicit request => {
+      UserRepository.getAuthorByArticle(articleId) match {
+        case None => Ok(Json.obj("viewArticle" -> "article.notFound"))
+        case Some(author) =>
+          request.identity match {
+            case None => Ok(Json.obj("viewArticle" -> ViewRepository.create(0.toLong, author.id.get, articleId)))
+            case Some(user) => Ok(Json.obj("viewArticle" -> ViewRepository.create(user.id.get, author.id.get, articleId)))
+          }
+      }
+    }
+  }
+
+  def hasLiked(articleId: Long): Action[AnyContent] = SecuredAction { implicit request => {
     val bool: Boolean = LikeRepository.hasLiked(request.identity.id.get, articleId)
     Ok(Json.obj("hasLiked" -> bool))
   }
@@ -46,16 +61,25 @@ class RelationshipController @Inject()(ws: WSClient)(val env: AuthenticationEnvi
 
   def bookmarkUnbookmark(articleId: Long): Action[AnyContent] = SecuredAction {
     implicit request => {
-      val s: String = BookmarkRepository.bookmarksOrUnbookmarks(request.identity.id.get, articleId)
-      Ok(Json.obj("messages:" -> s))
+      UserRepository.getAuthorByArticle(articleId) match {
+        case None => Ok(Json.obj("messages" -> "article.notFound"))
+        case Some(author) =>
+          val s: String = BookmarkRepository.bookmarkUnbookmark(request.identity.id.get, author.id.get, articleId)
+          Ok(Json.obj("messages:" -> s))
+      }
+
     }
   }
 
   def likeUnlike(articleId: Long) = SecuredAction {
     implicit request => {
-      request.identity.id match {
-        case Some(id) => Ok(Json.obj("messages" -> LikeRepository.likesOrUnlikes(id, articleId)))
-        case None => Ok(Json.obj("messages" -> "like.action.failure"))
+      UserRepository.getAuthorByArticle(articleId) match {
+        case None => Ok(Json.obj("messages" -> "article.notFound"))
+        case Some(author) =>
+          request.identity.id match {
+            case Some(id) => Ok(Json.obj("messages" -> LikeRepository.likesOrUnlikes(id, author.id.get,articleId)))
+            case None => Ok(Json.obj("messages" -> "like.action.failure"))
+          }
       }
     }
   }

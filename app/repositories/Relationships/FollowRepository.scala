@@ -32,12 +32,12 @@ object FollowRepository extends FollowRepository {
       SQL(
         """
         insert into follows (follower_id,author_id,follow_date) values
-        ({follower_id},{author_id},{follow_date})
+        ({followerId},{authorId},{followDate})
         """
       ).on(
-        'follower_id -> followerId,
-        'author_id -> authorId,
-        'follow_date -> new Timestamp(DateTime.now().getMillis())
+        'followerId -> followerId,
+        'authorId -> authorId,
+        'followDate -> new Timestamp(DateTime.now().getMillis())
       ).executeInsert()
     }
     "follow.success"
@@ -49,11 +49,11 @@ object FollowRepository extends FollowRepository {
       SQL(
         """
         DELETE FROM follows
-        WHERE follows.follower_id = {follower_id} AND follows.author_id = {author_id}
+        WHERE follows.follower_id = {followerId} AND follows.author_id = {authorId}
         """).
         on(
-          "follower_id" -> followerId,
-          "author_id" -> authorId
+          "followerId" -> followerId,
+          "authorId" -> authorId
         ).executeUpdate()
     }
     "unfollow.success"
@@ -65,11 +65,11 @@ object FollowRepository extends FollowRepository {
       SQL(
         """
       SELECT follows.id from follows
-      WHERE follows.follower_id = {followerId} and follows.author_id = {author_id}
+      WHERE follows.follower_id = {followerId} and follows.author_id = {authorId}
         """
       ).
         on("followerId" -> followerId,
-          "author_id" -> authorId
+          "authorId" -> authorId
         )
         .as(recordMapperId.singleOpt) match {
         case None => false

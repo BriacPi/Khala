@@ -52,11 +52,11 @@ GET         /api/article-stats-by-author             controllers.ContentControll
 GET         /api/top-article-stats-by-views          controllers.ContentController.getTopArticleStatsByViews()
 GET         /api/author-by-article/:articleId        controllers.ContentController.getAuthorByArticle(articleId: Long)
 #GET         /api/top-articles-by-views/:firstId/:lastId        controllers.ContentController.getTopArticlesByViews(firstId: Int, lastId: Int)
-GET         /view-article/:articleId                 controllers.ContentController.viewArticle(articleId:Long)
+
 
 GET         /api/draft                               controllers.ContentController.getDraftsByAuthor()
-POST         /api/save                                controllers.ContentController.save()
-POST         /api/publish/:status                 controllers.ContentController.publish(status :String)
+POST        /api/save                                controllers.ContentController.save()
+POST        /api/publish/:status                     controllers.ContentController.publish(status :String)
 
 ###UserProfile Management
 #GET         /api/user                                controllers.MyProfileController.getUser()
@@ -67,8 +67,9 @@ POST        /api/upload                              controllers.SettingsControl
 
 #Relationship Management
 GET         /like-unlike/:articleId                  controllers.RelationshipController.likeUnlike(articleId: Long)
-GET         /api/has-liked/article/:articleId                  controllers.RelationshipController.hasLiked(articleId:Long)
+GET         /api/has-liked/article/:articleId        controllers.RelationshipController.hasLiked(articleId:Long)
 #GET         /api/has-followed/author/:authorId                 controllers.RelationshipController.hasFollowed(authorId)
 #GET         /api/follows-or-unfollows/author/:authorId         controllers.RelationshipController.followsOrUnfollows(authorId)
+GET         /view-article/:articleId                 controllers.RelationshipController.viewArticle(articleId:Long)
 
 GET         /javascriptRoutes                        controllers.Application.javascriptRoutes

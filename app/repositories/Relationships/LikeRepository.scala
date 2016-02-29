@@ -25,20 +25,21 @@ trait LikeRepository {
 
 object LikeRepository extends LikeRepository {
 
-  def create(userId: Long, articleId: Long) = {
+  def create(userId: Long, authorId: Long, articleId: Long) = {
 
     ArticleRepository.getById(articleId) match {
       case Some(article) => {
         DB.withConnection { implicit c =>
           SQL(
             """
-        insert into likes (user_id,article_id,like_date) values
-        ({user_id},{article_id},{like_date})
+        insert into likes (user_id,author_id,article_id,like_date) values
+        ({userId},{authorId},{articleId},{likeDate})
             """
           ).on(
-            'user_id -> userId,
-            'article_id -> articleId,
-            'like_date -> new Timestamp(DateTime.now().getMillis())
+            'userId -> userId,
+            'authorId -> authorId,
+            'articleId -> articleId,
+            'likeDate -> new Timestamp(DateTime.now().getMillis())
           ).executeInsert()
         }
         "like.add.success"
@@ -56,11 +57,11 @@ object LikeRepository extends LikeRepository {
           SQL(
             """
         DELETE FROM likes
-        WHERE likes.user_id = {userId} and likes.article_id = {article_id}
+        WHERE likes.user_id = {userId} and likes.article_id = {articleId}
             """).
             on(
               "userId" -> userId,
-              "article_id" -> articleId
+              "articleId" -> articleId
             ).
             executeUpdate()
 
@@ -77,11 +78,11 @@ object LikeRepository extends LikeRepository {
       SQL(
         """
       SELECT likes.id from likes
-      WHERE likes.user_id = {userId} and likes.article_id = {article_id}
+      WHERE likes.user_id = {userId} and likes.article_id = {articleId}
         """
       ).
         on("userId" -> userId,
-          "article_id" -> articleId
+          "articleId" -> articleId
         )
         .as(recordMapperId.singleOpt) match {
         case None => false
@@ -93,11 +94,11 @@ object LikeRepository extends LikeRepository {
 
   }
 
-  def likesOrUnlikes(userId: Long, articleId: Long): String = {
+  def likesOrUnlikes(userId: Long, authorId: Long, articleId: Long): String = {
     if (ArticleRepository.isDraft(articleId)) "error.isDraft"
     else {
       if (hasLiked(userId, articleId)) remove(userId, articleId)
-      else create(userId, articleId)
+      else create(userId, authorId, articleId)
     }
   }
 }

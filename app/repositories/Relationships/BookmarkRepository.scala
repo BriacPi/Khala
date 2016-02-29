@@ -24,17 +24,18 @@ trait BookmarkRepository {
 
 object BookmarkRepository extends BookmarkRepository {
 
-  def bookmarks(userId: Long, articleId: Long) = {
+  def bookmarks(userId: Long, authorId: Long, articleId: Long) = {
     DB.withConnection { implicit c =>
       SQL(
         """
-        insert into bookmarks (user_id,article_id,bookmark_date) values
-        ({user_id},{article_id},{bookmark_date})
+        insert into bookmarks (user_id,author_id,article_id,bookmark_date) values
+        ({userId},{authorId},{articleId},{bookmarkDate})
         """
       ).on(
-        'user_id -> userId,
-        'article_id -> articleId,
-        'bookmark_date -> new Timestamp(DateTime.now().getMillis())
+        'userId -> userId,
+        'authorId -> authorId,
+        'articleId -> articleId,
+        'bookmarkDate -> new Timestamp(DateTime.now().getMillis())
       ).executeInsert()
     }
     "bookmark.success"
@@ -46,7 +47,7 @@ object BookmarkRepository extends BookmarkRepository {
       SQL(
         """
         DELETE FROM bookmarks
-        WHERE bookmarks.user_id = {userId} AND bookmarks.author_id = {articleId}
+        WHERE bookmarks.user_id = {userId} AND bookmarks.article_id = {articleId}
         """).
         on(
           "userId" -> userId,
@@ -75,11 +76,11 @@ object BookmarkRepository extends BookmarkRepository {
     }
   }
 
-  def bookmarksOrUnbookmarks(followerId: Long, articleId: Long): String = {
+  def bookmarkUnbookmark(followerId: Long, authorId: Long,articleId: Long): String = {
     if (ArticleRepository.isDraft(articleId)) "error.isDraft"
     else {
       if (hasBookmarked(followerId, articleId)) unbookmarks(followerId, articleId)
-      else bookmarks(followerId, articleId)
+      else bookmarks(followerId, authorId,articleId)
     }
   }
 }
