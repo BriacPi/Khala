@@ -53,6 +53,8 @@ To do list: (Sur la page d'accueil)
 -S'inscrire avec Google/Facebook.
 -How to manage dynamic pictures and videos
 -Publish needs to be on top of it.
+-Textes en gris.
+-Views is borken.
 
 
 

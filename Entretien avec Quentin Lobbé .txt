@@ -1,0 +1,31 @@
+Quentin Lobbé: Twanga? (comparateur de prix un des plus gros). Beaucoup de pression et une fois que le moteur de rechers est rodé, c'est plus des questions d'architecture.
+Sujet: Population migrante et technologie du numérique.
+
+
+Elastic Serach: Index et index inversé, basé sur (tfidf) librairie Open Source (Lucène, c'est en fait une transformation mais une vraie librairie, donc ce sont bien tes textes pas de qq'un d'autres.). En fait c'est un google open source.
+CF Google: C'est un calcul de similarité.
+Kibana: c'est le moteur de visualisation d'ES. C'est aussi gratuit.
+Solar: C'est un concurrent de Elastic Search basé sur la même librairie. C'est un projet totalement Open Source (Apache).
+ES/Solar sont des serveurs qui se greffent sur les documents formés dans Lucène obtenus à, partir des documents envoyés à Lucène.
+Il faut une structure PostgreSQL, car les indexes inverés sont mis à jour tous les jours par exemple. (ES/Solar permettent a priori de le faire en temps réel.)
+Comme ils permettent d'indexer et de répondre à la requête, il vaut mieux le faire en décalé (par exemple pendant la nuit). => la stratégie dépend des besoins. (par exemple une machine pour faire de l'indexation et une pour faire les requêtes.)
+
+ES: plus une boîte noire moins Solar.
+
+Pour ES/Solar: On commence à créer un schèma. (en fait les champs). En fait qui viennent les indexer je les mets dedans (contenu oui, date de création non par exemple).
+Plusieurs besoins = plusieurs indexes. Mais c'est coûteux. (question d'échelle) 50k documents ok. 500 millions... Il ne faut pas oublier que la requête ne peut pas se faire pendant l'indexation.
+Donc il vaut mieux avoir deux instances d'elastic search pour faire les deux différentes tâches.
+
+Maintenant en distribué: (donc plusieurs serveurs)
+Les deux permettent de distribuer les indexes. Donc lis sont installés sur les deux serveurs.
+Zookeeper (Open Source Apache) qui va dire à une machine d'indexer le document reçu.
+Lors de la requête, Zookeeper va demander à une machine et c'est cette machine qui va demadner à une autre machine. (il va pt demander à une machine pas trop chargé) ES permet de le faire de manière très simple.
+Chaque machine garde un réplica les indexes de toutes les autre machines. Il ne faut pas oublier que les scores sont absolus.
+Attention on ne veut peut-être pas indexer tous les mots, il faut débiaiser la longeur des textes, il faut faire des équivalences des mots.
+
+Il faut coder un analyseur qui va aller chercher une image binaire, et on envoie texte/image séparément. (regarder si y a pas des gens qui ne l'ont pas déjà fait.)
+
+Business Model d'ES: c'est le service, car le système est open source, mais il propose des ingénieurs pour intervenir dans les boîtes.
+Solar a 6 mois de retard, souvent ce sont les ingénieurs qui bossent sur ES puis les portent sur Solar. En fait ils sont recrutés en bossant sur Solar, qui est la techno historique.
+
+Mot de la fin: Elastic Search c'est du texte, le but c'est de remonter le résultat le plus pertinent (NLP!!!), N'oublie pas: Open Source is the king!
