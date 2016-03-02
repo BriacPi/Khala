@@ -8,10 +8,8 @@ create or replace function article_insert() returns trigger
 as $$
   begin
     insert into articles_stats(article_id) values(new.id);
-
     update authors_stats set nb_articles = nb_articles+1
     where author_id = new.author_id AND new.status != 'draft';
-
     return new;
   end;
 $$;
@@ -89,37 +87,6 @@ create trigger like_delete after delete on likes
 
 
 
-create or replace function comment_insert() returns trigger
-  security definer
-  language plpgsql
-as $$
-  begin
-  case new.parent_type
-  WHEN 'article' THEN
-    update articles_stats set nb_comments = nb_comments+1
-    where article_id = new.article_id ;
-    ELSE
-    insert into comments_stats(comment_id) values(new.id);
-  END CASE;
-    return new;
-  end;
-$$;
-create trigger comment_insert after insert on comments
-    for each row execute procedure comment_insert();
-
-
-create or replace function comment_delete() returns trigger
-  security definer
-  language plpgsql
-as $$
-  begin
-    update articles_stats set nb_comments = nb_comments-1
-    where article_id = old.article_id;
-    return new;
-  end;
-$$;
-create trigger comment_delete after delete on comments
-    for each row execute procedure comment_delete();
 
 
 create or replace function bookmark_insert() returns trigger
@@ -149,6 +116,32 @@ $$;
 create trigger bookmark_delete after delete on bookmarks
     for each row execute procedure bookmark_delete();
 
+create or replace function reaction_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update articles_stats set nb_reactions = nb_reactions+1
+    where article_id = new.origine_article_id;
+    return new;
+  end;
+$$;
+create trigger reaction_insert after insert on reactions
+    for each row execute procedure reaction_insert();
+
+
+create or replace function reaction_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update articles_stats set nb_reactions = nb_reactions-1
+    where article_id = old.origine_article_id;
+    return new;
+  end;
+$$;
+create trigger reaction_delete after delete on reactions
+    for each row execute procedure reaction_delete();
 
 
 
@@ -312,33 +305,26 @@ create trigger interest_delete after delete on interests
 
 
 
-create or replace function comment_like_insert() returns trigger
-  security definer
-  language plpgsql
-as $$
-  begin
-    update comments_stats set nb_likes = nb_likes+1
-    where comment_id = new.comment_id;
-    return new;
-  end;
-$$;
-create trigger comment_like_insert after insert on comment_likes
-    for each row execute procedure comment_like_insert();
-
-
-create or replace function comment_like_delete() returns trigger
-  security definer
-  language plpgsql
-as $$
-  begin
-    delete from comments_stats where comment_id = old.comment_id;
-    return new;
-  end;
-$$;
-create trigger comment_like_delete after delete on comment_likes
-    for each row execute procedure comment_like_delete();
-
 
 
 # --- !Downs
 
+DROP FUNCTION IF EXISTS article_insert() CASCADE;
+DROP FUNCTION IF EXISTS article_delete() CASCADE;
+DROP FUNCTION IF EXISTS article_update() CASCADE;
+DROP FUNCTION IF EXISTS view_insert() CASCADE;
+DROP FUNCTION IF EXISTS view_delete() CASCADE;
+DROP FUNCTION IF EXISTS like_insert() CASCADE;
+DROP FUNCTION IF EXISTS like_delete() CASCADE;
+DROP FUNCTION IF EXISTS bookmark_insert() CASCADE;
+DROP FUNCTION IF EXISTS bookmark_delete() CASCADE;
+DROP FUNCTION IF EXISTS author_insert()CASCADE;
+DROP FUNCTION IF EXISTS author_delete() CASCADE;
+DROP FUNCTION IF EXISTS follower_insert() CASCADE;
+DROP FUNCTION IF EXISTS follower_delete() CASCADE;
+DROP FUNCTION IF EXISTS tag_insert() CASCADE;
+DROP FUNCTION IF EXISTS tag_delete() CASCADE;
+DROP FUNCTION IF EXISTS tagging_insert() CASCADE;
+DROP FUNCTION IF EXISTS tagging_delete() CASCADE;
+DROP FUNCTION IF EXISTS interest_insert() CASCADE;
+DROP FUNCTION IF EXISTS interest_delete() CASCADE;

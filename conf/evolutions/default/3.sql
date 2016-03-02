@@ -155,6 +155,14 @@ nb_articles INT NOT NULL DEFAULT 0
 
 # --- !Downs
 
+DROP FUNCTION IF EXISTS  publication_insert() CASCADE;
+DROP FUNCTION IF EXISTS  publication_delete() CASCADE;
+DROP FUNCTION IF EXISTS  publication_member_insert() CASCADE;
+DROP FUNCTION IF EXISTS  publication_member_delete() CASCADE;
+DROP FUNCTION IF EXISTS  publication_follower_insert() CASCADE;
+DROP FUNCTION IF EXISTS  publication_follower_delete() CASCADE;
+DROP FUNCTION IF EXISTS  publication_article_insert() CASCADE;
+DROP FUNCTION IF EXISTS  publication_article_delete() CASCADE;
 
 DROP TABLE publications CASCADE;
 DROP TABLE publication_members CASCADE

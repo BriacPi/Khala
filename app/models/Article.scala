@@ -20,15 +20,13 @@ case class Article(
                     content: String,
                     nbModifications: Int,
                     readingTime: Int,
-                    tag1: String,
-                    tag2: Option[String],
-                  //draft,public,private,delete
+                    //draft,public,private
                     status: String = "draft"
-                  ){
-  def this(articleUserEditable:ArticleUserEditable, authorId: Long, creationDate: DateTime, lastUpdate: DateTime,nbModifications: Int,
-           readingTime: Int, status: String) = this(articleUserEditable.id, authorId,creationDate,lastUpdate,articleUserEditable.title,
+                  ) {
+  def this(articleUserEditable: ArticleUserEditable, authorId: Long, creationDate: DateTime, lastUpdate: DateTime, nbModifications: Int,
+           readingTime: Int, status: String) = this(articleUserEditable.id, authorId, creationDate, lastUpdate, articleUserEditable.title,
 
-    articleUserEditable.summary,articleUserEditable.content,nbModifications,readingTime,articleUserEditable.tag1,articleUserEditable.tag2,status)
+    articleUserEditable.summary, articleUserEditable.content, nbModifications, readingTime, status)
 
 }
 
@@ -45,8 +43,6 @@ object Article {
       (JsPath \ "content").read[String] and
       (JsPath \ "nbModifications").read[Int] and
       (JsPath \ "readingTime").read[Int] and
-      (JsPath \ "tag1").read[String] and
-      (JsPath \ "tag2").readNullable[String] and
       (JsPath \ "status").read[String]
     ) (Article.apply _)
 
@@ -61,8 +57,6 @@ object Article {
         "content" -> article.content,
         "nbModifications" -> article.nbModifications,
         "readingTime" -> article.readingTime,
-        "tag1" -> article.tag1,
-        "tag2" -> article.tag2.getOrElse[String](""),
         "status" -> article.status
       )
       article.id match {
@@ -75,7 +69,8 @@ object Article {
 
   def shorten(article: Article): Article = {
     val textOnly = Jsoup.parse(article.content).text()
-    article.copy(content = textOnly.take(140) + "...")}
+    article.copy(content = textOnly.take(140) + "...")
+  }
 
 
   def shorten(listArticle: List[Article]): List[Article] = {
@@ -83,10 +78,11 @@ object Article {
       shorten
     }
   }
-def getReadingTime(s: String): Int = {
-  val textOnly = Jsoup.parse(s).text()
-  math.max(textOnly.length/1150,1)
-}
+
+  def getReadingTime(s: String): Int = {
+    val textOnly = Jsoup.parse(s).text()
+    math.max(textOnly.length / 1150, 1)
+  }
 
 }
 
@@ -94,22 +90,18 @@ case class ArticleUserEditable(
                                 id: Option[Long],
                                 title: String,
                                 summary: Option[String],
-                                content: String,
-                                tag1: String,
-                                tag2: Option[String]
-                              )
- {
-   def this(article:Article) = this(article.id,article.title,article.summary,article.content,article.tag1,article.tag2)
- }
+                                content: String
+                              ) {
+  def this(article: Article) = this(article.id, article.title, article.summary, article.content)
+}
+
 object ArticleUserEditable {
   implicit val articleUserEditableReader: Reads[ArticleUserEditable] = (
     //readNullable manages option
     (JsPath \ "_id").readNullable[Long] and
       (JsPath \ "title").read[String] and
       (JsPath \ "summary").readNullable[String] and
-      (JsPath \ "content").read[String] and
-      (JsPath \ "tag1").read[String] and
-      (JsPath \ "tag2").readNullable[String]
+      (JsPath \ "content").read[String]
     ) (ArticleUserEditable.apply _)
 
   implicit val articleUserEditableWriter = new Writes[ArticleUserEditable] {
@@ -117,9 +109,7 @@ object ArticleUserEditable {
       def json = Json.obj(
         "title" -> articleUserEditable.title,
         "summary" -> articleUserEditable.summary.getOrElse[String](""),
-        "content" -> articleUserEditable.content,
-        "tag1" -> articleUserEditable.tag1,
-        "tag2" -> articleUserEditable.tag2.getOrElse[String]("")
+        "content" -> articleUserEditable.content
       )
       articleUserEditable.id match {
         case None => json
@@ -132,12 +122,13 @@ object ArticleUserEditable {
 
 
 case class ArticleNbs(
-                         id: Long,
-                         nbViews: Int,
-                         nbLikes: Int,
-                         nbComments: Int,
-                         nbBookmarks: Int
-                       )
+                       id: Long,
+                       nbViews: Int,
+                       nbLikes: Int,
+                       nbComments: Int,
+                       nbBookmarks: Int
+                     )
+
 case class ArticleStats(
                          article: Article,
                          nbViews: Int,
@@ -149,8 +140,8 @@ case class ArticleStats(
 object ArticleStats {
 
   def fromArticle(article: Article, articleNbs: ArticleNbs): ArticleStats = {
-    ArticleStats(article, articleNbs.nbViews,articleNbs.nbLikes,
-      articleNbs.nbComments,articleNbs.nbBookmarks)
+    ArticleStats(article, articleNbs.nbViews, articleNbs.nbLikes,
+      articleNbs.nbComments, articleNbs.nbBookmarks)
   }
 
   implicit val articleStatsWriter = new Writes[ArticleStats] {
@@ -161,6 +152,41 @@ object ArticleStats {
         "nbLikes" -> articleStats.nbLikes,
         "nbComments" -> articleStats.nbComments,
         "nbBookmarks" -> articleStats.nbBookmarks
+      )
+    }
+
+  }
+}
+
+case class ArticleShow(
+                         articleId: Long,
+                         title: String,
+                         summary: Option[String],
+                         content: String,
+                         creationDate: DateTime,
+                         readingTime: Int,
+                         authorId: Long,
+                         authorFirstName: String,
+                         authorLastName: String,
+                         authorPhotoUrl: String
+                       )
+
+object ArticleShow {
+
+
+  implicit val articleShowWriter = new Writes[ArticleShow] {
+    def writes(articleShow: ArticleShow): JsObject = {
+      Json.obj(
+        "articleId" -> articleShow.articleId,
+        "creationDate" -> articleShow.creationDate,
+        "title" -> articleShow.title,
+        "summary" -> articleShow.summary.getOrElse[String](""),
+        "content" -> articleShow.content,
+        "readingTime" -> articleShow.readingTime,
+        "authorId" -> articleShow.authorId,
+        "authorFirstName" -> articleShow.authorFirstName,
+        "authorLastName" -> articleShow.authorLastName,
+        "authorPhotoUrl" -> articleShow.authorPhotoUrl
       )
     }
 

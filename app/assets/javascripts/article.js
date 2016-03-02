@@ -2,7 +2,7 @@ $(function () {
 
     $(".like-auth").each(function(like){
         $(this).click(function (event) {
-            var requestLikeUnlike=jsRoutes.controllers.ContentController.likeUnlike($(this).attr("articleid"));
+            var requestLikeUnlike=jsRoutes.controllers.RelationshipController.likeUnlike($(this).attr("articleid"));
             requestLikeUnlike.ajax({
                 success: function(result) {
                 },

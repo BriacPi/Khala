@@ -38,7 +38,7 @@ Other questions:
 -how to manage photo?
 -how to return cursor and then just return by blocks of 10 article
 -How to manage people who spam write() page.
-
+-Json sanitized?
 
 
 To do list: (Sur la page d'accueil)
@@ -55,7 +55,7 @@ To do list: (Sur la page d'accueil)
 -Publish needs to be on top of it.
 -Textes en gris.
 -Views is borken.
-
+-Cache: Apache + Nginx qui se met entre serveur et client, il sert de proxy. Particularité: servir des données en cache de manière optimisée.
 
 
 -Photo: mode debug. (size?)

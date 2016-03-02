@@ -31,13 +31,11 @@ trait ArticleRepository {
       str("articles.content") ~
       int("articles.nb_modifications") ~
       int("articles.reading_time") ~
-      str("articles.tag1") ~
-      str("articles.tag2") ~
       str("articles.status") map {
       case id ~ author_id ~ creationDate ~ lastUpdate ~ title ~ summary ~ content ~ nbModifications ~
-        readingTime ~ tag1 ~ tag2 ~ status => {
+        readingTime ~  status => {
         Article(Some(id), author_id, creationDate, lastUpdate,
-          title, Some(summary), content, nbModifications, readingTime, tag1, Some(tag2), status)
+          title, Some(summary), content, nbModifications, readingTime, status)
       }
     }
   }
@@ -59,11 +57,9 @@ trait ArticleRepository {
     long("articles.id") ~
       str("articles.title") ~
       str("article.summary") ~
-      str("articles.content") ~
-      str("articles.tag1") ~
-      str("articles.tag2") map {
-      case id ~ title ~ summary ~ content ~ tag1 ~ tag2 => {
-        ArticleUserEditable(Some(id), title, Some(summary), content, tag1, Some(tag2))
+      str("articles.content") map {
+      case id ~ title ~ summary ~ content => {
+        ArticleUserEditable(Some(id), title, Some(summary), content)
       }
     }
   }
@@ -140,13 +136,14 @@ object ArticleRepository extends ArticleRepository {
   def create(article: Article): String = {
     article.id match {
       case None => {
+
         DB.withConnection { implicit c =>
           SQL(
             """
               insert into articles (author_id,creation_date,last_update,title,summary,content,
-              nb_modifications,reading_time, tag1, tag2, status) values
+              nb_modifications,reading_time, status) values
               ({author_id},{creation_date},{last_update},{title},{summary},{content},
-              {nb_modifications},{reading_time}, {tag1},{tag2},{status})
+              {nb_modifications},{reading_time},{status})
             """
           ).on(
             'author_id -> article.authorId,
@@ -157,8 +154,6 @@ object ArticleRepository extends ArticleRepository {
             'content -> article.content,
             'nb_modifications -> article.nbModifications,
             'reading_time -> Article.getReadingTime(article.content),
-            'tag1 -> article.tag1,
-            'tag2 -> article.tag2.getOrElse[String](""),
             'status -> "draft"
           ).executeInsert()
         }
@@ -182,11 +177,11 @@ object ArticleRepository extends ArticleRepository {
           //it would have been done beforehand except when it is a draft.
           if (oldArticle.status == "draft") {
             TaggingRepository.removeFromArticle(article.id.get)
-            TaggingRepository.create(article.tag1, authorId,article.id.get)
-            article.tag2 match {
-              case None =>
-              case Some(tag2) => TaggingRepository.create(tag2,authorId, article.id.get)
-            }
+//            TaggingRepository.create(article.tag1, authorId,article.id.get)
+//            article.tag2 match {
+//              case None =>
+//              case Some(tag2) => TaggingRepository.create(tag2,authorId, article.id.get)
+//            }
           }
           //Changing status
           DB.withConnection { implicit c =>
@@ -218,7 +213,7 @@ object ArticleRepository extends ArticleRepository {
         SQL(
           """
         update  articles set creation_date = {creation_date}, last_update ={last_update},title={title},summary={summary}
-        ,content={content},nb_modifications={nbModifications},reading_time={readingTime}, tag1 = {tag1}, tag2 = {tag2}
+        ,content={content},nb_modifications={nbModifications},reading_time={readingTime}
         WHERE id ={id}
           """
         ).on(
@@ -229,18 +224,16 @@ object ArticleRepository extends ArticleRepository {
           'summary -> newArticle.summary.getOrElse(""),
           'content -> newArticle.content,
           'nbModifications -> newArticle.nbModifications,
-          'readingTime -> newArticle.readingTime,
-          'tag1 -> newArticle.tag1,
-          'tag2 -> newArticle.tag2.getOrElse[String]("")
+          'readingTime -> newArticle.readingTime
         ).executeUpdate()
       }
       if (oldArticle.status != "draft") {
         TaggingRepository.removeFromArticle(newArticle.id.get)
-        TaggingRepository.create(newArticle.tag1, authorId,newArticle.id.get)
-        newArticle.tag2 match {
-          case None =>
-          case Some(tag2) => TaggingRepository.create(tag2,authorId, newArticle.id.get)
-        }
+//        TaggingRepository.create(newArticle.tag1, authorId,newArticle.id.get)
+//        newArticle.tag2 match {
+//          case None =>
+//          case Some(tag2) => TaggingRepository.create(tag2,authorId, newArticle.id.get)
+//        }
         "article.update.success"
       }
       else "draft.update.success"
@@ -279,7 +272,7 @@ object ArticleRepository extends ArticleRepository {
       implicit current =>
         SQL(
           """
-          SELECT articles.id, articles.title, articles.summary, articles.content, articles.tag1, articles.tag2
+          SELECT articles.id, articles.title, articles.summary, articles.content
           FROM articles
           WHERE articles.id = {articleId} AND articles.author_id = {authorId}
           """
