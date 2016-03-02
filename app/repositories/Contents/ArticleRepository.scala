@@ -44,10 +44,10 @@ trait ArticleRepository {
     long("articles_stats.article_id") ~
       int("articles_stats.nb_views") ~
       int("articles_stats.nb_likes") ~
-      int("articles_stats.nb_comments") ~
+      int("articles_stats.nb_reactions") ~
       int("articles_stats.nb_bookmarks") map {
-      case id ~ nbViews ~ nbLikes ~ nbComments ~ nbBookmarks => {
-        ArticleNbs(id, nbViews, nbLikes, nbComments, nbBookmarks)
+      case id ~ nbViews ~ nbLikes ~ nbReactions ~ nbBookmarks => {
+        ArticleNbs(id, nbViews, nbLikes, nbReactions, nbBookmarks)
       }
     }
   }
