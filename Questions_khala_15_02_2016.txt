@@ -55,7 +55,9 @@ To do list: (Sur la page d'accueil)
 -Publish needs to be on top of it.
 -Textes en gris.
 -Views is borken.
--Cache: Apache + Nginx qui se met entre serveur et client, il sert de proxy. Particularité: servir des données en cache de manière optimisée.
+-Cache: Apache/Nginx qui se met entre serveur et client, il sert de proxy. Particularité: servir des données en cache de manière optimisée. Raison 2: déchiffrage des 
+requêtes.
+-Utiliser Slick comme OVM?
 
 
 -Photo: mode debug. (size?)

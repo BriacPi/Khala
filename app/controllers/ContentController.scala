@@ -120,7 +120,6 @@ class ContentController @Inject()(ws: WSClient)(val env: AuthenticationEnvironme
   def write() = SecuredAction { implicit request =>
     ArticleRepository.getRecentUntitledDraft(request.identity.id.get) match {
       case None => {
-        println("debug")
         val draftCreationDate = DateTime.now()
         val virginDraft = Article(None, request.identity.id.get, draftCreationDate,
           draftCreationDate, "", None, "", 0, 0, "draft")
