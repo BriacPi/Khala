@@ -14,9 +14,9 @@ create or replace function publication_insert() returns trigger
   language plpgsql
 as $$
   begin
-    INSERT INTO publications_stats(publication_id) VALUES(new.id);
-    return new;
-  end;
+    INSERT INTO publications_stats(publication_id) VALUES(new.id);;
+    return new;;
+  end;;
 $$;
 create trigger publication_insert after insert on publications
     for each row execute procedure publication_insert();
@@ -27,9 +27,9 @@ create or replace function publication_delete() returns trigger
   language plpgsql
 as $$
   begin
-    delete from publications_stats where publication_id = old.id;
-    return new;
-  end;
+    delete from publications_stats where publication_id = old.id;;
+    return new;;
+  end;;
 $$;
 create trigger publication_delete after delete on publications
     for each row execute procedure publication_delete();
@@ -48,9 +48,9 @@ create or replace function publication_member_insert() returns trigger
   language plpgsql
 as $$
   begin
-    UPDATE publications_stats SET nb_memebers = nb_members+1;
-    return new;
-  end;
+    UPDATE publications_stats SET nb_memebers = nb_members+1;;
+    return new;;
+  end;;
 $$;
 create trigger publication_member_insert after insert on publication_members
     for each row execute procedure publication_member_insert();
@@ -61,9 +61,9 @@ create or replace function publication_member_delete() returns trigger
   language plpgsql
 as $$
   begin
-  UPDATE publications_stats SET nb_memebers = nb_members-1;
-    return new;
-  end;
+  UPDATE publications_stats SET nb_memebers = nb_members-1;;
+    return new;;
+  end;;
 $$;
 create trigger publication_member_delete after delete on publication_members
     for each row execute procedure publication_member_delete();
@@ -82,9 +82,9 @@ create or replace function publication_follower_insert() returns trigger
   language plpgsql
 as $$
   begin
-    UPDATE publications_stats SET nb_followers = nb_followers+1;
-    return new;
-  end;
+    UPDATE publications_stats SET nb_followers = nb_followers+1;;
+    return new;;
+  end;;
 $$;
 create trigger publication_follower_insert after insert on publication_followers
     for each row execute procedure publication_follower_insert();
@@ -95,9 +95,9 @@ create or replace function publication_follower_delete() returns trigger
   language plpgsql
 as $$
   begin
-  UPDATE publications_stats SET nb_followers = nb_followers-1;
-    return new;
-  end;
+  UPDATE publications_stats SET nb_followers = nb_followers-1;;
+    return new;;
+  end;;
 $$;
 create trigger publication_follower_delete after delete on publication_followers
     for each row execute procedure publication_follower_delete();
@@ -120,9 +120,9 @@ create or replace function publication_article_insert() returns trigger
   language plpgsql
 as $$
   begin
-    UPDATE publications_stats SET nb_articles = nb_articles+1;
-    return new;
-  end;
+    UPDATE publications_stats SET nb_articles = nb_articles+1;;
+    return new;;
+  end;;
 $$;
 create trigger publication_article_insert after insert on publication_articles
     for each row execute procedure publication_article_insert();
@@ -133,9 +133,9 @@ create or replace function publication_article_delete() returns trigger
   language plpgsql
 as $$
   begin
-  UPDATE publications_stats SET nb_articles = nb_articles-1;
-    return new;
-  end;
+  UPDATE publications_stats SET nb_articles = nb_articles-1;;
+    return new;;
+  end;;
 $$;
 create trigger  publication_article_delete after delete on  publication_articles
     for each row execute procedure publication_article_delete();

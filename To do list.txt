@@ -42,6 +42,8 @@ Other questions:
 
 
 To do list: (Sur la page d'accueil)
+
+-Souci d'update la table des stats lors de l'insert (probablement parce que evolutions est mal lu)
 -Troll: faut pas laisser les gens écrire des mots trop longs ou bien faire en sorte qu'ils soient découpés avec un tiret.
 -Travailler sur les bandeaux
 -Commentaire

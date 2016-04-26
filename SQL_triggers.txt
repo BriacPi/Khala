@@ -1,64 +1,19 @@
 
-slect * from pg_trigger;
-
-DROP FUNCTION IF EXISTS article_insert();
-DROP FUNCTION IF EXISTS article_delete();
-DROP FUNCTION IF EXISTS view_insert();
-DROP FUNCTION IF EXISTS view_delete();
-DROP FUNCTION IF EXISTS like_insert();
-DROP FUNCTION IF EXISTS like_delete();
-DROP FUNCTION IF EXISTS comment_insert();
-DROP FUNCTION IF EXISTS comment_delete();
-DROP FUNCTION IF EXISTS bookmark_insert();
-DROP FUNCTION IF EXISTS bookmark_delete();
-  
-## Not ok.
-CREATE TABLE IF NOT EXISTS articles_stats AS
-(
-select articles.id as article_id, COALESCE(nb_views,0) AS nb_views, COALESCE(nb_likes,0) AS nb_likes, 
-COALESCE(nb_comments,0) AS nb_comments, COALESCE(nb_bookmarks,0) AS nb_bookmarks
-FROM articles
-LEFT JOIN 
-(SELECT views.article_id AS id, COUNT(views.id) AS nb_views
-FROM views
-GROUP BY views.article_id) va 
-ON articles.id = va.id
-LEFT JOIN 
-(SELECT likes.article_id AS id, COUNT(likes.id) AS nb_likes
-FROM likes 
-GROUP BY likes.article_id) la 
-ON articles.id = la.id
-LEFT JOIN
-(SELECT comments.article_id AS id, COUNT(comments.id) AS nb_comments
-FROM comments 
-GROUP BY comments.article_id) ca 
-ON articles.id = ca.id
-LEFT JOIN
-(SELECT bookmarks.article_id AS id, COUNT(bookmarks.id) AS nb_bookmarks
-FROM bookmarks
-GROUP BY bookmarks.article_id) ba
-ON articles.id = ba.id
-WHERE articles.status != 'draft'
-);
+select * from pg_trigger;
 
 
-CREATE TABLE IF NOT EXISTS articles_stats (
-article_id INT NOT NULL UNIQUE,
-nb_views INT NOT NULL DEFAUT = 0,
-nb_likes INT NOT NULL DEFAUT = 0,
-nb_comments INT NOT NULL DEFAUT = 0,
-nb_bookmarks INT NOT NULL DEFAUT = 0
-
-)
-
+# --- !Ups
+--  This one is for triggers on 1.SQL
 create or replace function article_insert() returns trigger
   security definer
   language plpgsql
 as $$
   begin
-    insert into articles_stats(article_id) values(new.id);
-    return new;
-  end;
+    insert into articles_stats(article_id) values(new.id);;
+    update authors_stats set nb_articles = nb_articles+1
+    where author_id = new.author_id AND new.status != 'draft';;
+    return new;;
+  end;;
 $$;
 create trigger article_insert after insert on articles
     for each row execute procedure article_insert();
@@ -69,7 +24,7 @@ create or replace function article_delete() returns trigger
   language plpgsql
 as $$
   begin
-    delete from articles_stats where articles_stats.article_id = old.article_id;
+    delete from articles_stats where article_id = old.id;
     return new;
   end;
 $$;
@@ -134,32 +89,6 @@ create trigger like_delete after delete on likes
 
 
 
-create or replace function comment_insert() returns trigger
-  security definer
-  language plpgsql
-as $$
-  begin
-    update articles_stats set nb_comments = nb_comments+1
-    where article_id = new.article_id;
-    return new;
-  end;
-$$;
-create trigger comment_insert after insert on comments
-    for each row execute procedure comment_insert();
-
-
-create or replace function comment_delete() returns trigger
-  security definer
-  language plpgsql
-as $$
-  begin
-    update articles_stats set nb_comments = nb_comments-1
-    where article_id = old.article_id;
-    return new;
-  end;
-$$;
-create trigger comment_delete after delete on comments
-    for each row execute procedure comment_delete();
 
 
 create or replace function bookmark_insert() returns trigger
@@ -189,5 +118,389 @@ $$;
 create trigger bookmark_delete after delete on bookmarks
     for each row execute procedure bookmark_delete();
 
-insert into articles(author_id,creation_date,last_update,title,summary,content,nb_modifications,reading_time,tag1,tag2,status) values(1,now(),now(),'test','summary','content',0,1,'test','really','draft');
-insert into views(user_id,article_id,view_date) values(1,4,now());
+create or replace function reaction_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update articles_stats set nb_reactions = nb_reactions+1
+    where article_id = new.origine_article_id;
+    return new;
+  end;
+$$;
+create trigger reaction_insert after insert on reactions
+    for each row execute procedure reaction_insert();
+
+
+create or replace function reaction_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update articles_stats set nb_reactions = nb_reactions-1
+    where article_id = old.origine_article_id;
+    return new;
+  end;
+$$;
+create trigger reaction_delete after delete on reactions
+    for each row execute procedure reaction_delete();
+
+
+
+
+
+
+
+
+create or replace function article_update() returns trigger
+security definer
+  language plpgsql
+as $$
+  begin
+    update authors_stats set nb_articles = nb_articles+1
+    where author_id = new.author_id AND old.status = 'draft' AND new.status !='draft';
+    return new;
+  end;
+$$;
+create trigger article_update after update on articles
+    for each row execute procedure article_update();
+
+
+create or replace function author_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    insert into authors_stats(author_id) values(new.id);
+    return new;
+  end;
+$$;
+create trigger author_insert after insert on users
+    for each row execute procedure author_insert();
+
+
+create or replace function author_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    delete from authors_stats where author_id = old.id;
+    return new;
+  end;
+$$;
+create trigger author_delete after delete on users
+    for each row execute procedure author_delete();
+
+create or replace function follower_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update authors_stats set nb_followers = nb_followers+1
+    where author_id = new.author_id;
+    return new;
+  end;
+$$;
+create trigger follower_insert after insert on follows
+    for each row execute procedure follower_insert();
+
+
+create or replace function follower_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update authors_stats set nb_followers = nb_followers-1
+    where author_id = old.author_id;
+    return new;
+  end;
+$$;
+create trigger follower_delete after delete on follows
+    for each row execute procedure follower_delete();
+
+
+
+
+
+
+
+create or replace function tag_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    insert into tags_stats(tag_name) values(new.name);
+    return new;
+  end;
+$$;
+create trigger tag_insert after insert on tags
+    for each row execute procedure tag_insert();
+
+
+create or replace function tag_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    delete from tags_stats where tag_name = old.name;
+    return new;
+  end;
+$$;
+create trigger tag_delete after delete on tags
+    for each row execute procedure tag_delete();
+
+
+
+create or replace function tagging_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update tags_stats set nb_articles = nb_articles+1
+    where tag_name = new.tag_name;
+    return new;
+  end;
+$$;
+create trigger tagging_insert after insert on taggings
+    for each row execute procedure tagging_insert();
+
+
+create or replace function tagging_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    delete from tags_stats where tag_name = old.tag_name;
+    return new;
+  end;
+$$;
+create trigger tagging_delete after delete on taggings
+    for each row execute procedure tagging_delete();
+
+
+create or replace function interest_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    update tags_stats set nb_interested_users = nb_interested_users+1
+    where tag_name = new.tag_name;
+    return new;
+  end;
+$$;
+create trigger interest_insert after insert on interests
+    for each row execute procedure interest_insert();
+
+
+create or replace function interest_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    delete from tags_stats where tag_name = old.tag_name;
+    return new;
+  end;
+$$;
+create trigger interest_delete after delete on interests
+    for each row execute procedure interest_delete();
+
+
+
+
+
+
+# --- !Downs
+
+DROP FUNCTION IF EXISTS article_insert() CASCADE;
+DROP FUNCTION IF EXISTS article_delete() CASCADE;
+DROP FUNCTION IF EXISTS article_update() CASCADE;
+DROP FUNCTION IF EXISTS view_insert() CASCADE;
+DROP FUNCTION IF EXISTS view_delete() CASCADE;
+DROP FUNCTION IF EXISTS like_insert() CASCADE;
+DROP FUNCTION IF EXISTS like_delete() CASCADE;
+DROP FUNCTION IF EXISTS bookmark_insert() CASCADE;
+DROP FUNCTION IF EXISTS bookmark_delete() CASCADE;
+DROP FUNCTION IF EXISTS author_insert()CASCADE;
+DROP FUNCTION IF EXISTS author_delete() CASCADE;
+DROP FUNCTION IF EXISTS follower_insert() CASCADE;
+DROP FUNCTION IF EXISTS follower_delete() CASCADE;
+DROP FUNCTION IF EXISTS tag_insert() CASCADE;
+DROP FUNCTION IF EXISTS tag_delete() CASCADE;
+DROP FUNCTION IF EXISTS tagging_insert() CASCADE;
+DROP FUNCTION IF EXISTS tagging_delete() CASCADE;
+DROP FUNCTION IF EXISTS interest_insert() CASCADE;
+DROP FUNCTION IF EXISTS interest_delete() CASCADE;
+
+
+
+
+# --- !Ups
+-- This one is for publications
+CREATE TABLE IF NOT EXISTS publications(
+ID SERIAL PRIMARY KEY NOT NULL,
+NAME varchar(100) NOT NULL UNIQUE,
+description varchar(455) NOT NULL,
+creator_id INT NOT NULL,
+creation_date TIMESTAMP NOT NULL
+);
+
+create or replace function publication_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    INSERT INTO publications_stats(publication_id) VALUES(new.id);
+    return new;
+  end;
+$$;
+create trigger publication_insert after insert on publications
+    for each row execute procedure publication_insert();
+
+
+create or replace function publication_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    delete from publications_stats where publication_id = old.id;
+    return new;
+  end;
+$$;
+create trigger publication_delete after delete on publications
+    for each row execute procedure publication_delete();
+
+
+
+CREATE TABLE IF NOT EXISTS publication_members(
+publication_name varchar(100) NOT NULL,
+member_id INT NOT NULL,
+join_date TIMESTAMP NOT NULL,
+title VARCHAR(25) NOT NULL
+);
+
+create or replace function publication_member_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    UPDATE publications_stats SET nb_memebers = nb_members+1;
+    return new;
+  end;
+$$;
+create trigger publication_member_insert after insert on publication_members
+    for each row execute procedure publication_member_insert();
+
+
+create or replace function publication_member_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+  UPDATE publications_stats SET nb_memebers = nb_members-1;
+    return new;
+  end;
+$$;
+create trigger publication_member_delete after delete on publication_members
+    for each row execute procedure publication_member_delete();
+
+
+
+
+CREATE TABLE IF NOT EXISTS publication_followers(
+publication_name varchar(100) NOT NULL,
+follower_id INT NOT NULL,
+follow_date TIMESTAMP NOT NULL
+);
+
+create or replace function publication_follower_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    UPDATE publications_stats SET nb_followers = nb_followers+1;
+    return new;
+  end;
+$$;
+create trigger publication_follower_insert after insert on publication_followers
+    for each row execute procedure publication_follower_insert();
+
+
+create or replace function publication_follower_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+  UPDATE publications_stats SET nb_followers = nb_followers-1;
+    return new;
+  end;
+$$;
+create trigger publication_follower_delete after delete on publication_followers
+    for each row execute procedure publication_follower_delete();
+
+
+
+
+CREATE TABLE IF NOT EXISTS publication_articles(
+publication_name varchar(100) NOT NULL,
+article_id INT NOT NULL,
+proposed_by INT NOT NULL,
+proposed_date TIMESTAMP NOT NULL,
+state_of_article TIMESTAMP NOT NULL,
+validated_date TIMESTAMP
+);
+
+
+create or replace function publication_article_insert() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+    UPDATE publications_stats SET nb_articles = nb_articles+1;
+    return new;
+  end;
+$$;
+create trigger publication_article_insert after insert on publication_articles
+    for each row execute procedure publication_article_insert();
+
+
+create or replace function publication_article_delete() returns trigger
+  security definer
+  language plpgsql
+as $$
+  begin
+  UPDATE publications_stats SET nb_articles = nb_articles-1;
+    return new;
+  end;
+$$;
+create trigger  publication_article_delete after delete on  publication_articles
+    for each row execute procedure publication_article_delete();
+
+
+CREATE TABLE IF NOT EXISTS publications_stats(
+publication_id INT NOT NULL UNIQUE,
+nb_members INT NOT NULL DEFAULT 0,
+nb_followers INT NOT NULL DEFAULT 0,
+nb_articles INT NOT NULL DEFAULT 0
+);
+
+
+
+
+
+
+# --- !Downs
+
+DROP FUNCTION IF EXISTS  publication_insert() CASCADE;
+DROP FUNCTION IF EXISTS  publication_delete() CASCADE;
+DROP FUNCTION IF EXISTS  publication_member_insert() CASCADE;
+DROP FUNCTION IF EXISTS  publication_member_delete() CASCADE;
+DROP FUNCTION IF EXISTS  publication_follower_insert() CASCADE;
+DROP FUNCTION IF EXISTS  publication_follower_delete() CASCADE;
+DROP FUNCTION IF EXISTS  publication_article_insert() CASCADE;
+DROP FUNCTION IF EXISTS  publication_article_delete() CASCADE;
+
+DROP TABLE publications CASCADE;
+DROP TABLE publication_members CASCADE
+DROP TABLE publications_followers CASCADE
+DROP TABLE publications_articles CASCADE
+DROP TABLE publications_stats CASCADE
