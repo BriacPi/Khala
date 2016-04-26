@@ -95,8 +95,8 @@
         case Some(nbs) => {
           <span id="nblikes">@nbs.nbLikes</span>
           <span class="pull-right"><a href="#"><i class="fa fa-comments" style="margin-top: 4px;"></i></a> @nbs.nbComments</span>
-
         }
+          case _ => {}
       }
     </p>
 </div>
